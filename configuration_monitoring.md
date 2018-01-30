@@ -88,6 +88,18 @@ The actual value is calculated using the following formula:
 
 *ToDo: Define numbers for each type.*
 
+### Data object categories
+
+Each data object belongs to one of the following categories (associated to a category ID):
+
+- device_info: Read-only device information (e.g. manufacturer, etc.)
+- settings: User-configurable settings (free access, maybe with user password)
+- calibration: Factory-calibrated settings (access restricted)
+- diagnosis: Error memory, etc., (at least partly access restricted)
+- input: free user access
+- output: free user access
+
+
 ## Binary Protocol
 
 Numbers are encoded using the little endian format (least significant *byte* first, the bits inside a byte are MSB first). This format is most commonly used by modern computers and microcontrollers, which makes it easy to implement. In addition to that, many CAN based high layer protocols (like CANopen, SAE J1939 and NMEA2000) use little endian encoding.
@@ -250,8 +262,37 @@ Requests to overwrite a data object.
 	<td>Data n</td>
 </tr></tbody></table>
 
-- Function ID: 0x04 (preliminary)
+- Function ID: 0x84 (preliminary)
 - Data Type: Maybe remove, as response data type will always be string.
+
+### List data objects
+
+#### Request
+
+<table><thead><tr>
+    <th>Byte 1</th><th>Byte 2</th>
+</tr></thead><tbody><tr>
+	<td>Function ID</td>
+    <td>Category ID</td>
+</tr></tbody></table>
+
+- Function ID: 0x05 (preliminary)
+- Category ID: Data object category to list objects from (0 for all data objects)
+
+#### Response
+
+<table><thead><tr>
+    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th></th><th>Byte (n\*2)</th><th>Byte (n\*2)+1</th>
+</tr></thead><tbody><tr>
+	<td>Function ID</td>
+    <td colspan="2">Data Object ID 1</td>
+	<td>...</td>
+    <td colspan="2">Data Object ID n</td>
+</tr></tbody></table>
+
+- Function ID: 0x85 (preliminary)
+- Data Object ID 1..n: Lists all valid data object IDs belonging to the requested category.
+
 
 ### ASCII protocol selection
 
