@@ -59,7 +59,7 @@ It is NOT allowed to publish a voltage in millivolts (mV) instead of volts (V), 
 
 ### Data types
 
-The data type of each variable is encoded in a 1-byte uint8 number. The following types are possible:
+The data type of each variable is encoded in a 6-bit number stored in one uint8 byte (only the values 0-63 are valid). The following types are possible:
 
 - Void
 - Boolean
@@ -87,6 +87,19 @@ The actual value is calculated using the following formula:
 ```
 
 *ToDo: Define numbers for each type.*
+
+### Status Code
+
+Each response message contains a status byte to identify if the request could be handled successfully. If the most signigicant bit (number 7) is 0, the response was successful. The remaining bits can be used for other purposes (e.g. for the 6-bit type ID). If the most significant bit is 1, an error occured. The remaining bits are used to specify the error in more detail.
+
+In other words:
+- Status Code 0x00-0x7F (0-127): Success
+- Status Code 0x80-0xFF (128-255): Error
+    - 0x80: General Error
+    - 0x81: Function ID unknown
+    - 0x82: Device busy
+    - 0x83: Unauthorized
+    - 0x84: Request too long
 
 ### Data object categories
 
@@ -137,18 +150,17 @@ Requests to read a given data object.
 Responds with an ACK and the requested data or an error code.
 
 <table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th>...</th><th>Byte n+3</th>
+    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>...</th><th>Byte n+2</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
-    <td>Err Code</td>
-    <td>Data Type</td>
+    <td>Status | Data Type</td>
     <td>Data 1</td>
 	<td>...</td>
 	<td>Data n</td>
 </tr></tbody></table>
 
 - Function ID: 0x80 (preliminary)
-- Err Code: ACK or NACK (t.b.d.: ID not found, not sufficient access rights, etc.)
+- Status | Data Type: Status code (see above) and data type (bits 0..5) in case of success (bit 7 = 0).
 - Data 1...n: Data bytes. No bytes sent in case of error.
 
 ### Write data object
@@ -177,7 +189,7 @@ Requests to overwrite a data object.
     <th>Byte 1</th><th>Byte 2</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
-    <td>Err Code</td>
+    <td>Status Code</td>
 </tr></tbody></table>
 
 - Function ID: 0x81 (preliminary)
@@ -204,10 +216,11 @@ Requests to overwrite a data object.
     <th>Byte 1</th><th>Byte 2</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
-    <td>Err Code</td>
+    <td>Status Code</td>
 </tr></tbody></table>
 
 - Function ID: 0x82 (preliminary)
+- Status Code: Success or error (see above)
 
 ### Subscribe to data object
 
@@ -231,10 +244,11 @@ Requests to overwrite a data object.
     <th>Byte 1</th><th>Byte 2</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
-    <td>Err Code</td>
+    <td>Status Code</td>
 </tr></tbody></table>
 
 - Function ID: 0x83 (preliminary)
+- Status Code: Success or error (see above)
 
 ### Get data object name
 
@@ -252,18 +266,17 @@ Requests to overwrite a data object.
 #### Response
 
 <table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th></th><th>Byte n+3</th>
+    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th></th><th>Byte n+2</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
-    <td>Err Code</td>
-    <td>Data Type</td>
+    <td>Status | Data Type</td>
     <td>Data 1</td>
 	<td>...</td>
 	<td>Data n</td>
 </tr></tbody></table>
 
 - Function ID: 0x84 (preliminary)
-- Data Type: Maybe remove, as response data type will always be string.
+- Status | Data Type: Status code (see above) and data type (bits 0..5) in case of success (bit 7 = 0).
 
 ### List data objects
 
@@ -282,15 +295,17 @@ Requests to overwrite a data object.
 #### Response
 
 <table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th></th><th>Byte (n\*2)</th><th>Byte (n\*2)+1</th>
+    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th></th><th>Byte (n\*2)+1</th><th>Byte (n\*2)+2</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
+    <td>Status | Data Type</td>
     <td colspan="2">Data Object ID 1</td>
 	<td>...</td>
     <td colspan="2">Data Object ID n</td>
 </tr></tbody></table>
 
 - Function ID: 0x85 (preliminary)
+- Status | Data Type: Status code (see above) and data type (always uint16)
 - Data Object ID 1..n: Lists all valid data object IDs belonging to the requested category.
 
 
