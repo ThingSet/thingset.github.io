@@ -78,7 +78,7 @@ The data type of each variable is encoded in a 6-bit number stored in one uint8 
 - String (UTF-8)
 - Array of above types (?)
 
-Integer values might have the specified size and an additional tail byte defining the exponent to the basis of 10 as an int8 value. For example, a 32bit integer would consume 5 instead of 4 bytes. If the exponent is omitted, it is 0.
+Microcontrollers without floating point unit normally use fixed-point math. The protocol allows to send out data without conversion to float. In order to be consistent with the SI unit system, the first byte of the int data types specifies an exponent to the basis of 10 as an int8 value. For example, a 32bit integer would consume 5 instead of 4 bytes.
 
 The actual value is calculated using the following formula:
 
@@ -100,6 +100,7 @@ In other words:
     - 0x82: Device busy
     - 0x83: Unauthorized
     - 0x84: Request too long
+    - 0x85: Data object ID unknown
 
 ### Data object categories
 
@@ -115,17 +116,19 @@ Each data object belongs to one of the following categories (associated to a cat
 
 ## Binary Protocol
 
-Numbers are encoded using the little endian format (least significant *byte* first, the bits inside a byte are MSB first). This format is most commonly used by modern computers and microcontrollers, which makes it easy to implement. In addition to that, many CAN based high layer protocols (like CANopen, SAE J1939 and NMEA2000) use little endian encoding.
+Numbers are encoded using the big endian format (most significant byte transferred first). This format is used by the internet protocols, hence it is also called network byte order.
+
+This decision was taken even though many modern computers as well as many CAN based high layer protocols (like CANopen, SAE J1939 and NMEA2000) use little endian encoding. The focus of the protocol is more being "internet" compatible than "CAN" compatible. 
 
 Example encoding of the bits inside a 32-bit integer:
 
 <table><thead><tr>
     <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th>
 </tr></thead><tbody><tr>
-	<td>b7 ... b0</td>
-    <td>b15 ... b8</td>
-    <td>b23 ... b16</td>
     <td>b31 ... b24</td>
+    <td>b23 ... b16</td>
+    <td>b15 ... b8</td>
+	<td>b7 ... b0</td>
 </tr></tbody></table>
 
 
@@ -167,21 +170,24 @@ Responds with an ACK and the requested data or an error code.
 
 Requests to overwrite a data object.
 
+The device must support a write request using the same data type as used in the response of a read request for the given object ID. Optionally, the device may also accept different data types (e.g. int32 + exp or float32) and convert the data internally.
+
 #### Request
 
 <table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th>Byte 5</th><th>Byte 6</th><th></th><th>Byte n+5</th>
+    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th>Byte 5</th><th></th><th>Byte n+4</th>
 </tr></thead><tbody><tr>
 	<td>Function ID</td>
     <td colspan="2">Data Object ID</td>
-    <td>Persistence</td>
-    <td>Data Type</td>
+    <td>Persistence | Data Type</td>
 	<td>Data 1</td>
 	<td>...</td>
 	<td>Data n</td>
 </tr></tbody></table>
 
 - Function ID: 0x01 (preliminary)
+- Data Object ID: Defines which data object should be updated / written to.
+- Persistence | Data Type: Set bit 7 to 1 to write in non-volatile memory (store permanently), otherwise 0. Least significant 6 bits (0..5) for data type ID.
 
 #### Response
 
@@ -193,6 +199,8 @@ Requests to overwrite a data object.
 </tr></tbody></table>
 
 - Function ID: 0x81 (preliminary)
+
+If the data type is not supported, an error status code (TS_STATUS_WRONG_TYPE 0x87) is responded.
 
 ### Publish data object
 
@@ -309,6 +317,39 @@ Requests to overwrite a data object.
 - Data Object ID 1..n: Lists all valid data object IDs belonging to the requested category.
 
 
+### Authentication challenge request
+
+Requests a challenge from the device to authenticate using secret password + hashing function.
+
+#### Request
+
+<table><thead><tr>
+    <th>Byte 1</th><th>Byte 2</th>
+</tr></thead><tbody><tr>
+	<td>Function ID</td>
+	<td>Hash Algorithm</td>
+</tr></tbody></table>
+
+- Function ID: 0x06 (preliminary)
+- Hash Algorithm: select used Hash algorithm (currently only SHA-3) supported
+
+#### Response
+
+<table><thead><tr>
+    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th></th><th>Byte (n\*2)+1</th><th>Byte (n\*2)+2</th>
+</tr></thead><tbody><tr>
+	<td>Function ID</td>
+    <td>Status | Data Type</td>
+    <td colspan="2">Challenge byte 1</td>
+	<td>...</td>
+    <td colspan="2">Challenge byte n</td>
+</tr></tbody></table>
+
+- Function ID: 0x86 (preliminary)
+- Status | Data Type: Status code (see above) and data type (always uint8)
+- Challenge bytes 1..n: The challenge to be used. Must be random number.
+
+
 ### ASCII protocol selection
 
 An ASCII protocol request starts with an exclamation mark. Consequently, function code 33 (which is the '!' sign in ASCII) is used to start the ASCII communication protocol.
@@ -374,15 +415,20 @@ Write the setting of maximum battery charging voltage.
 !write {"settings":{"vBatMax":14.4}}
 ```
 
-Publish measurement data vBat every 100 ms.
+Publication request measurement data vBat every 100 ms.
 
 ```
-!pub /measurements/vBat 100
+!pubreq /measurements/vBat 100
 ```
 
-Subscribe to external temperature sensor data.
+Subscription request to external temperature sensor data.
 
 ```
-!sub /input/temperature /measurements/temp1 192.168.0.2
+!subreq /input/temperature /measurements/temp1 192.168.0.2
 ```
 
+List all settings data objects
+
+```
+!list /setings/*
+```

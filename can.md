@@ -162,11 +162,53 @@ Publication messages are not sent to a single node, so the destination address d
 
 The first byte of the payload defines the data type of the published data object. The data type is encoded using a 6-bit unsigned integer. The first two bits of the byte can be used for other purposes (see below).
 
-The content of the data is determined by the data type. Data of type uint32 + exp will need 5 bytes in addition to the data type byte.
+The following data types are defined:
+
+| 6-bit typeID | CBOR type | CBOR description |
+|--------------|-----------|------------------|
+| 0x00	| 0x18 | Unsigned integer (one-byte uint8_t follows)
+| 0x01	| 0x19 | Unsigned integer (two-byte uint16_t follows)
+| 0x02	| 0x1a | Unsigned integer (four-byte uint32_t follows)
+| 0x03	| 0x1b | Unsigned integer (eight-byte uint64_t follows)
+| 0x04	| 0x38 | Negative integer -1-n (one-byte uint8_t for n follows)
+| 0x05	| 0x39 | Negative integer -1-n (two-byte uint16_t for n follows)
+| 0x06	| 0x3a | Negative integer -1-n (four-byte uint32_t for n follows)
+| 0x07	| 0x3b | Negative integer -1-n (eight-byte uint64_t for n follows)
+| 0x08	| 0x58 | byte string (one-byte uint8_t for n, and then n bytes follow)
+| 0x0C	| 0x78 | UTF-8 string (one-byte uint8_t for n, and then n bytes follow)
+| 0x10	| 0x98 | array (one-byte uint8_t for n, and then n data items follow)
+| 0x14	| 0xb8 | map (one-byte uint8_t for n, and then n pairs fo data items follow)
+| 0x1E	| 0xfa | Single-Precision Float (four-byte IEEE 754)
+| 0x1F	| 0xfb | Double-Precision Float (eight-byte IEEE 754)
+| 0x20	| 0xc0 | Text-based date/time (data item follows; see section 2.4.1
+| 0x21	| 0xc1 | Epoch-based date/time (data item follows; see section 2.4.1
+| 0x24	| 0xc4 | Decimal Fraction (data item "array" follows; see Section 2.4.3
+| 0x3C	| 0xf4 | False
+| 0x3D	| 0xf5 | True
+| 0x3E	| 0xf6 | Null
+| 0x3F	| 0xf7 | Undefined
+
+The data type is compatible with the CBOR format used in the ThingSet application layer protocol. The 6-bit data type ID can be converted to a valid CBOR first byte using simple bit-shift operations.
+
+Assuming the data of the CAN frame is stored in an array data[0...7], use the following operation to generate valid CBOR data for type ID < 0x20 (stored in data[0]) :
+```
+data[0] = (data[0] & 0x1C) << 3 + (data[0] & 0x03) + 0x18
+```
+
+For data type ID >= 0x20 (stored in data[0]) the bit shifting operation is slightly different:
+```
+data[0] = (data[0] & 0x18) << 1 + (data[0] & 0x07) + 0xC0
+```
+
+Of course, you can also store a map of the above table and replace the 6-bit typeID by the CBOR type. However, the bit-shift operations will be more efficient.
+
+Using above method, the generated CBOR might not be the most compact form, as the values stored directly in the first byte (e.g. 0..23) are not used. However, the generated data is still valid CBOR.
 
 #### Time stamp
 
-In order to acquire real-time measurement values, a 16-bit timestamp can be appended to the data content bytes. The timestamp contains the 16 least significant bits of the microcontroller's system clock in milliseconds. It is a rolling counter and restarts at 0 after an overflow. The timestamp cannot be used to determine the absolute time of a measurement, but the time difference between subsequent measurements. This is important to obtain correct sampling of time-series data if higher priority messages cause a delay of the data delivery on the bus.
+In order to acquire real-time measurement values, a 16-bit timestamp (unsigned int) can be appended to the data content bytes. The timestamp contains the 16 least significant bits of the microcontroller's system clock in milliseconds. It is a rolling counter and restarts at 0 after an overflow. The timestamp cannot be used to determine the absolute time of a measurement, but the time difference between subsequent measurements. This is important to obtain correct sampling of time-series data if higher priority messages cause a delay of the data delivery on the bus.
+
+The second bit of the first byte defines if the time stamp is present or not (see below).
 
 #### Tiny transport protocol (Tiny-TP) for message broadcasting
 

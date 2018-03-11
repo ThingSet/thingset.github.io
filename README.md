@@ -4,6 +4,8 @@ This specification describes a communication protocol for control, configuration
 
 Even though this protocol was developed with the focus on energy management (especially the Libre Solar MPPT and BMS devices), it can be used for other purposes aswell. The specification is published under a permissive license for both commercial and personal use.
 
+The working name of the protocol is ThingSet Protocol - a protocol for settings of "things".
+
 # Content
 
 1. [Energy System Layout](system_layout.md)
@@ -15,7 +17,7 @@ Even though this protocol was developed with the focus on energy management (esp
 4. Application Level Protocol
 
 	- [Communication Models](communication_models.md)
-	- [Configuration and Monitoring Protocol](configuration_monitoring.md)
+	- [ThingSet Protocol](thingset.md)
 	- Control Protocol (ToDo)
 
 5. Low Level Protocols
