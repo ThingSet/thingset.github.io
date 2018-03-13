@@ -36,7 +36,7 @@ Payload data is encoded in JSON format or in the compatible CBOR binary format i
 
 All accessible data of a device is structured in so-called data objects. A data object might be a measurement value like the output current of a device or the voltage setpoint of a charger (user-configurable data).
 
-Each data object is identified by a unique Data Object ID. The ID can be arbitrarily chosen by the firmware developer. In addition to that, each data object has a unique name. The name is a short ASCII string without blanks, e.g. "vBat" for the battery voltage.
+Each data object is identified by a unique Data Object ID. The ID can be chosen by the firmware developer. In addition to that, each data object has a unique name. The name is a short ASCII string without blanks, e.g. "vBat" for the battery voltage.
 
 For reduced memory useage, [lower camel-case style](https://en.wikipedia.org/wiki/Camel_case) should be used for the data object names. The first letter(s) should specify the type of value:
 
@@ -46,11 +46,39 @@ For reduced memory useage, [lower camel-case style](https://en.wikipedia.org/wik
 - t for time
 - temp for temperature
 
-The numeric IDs are only used in the binary protocol for increased efficiency and performance. For all interactions with user devices, only the object name should be used. The numeric IDs are not used at all in the ASCII protocol.
+The numeric IDs are only used in the binary protocol for increased efficiency and performance. For all interactions with user interfaces, only the object name should be used. The numeric IDs are not used at all in the ASCII protocol.
 
-Data object IDs are stored as a 16-bit unsigned integer. Valid IDs are 0...65536.
+### Data object categories
 
-**ToDo:** *Maybe reserve some values for special cases and future use.*
+Each data object belongs to one of the following categories (associated to a category ID of 4 bits):
+
+| Category name (JSON) | Category ID | Description | Access  |
+|-------------|-------------|-------------|---------|
+| (any)       | 0x0         | Wildcard ID, representing all IDs (* character for JSON protocol) | |
+| info        | 0x1         | Read-only device information (e.g. manufacturer, etc.) | |
+| setup       | 0x2         | User-configurable settings  | free access, maybe with user password |
+| input       | 0x3         | Input channels (e.g. actuators) | free user access |
+| output      | 0x4         | Output channels (e.g. sensor data) | free user access |
+| rpc         | 0x5         | remote procedure call | partly access restricted |
+| calibration | 0x6         | Factory-calibrated settings | access restricted |
+| diagnosis   | 0x7         | Error memory, etc., | at least partly access restricted |
+|             | 0x8-0xF     | Reserved for future use | unknown |
+
+Data object IDs are stored as a 16-bit unsigned integer. The ID includes a category of 4 bits. The remaining 12-bit values can be freely chosen. In total, 4095 different measurement values can be associated via an ID, with 0 being the wildcard ID again. The wildcard category and data object IDs are used to query the accessible data of a device (see below).
+
+The follwing table describes the bits inside the 2-byte unique data object ID:
+
+<table><thead><tr>
+    <th colspan="2">Byte 1</th><th>Byte 2</th>
+</tr><tr>
+    <th>b15 ... b12</th><th>b11 ... b8</th><th>b7 ... b0</th>
+</tr></thead><tbody><tr>
+    <td>Category ID</td>
+    <td colspan="2">Data Object ID</td>
+</tr></tbody></table>
+
+
+### Examples
 
 For explanation of the protocol functions, the following exemplary device data object structure will be used:
 
@@ -70,12 +98,13 @@ For explanation of the protocol functions, the following exemplary device data o
 ```
 
 The above data structure contains 4 data objects in total, grouped into 3 different categories (info, output and input). The device will have an internal map to associate the object name with a unique ID. In C code this might look like the following:
+
 ```C
 const char* names[] = {
-    "manufacturer", // ID 0
-    "vBat",         // ID 1
-    "tAmbient",     // ID 2
-    "enableSwitch"  // ID 3
+    "manufacturer", // ID = (0x1 << 12) + 1 = 0x1001
+    "vBat",         // ID = (0x4 << 12) + 1 = 0x4001
+    "tAmbient",     // ID = (0x4 << 12) + 2 = 0x4002
+    "enableSwitch"  // ID = (0x3 << 12) + 1 = 0x3001
 };
 ```
 
@@ -93,17 +122,6 @@ For temperatures, Kelvin (K) is the official SI unit. However, °C is compatible
 
 It is NOT allowed to publish a voltage in millivolts (mV) instead of volts (V). Instead, the decimal fraction data type of CBOR can be used.
 
-### Data object categories
-
-Each data object belongs to one of the following categories (associated to a category ID):
-
-- info: Read-only device information (e.g. manufacturer, etc.)
-- settings: User-configurable settings (free access, maybe with user password)
-- calibration: Factory-calibrated settings (access restricted)
-- diagnosis: Error memory, etc., (at least partly access restricted)
-- input: free user access
-- output: free user access
-- rpc: remote procedure call
 
 ## Function Overview
 
@@ -207,11 +225,11 @@ Read the measurement values of *vBat* (ID 1) and *tAmbient* (ID 2):
 </tr></thead><tbody><tr>
     <td>Request</td>
     <td>`!read [ "vBat", "tAmbient" ]`</td>
-	<td>`00 82 01 02`</td>
+	<td>`00 82 194001 194002`</td>
 </tr><tr>
     <td>Response</td>
     <td>`:0 [14.2,22]`</td>
-	<td>`80 00 82 FA 41633333 16`</td>
+	<td>`80 00 82 FA41633333 16`</td>
 </tr></tbody></table>
 
 Read all device information values:
@@ -221,7 +239,7 @@ Read all device information values:
 </tr></thead><tbody><tr>
     <td>Request</td>
     <td>`!read { "info" : "*" }`</td>
-	<td>`?? (TODO)`</td>
+	<td>`00 10 00`</td>
 </tr><tr>
     <td>Response</td>
     <td>`:0 [14.2,22]`</td>
