@@ -1,8 +1,8 @@
 # CAN Transport and Network Layer
 
-This specification defines layer 3 (Network) and 4 (Transport) of the Energy Management Protocol based on CAN bus. Layer 1 and 2 are provided by the CAN bus itself.
+This specification defines layer 3 (Network) and 4 (Transport) of the ThingSet Protocol via CAN bus. Layer 1 and 2 are provided by the CAN bus itself.
 
-Only the binary messages of the Energy Management Protocol are supported via CAN.
+Only the binary messages of the ThingSet Protocol are supported via CAN.
 
 ## General features
 
@@ -21,7 +21,7 @@ Only the binary messages of the Energy Management Protocol are supported via CAN
 
 In the CAN bus, the identifier part of the CAN frame is used for arbitration and identification of the message type. Typically, it does not define the sender or receiver of the message, but the content of the message.
 
-For the energy management system, the layout of the CAN identifier is similar to the SAE J1939 specification. Parts of the identifier define the source and destination address of the message. In addition to that, the first three bits are used to prioritize the messages.
+For a network with connected ThingSet devices, the layout of the CAN identifier is similar to the SAE J1939 specification. Parts of the identifier define the source and destination address of the message. In addition to that, the first three bits are used to prioritize the messages.
 
 Two general types of messages are specified: Service message and Data object publication message. Only CAN extended ID with a size of 29 bit is used.
 

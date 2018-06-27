@@ -67,7 +67,7 @@ Summary of issues:
 
 The collection of SAE J1939 standards describe a well-established CAN application layer protocol. Several other protocols like RV-C (recreational vehicles), NMEA2000 (marine applications) and ISOBUS (agriculture machines) are based on SAE J1939.
 
-Unfortunately, all SAE J1939 based standards (including the base standard itself) are proprietary and not puplic. Only RV-C is available for donwload, but features only very basic specification of message types necessary for energy management.
+Unfortunately, all SAE J1939 based standards (including the base standard itself) are proprietary and not puplic. Only RV-C is available for download.
 
 SAE J1939 uses only the extended format CAN id with 29 bits and encodes message priority, source ID, destination ID and the type of message (Parameter Group Number, PGN) inside the CAN ID.
 
@@ -114,6 +114,8 @@ The open source energy management protocol described in this document will use s
 ToDo:
 
 - Publish/subscribe and request/response pattern
-- High level protocol specified, useable with different base layers
+- High level protocol specification, useable with different base layers
 
-One important difference compared to other protocols (CANopen or RV-C) regarding energy management: Battery requests to be charged (vs. chargers are configured to deliver current). This allows master-less operation.
+One important difference compared to EnergyBus regarding energy management: Battery requests to be charged (vs. chargers are configured to deliver current). This allows master-less operation.
+
+A similar approach is already implemented in RV-C (message type *DC Source Status 4*) and might be adapted.
