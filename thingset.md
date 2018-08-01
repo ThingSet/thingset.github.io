@@ -1,14 +1,12 @@
 # ThingSet Application Layer Protocol
 
-The ThingSet protocol provides a consistent, standardized way to configure, monitor and control ressource-constrained devices via different communication interfaces.
-
-As an application layer protocol, ThingSet defines layer 5 to 7 of the [OSI (Open Systems Interconnection) model](https://en.wikipedia.org/wiki/OSI_model). The payload data is independent of the underlying lower layer protocol or interface, which can be CAN, USB, WiFi, Bluetooth, UART (serial) or similar.
+The ThingSet protocol provides a consistent, standardized way to configure, monitor and control ressource-constrained devices via different communication interfaces. It specifies the higher layers (5 to 7) of the [OSI (Open Systems Interconnection) model](https://en.wikipedia.org/wiki/OSI_model). The payload data is independent of the underlying lower layer protocol or interface, which can be CAN, USB, LoRa, WiFi, Bluetooth, UART (serial) or similar.
 
 ![ISO/OSI layer setup](images/osi_layers.png)
 
 The underlying layers have to ensure reliable transfer, correct packet order (if messages are packetized) and error-checking of the transferred data.
 
-## General concepts
+## General Concepts
 
 <!---
 ## General goals
@@ -25,44 +23,39 @@ Layers 1-4 depend on the lower layer protocols used. In case of a simple serial 
 For IP based networks (over Ethernet or Wifi), the network layer will be the IP protocol. The source and destination addresses are IP addresses in this case. The transport layer might be TCP or UDP, adding additional headers to the entire protocol frame.
 -->
 
+### Message Types
 
-### Request/response messaging pattern
+ThingSet defines three types of messages: Requests, responses and publication messages.
 
-The ThingSet communication itself always takes place between two devices. The devices communiate via so-called channels, which can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi). In case of a network, each device/node has to be uniquely addressable.
+The communication between two specific devices uses a request/response messaging pattern via so-called channels. A communication channel can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device/node has to be uniquely addressable.
 
 ![Communication Channels](images/communication_channels.png)
 
-For configuration of devices, a a request/response messaging pattern is used. The device acts as a server which is connected to a client. The client might be a laptop or mobile phone with a human interface application. To read data from the device or change configuration settings, the client sends requests to the device, which responds with a status message and the requested data, if applicable.
+The device acts as the server and responds to the requests by a client. The client might be a laptop or mobile phone with a human interface application.
 
-The data transfer is always synchronous: The client sends a request, waits for the response, handles the data of the response and possibly starts with additional requests.
-
-### Publish/subscribe messaging pattern
+The data transfer is always synchronous: The client sends a request, waits for the response (status code and/or requested data), handles the data of the response and possibly starts with additional requests.
 
 Monitoring data is not intended for only a single device, but could be interesting for several devices (e.g. data logger, display, human interface device, etc.). Thus, the monitoring data is exchanged via a publish/subscribe messaging pattern.
 
-One popular pub/sub protocol is MQTT, which needs an intermediate broker to store the published messages and forward them to the subscribers. In a CAN based network, the monitoring data is just published to the bus and each device can decide if it uses the published data or not.
-
-The ThingSet protocol is mainly used to set up a pub/sub protocol, but it does not specify this type of protocol itself.
-
-<!-- As the control protocol should be master-less and plug-and-play, also the control messages follow the pub/sub messaging paradigm.-->
+Publication messages are directly broadcast through the network. There is *no* intermediate broker (like in MQTT) to store the messages and published messages are *not* confirmed by recipients, so there is no guarantee if the message was received.
 
 ### Protocol Modes
 
 Similar to Modbus, the ThingSet protocol supports two different modes: A human-readable text-based mode and a binary mode.
 
-In the text-based mode, payload data is encoded in standard JSON format. This mode is recommended when using USB or serial interfaces as the low layer protocol, as it can be easily used directly on a terminal.
+In the text-based mode, payload data is encoded in JSON format ([RFC 8259](https://tools.ietf.org/html/rfc8259)). This mode is recommended when using USB or serial interfaces as the low layer protocol, as it can be easily used directly on a terminal.
 
-The binary protocol uses the CBOR binary encoding instead of JSON payload data in order to reduce the protocol overhead for ressource-constrained devices or low-level communication protocols like CAN.
+The binary protocol uses the CBOR binary encoding ([RFC 7049](https://tools.ietf.org/html/rfc7049)) instead of JSON payload data in order to reduce the protocol overhead for ressource-constrained devices or low-level communication protocols like CAN and LoRa.
 
-Each device must implement the binary encoding of the protocol. The "normal" JSON variant is optional, but recommended.
+Each device must implement the binary encoding of the protocol. The the text-based JSON variant is optional, but recommended.
 
 ## Data Objects
 
-All accessible data of a device is structured in so-called data objects. A data object might be a measurement value like the output current of a device or the voltage setpoint of a charger (user-configurable data).
+All accessible data of a device is structured in so-called data objects. A data object might be any kind of measurement (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar data.
 
 Each data object is identified by a unique Data Object ID. The ID can be chosen by the firmware developer. In addition to that, each data object has a unique name. The name is a short ASCII string without blanks, e.g. "vBat" for the battery voltage.
 
-For reduced memory useage, [lower camel-case style](https://en.wikipedia.org/wiki/Camel_case) should be used for the data object names. The first letter(s) should specify the type of value:
+For reduced memory useage, [lower camel-case style](https://en.wikipedia.org/wiki/Camel_case) should be used for the data object names. The first letter(s) should specify the type of value if applicable:
 
 - v for voltage
 - e for energy
@@ -70,7 +63,7 @@ For reduced memory useage, [lower camel-case style](https://en.wikipedia.org/wik
 - t for time
 - temp for temperature
 
-The numeric IDs are used in the binary protocol for increased efficiency and performance. For all interactions with users and in the text-based mode, only the object name should be used.
+The numeric IDs are used in the binary protocol for increased efficiency and performance. For all interactions with users and in the text-based mode, only the object name is used.
 
 ### Data object categories
 
@@ -79,16 +72,16 @@ Each data object belongs to one of the following categories (associated to a cat
 | Category name (JSON) | Category ID | Description | Access  |
 |-------------|-------------|-------------|---------|
 | *           | 0x0         | Wildcard ID, representing all IDs | |
-| info        | 0x1         | Read-only device information (e.g. manufacturer, etc.) | |
-| setup       | 0x2         | User-configurable settings  | free access, maybe with user password |
-| input       | 0x3         | Input channels (e.g. actuators) | free user access |
-| output      | 0x4         | Output channels (e.g. sensor data) | free user access |
+| info        | 0x1         | Read-only device information (e.g. manufacturer, software version) | |
+| setup       | 0x2         | User-configurable settings  | read/write access, may be protected with user password |
+| input       | 0x3         | Input channels (e.g. actuators) | write access |
+| output      | 0x4         | Output channels (e.g. sensor data) | read access |
 | rpc         | 0x5         | remote procedure call | partly access restricted |
-| calibration | 0x6         | Factory-calibrated settings | access restricted |
-| diagnosis   | 0x7         | Error memory, etc., | at least partly access restricted |
+| calibration | 0x6         | Factory-calibrated settings | read/write access, protected |
+| diagnosis   | 0x7         | Error memory, etc., | read access, at least partly protected |
 |             | 0x8-0xF     | Reserved for future use | unknown |
 
-Data object IDs are stored as a 16-bit unsigned integer. The ID includes the category ID of 4 bits. The remaining 12-bit values can be freely chosen. In total, 4095 different values can be associated via an ID per category, with 0 being the wildcard ID again. The wildcard category and data object IDs are used to query the accessible data of a device (see below).
+Data object IDs are stored as a 16-bit unsigned integer. The ID includes the category ID of 4 bits. The remaining 12 bits can be freely chosen. In total, 4095 different values can be associated via an ID per category, with 0 being the wildcard ID again. The wildcard category and data object IDs are used to query the accessible data of a device (see below).
 
 The follwing table describes the bits inside the 2-byte unique data object ID:
 
@@ -113,13 +106,13 @@ For explanation of the protocol functions, the following exemplary device data o
     "info" : {
         "manufacturer" : "Test Company Inc."
     },
+    "input" : {
+        "enableSwitch" : true
+    },
     "output" : {
         "vBat"     : 14.2,
         "tAmbient" : 22
-    }, 
-    "input" : {
-        "enableSwitch" : true
-    }
+    } 
 }
 ```
 
@@ -133,9 +126,9 @@ struct data_object_t {
 
 const data_object_t data_objects[] = {
     {"manufacturer", 0x1001}, // ID = (0x1 << 12) + 1 = 0x1001
+    {"enableSwitch", 0x3001}, // ID = (0x3 << 12) + 1 = 0x3001
     {"vBat",         0x4001}, // ID = (0x4 << 12) + 1 = 0x4001
-    {"tAmbient",     0x4002}, // ID = (0x4 << 12) + 2 = 0x4002
-    {"enableSwitch", 0x3001}  // ID = (0x3 << 12) + 1 = 0x3001
+    {"tAmbient",     0x4002}  // ID = (0x4 << 12) + 2 = 0x4002
 };
 ```
 
@@ -151,40 +144,68 @@ If the basic SI unit for a given measurement value is not common or not feasible
 
 For temperatures, Kelvin (K) is the official SI unit. However, °C is compatible with K and is allowed, if specified in the data object name.
 
-It is NOT allowed to publish a voltage in millivolts (mV) instead of volts (V). Instead, the decimal fraction data type of CBOR can be used.
-
+It is *not* allowed to publish a voltage in millivolts (mV) instead of volts (V). Instead, the decimal fraction data type of CBOR can be used in the binary protocol, if internal calculation is done in fixed point math.
 
 ## Functions
 
-Each protocol function (or message type) is associated to a unique function ID, which defines the layout of the payload and the actions to be performed. 
+Each request fulfills a specified function, e.g. a command to read data from the device. The function is associated to a unique function ID, which defines the layout of the payload and the actions to be performed. 
 
-The different functions are encoded using 1 byte. IDs 0-127 are used for requests, 128-255 for responses.
+The different functions are encoded using 1 byte. IDs 0-31 are used for requests, 128-255 for responses.
 
-Function IDs 48-122 are reserved, as they contain the alphanumeric ASCII characters (0-9, a-z, A-Z). These characters are used to distinguish between text and binary mode (see below).
+Function IDs 10, 13 and 32-127 are reserved, as they represent the ASCII characters for readable text including CR and LF. Invalid function IDs are ignored by the ThingSet parser, so that other text output (e.g. status information) can be used in parallel to the ThingSet protocol on the same serial interface.
 
-The ID of a response includes a status code which shows if the request could be handled successfully. The ID is calculated as 0x80 + status code. For status codes between 0 and 31, the response was successful. If the status code is greater than or equal to 32, an error occured. The remaining bits are used to specify the error in more detail.
+The ASCII characters '!', '#' and ':' (function IDs 33, 35 and 58) are used as identifiers for the text mode protocol (see below). In this way, text-based or binary mode can be automatically detected based on the first byte.
 
-In other words:
-- Status Code 0-31 (function ID 128-159): Success
-    - 0: General Success
-    - 1: Partial Success (e.g. not all data values could be changed)
-- Status Code 32-127 (function ID 160-255): Error
-    - 0: General Error
-    - 1: Function unknown
-    - 2: Device busy
-    - 3: Unauthorized
-    - 4: Request too long
-    - 5: Data object ID unknown
+The ID of a response includes a status code which shows if the request could be handled successfully. The ID is calculated as 0x80 + status code. For status codes between 0 and 29, the response was successful. If the status code is greater than or equal to 30, an error occured. The remaining bits are used to specify the error in more detail.
+
+### Overview of currently defined request functions
+
+| Function ID | Function name | Description |
+|-------------|--------------|--------------|
+|  1          | read         | Read data object(s) |
+|  2          | write        | Write data object(s) |
+|  3          | list         | List all data objects of one category (device-discovery) |
+|  4          | name         | Get the name of a function by ID |
+|  5          | pub          | Request publication of data object(s) |
+
+### Possible future request functions (not yet specified)
+
+| Function ID | Function name | Description |
+|-------------|--------------|--------------|
+|  ?          | ping         | Ping a device |
+|  ?          | auth         | Authentication for access to access-restricted data objects |
+|  ?          | sync         | Time synchronization |
+|  ?          | file         | File access |
+|  ?          | reset        | Request too long. |
+|  ?          | dfu          | Device firmware upgrade. |
+
+### Response functions (status codes)
+
+| Function ID | Status Code | Description |
+|-------------|-------------|-------------|
+| 128         |  0          | Success. |
+| 129         |  1          | Partial Success. (e.g. not all data values could be changed) |
+| 158         | 30          | General Error. |
+| 159         | 31          | Unknown/unsupported function. |
+| 160         | 32          | Unknown data object. |
+| 161         | 33          | Wrong format. |
+| 162         | 34          | Wrong data type. |
+| 163         | 35          | Device busy. |
+| 164         | 36          | Unauthorized. |
+| 165         | 37          | Request too long. |
+| 166         | 38          | Response too long. |
 
 ## Message Layout
 
-The first byte of a request contains either the function ID in binary format or the first character of the text-mode function name. If the first byte is a valid alphanumeric character, the parser is switched to text-based mode.
+The first byte of a request contains either the function ID in binary format or the first character of the text-mode function name. If the first byte is one of !, : and #, the parser is switched to text-based mode.
 
 ### Text-based mode (JSON)
 
-Each request message consists of a function name (e.g. read) followed by valid JSON string containing the payload data.
+Each request message consists of a function name (e.g. read) followed by valid JSON string containing the payload data. A request starts with an exclamation mark (!) in front of the function name.
 
-The response starts with the status code and a plain text description of the status followed by a new-line character (\n recommended, but \r\n also allowed). The following new line(s) contain the requested data. The end of the data is automatically recognized when the last character for a valid JSON text is received, e.g. '}'. It is possible to use multiple lines for the response.
+The response starts with a colon (:) followed by the the status code and a plain text description of the status finished with a ".". The description message content is not strictly specified and can be either the description from above table or a more verbose message. However, it must contain only one dot at the end of the description, signfying the end of the description.
+
+The following bytes after the dot contain the requested data. The end of the data is automatically recognized when the last character for a valid JSON text is received, e.g. '}'. In addition to that, the response must be finished with a newline (\n recommended, but \r\n also allowed).
 
 Some examples are shown below.
 
@@ -213,7 +234,7 @@ Example encoding of the bits inside a 32-bit integer:
 
 ## Function Overview
 
-### Read data object (0x00)
+### Read data object (0x01)
 
 Request data field: Single ID or array of IDs (binary) / name(s) of data objects (JSON)
 
@@ -251,37 +272,31 @@ Read all device information values:
 </tr></tbody></table>
 -->
 
-    read ["vBat", "tAmbient"]
-    0 Success
-    [15.2, 22]
+    !read ["vBat", "tAmbient"]
+    :0 Success. [15.2, 22]
 
-    read [1, 2]
-    0 Success
-    [15.2, 22]
+    !read [1, 2]
+    :0 Success. [15.2, 22]
 
-    read "vBat"
-    0 Success
-    15.2
+    !read "vBat"
+    :0 Success. 15.2
 
-    read { "output" : "*" }
-    0 Success
-    {"vBat":15.2,"tAmbient":22}
+Maybe in future releases:
 
-    read "*"
-    0
-    {
-        "output" : {"vBat":15.2, "tAmbient":22},
-        "input" : {"loadEn":false}
-    }
+    !read { "output" : "*" }
+    :0 Success. {"vBat":15.2,"tAmbient":22}
+
+    !read "*"
+    :0 Success. {"output" : {"vBat":15.2, "tAmbient":22}, "input" : {"loadEn":false} }
 
 
-### Write data object (0x01)
+### Write data object (0x02)
 
 Requests to overwrite a data object.
 
 The device must support a write request using the same data type as used in the response of a read request for the given objects. Optionally, the device may also accept different data types (e.g. int32 + exp or float32) and convert the data internally.
 
-Data of settings will be written into persinstent memory, so it is not allowed to change settings periodically. Only data types of category input might be changed regularly.
+Data of settings will be written into persistent memory, so it is not allowed to change settings periodically. Only data types of category input might be changed regularly.
 
     Request Data:
         map of { id : value } (binary) or { name : value } (JSON)
@@ -293,14 +308,14 @@ If the data type is not supported, an error status code (TS_STATUS_WRONG_TYPE 0x
 
 #### Examples
 
-    write { "vBat" : 15.2, "tAmbient" : 22 }
-    0 OK
+    !write { "vBat" : 15.2, "tAmbient" : 22 }
+    :0 Success.
 
-    write {"vBat" : 15.2}
-    0 OK
+    !write {"vBat" : 15.2}
+    :0 Success.
 
     binary:
-    write {1:15.2}
+    !write {1:15.2}
 
 
 
@@ -326,13 +341,11 @@ In binary mode, the data IDs are returned, in text mode, an array of strings.
 
 #### Examples
 
-    list { "output" : "*" }
-    0 OK
-    [ "vBat", "tAmbient" ]
+    !list "output"
+    :0 Success. [ "vBat", "tAmbient" ]
 
-    list "*"
-    0 OK
-    { "output" : [ "vBat", "tAmbient" ], "input" : [ "loadEn" ]}
+    !list
+    :0 Success. { "output" : [ "vBat", "tAmbient" ], "input" : [ "loadEn" ]}
 
     Binary: returns IDs instead of names
 
@@ -369,13 +382,4 @@ Requests a challenge from the device to authenticate using secret password + has
 - Status | Data Type: Status code (see above) and data type (always uint8)
 - Challenge bytes 1..n: The challenge to be used. Must be random number.
 
-### Other possible functions
-
-- Ping
-- Firmware Upgrade
-- Authentication
-- File Access
-- Time Sync?
-- Shutdown/Restart
-- Heartbeat?
 
