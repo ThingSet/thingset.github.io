@@ -1,12 +1,10 @@
-# ThingSet Application Layer Protocol
+# ThingSet - General Protocol Concept
 
 The ThingSet protocol provides a consistent, standardized way to configure, monitor and control ressource-constrained devices via different communication interfaces. It specifies the higher layers (5 to 7) of the [OSI (Open Systems Interconnection) model](https://en.wikipedia.org/wiki/OSI_model). The payload data is independent of the underlying lower layer protocol or interface, which can be CAN, USB, LoRa, WiFi, Bluetooth, UART (serial) or similar.
 
 ![ISO/OSI layer setup](images/osi_layers.png)
 
 The underlying layers have to ensure reliable transfer, correct packet order (if messages are packetized) and error-checking of the transferred data.
-
-## General Concepts
 
 <!---
 ## General goals
@@ -23,7 +21,7 @@ Layers 1-4 depend on the lower layer protocols used. In case of a simple serial 
 For IP based networks (over Ethernet or Wifi), the network layer will be the IP protocol. The source and destination addresses are IP addresses in this case. The transport layer might be TCP or UDP, adding additional headers to the entire protocol frame.
 -->
 
-### Message Types
+## Message Types
 
 ThingSet defines three types of messages: Requests, responses and publication messages.
 
@@ -39,19 +37,19 @@ Monitoring data is not intended for only a single device, but could be interesti
 
 Publication messages are directly broadcast through the network. There is *no* intermediate broker (like in MQTT) to store the messages and published messages are *not* confirmed by recipients, so there is no guarantee if the message was received.
 
-### Protocol Modes
+## Protocol Modes
 
 Similar to Modbus, the ThingSet protocol supports two different modes: A human-readable text-based mode and a binary mode.
 
 In the text-based mode, payload data is encoded in JSON format ([RFC 8259](https://tools.ietf.org/html/rfc8259)). This mode is recommended when using USB or serial interfaces as the low layer protocol, as it can be easily used directly on a terminal.
 
-The binary protocol uses the CBOR binary encoding ([RFC 7049](https://tools.ietf.org/html/rfc7049)) instead of JSON payload data in order to reduce the protocol overhead for ressource-constrained devices or low-level communication protocols like CAN and LoRa.
+The binary protocol uses the CBOR binary encoding ([RFC 7049](https://tools.ietf.org/html/rfc7049)) instead of JSON payload data in order to reduce the protocol overhead for ressource-constrained devices or low bandwith communication protocols like CAN and LoRa.
 
 Each device must implement the binary encoding of the protocol. The the text-based JSON variant is optional, but recommended.
 
 ## Data Objects
 
-All accessible data of a device is structured in so-called data objects. A data object might be any kind of measurement (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar data.
+All accessible data of a device is structured in so-called data objects. A data object might be any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar data.
 
 Each data object is identified by a unique Data Object ID. The ID can be chosen by the firmware developer. In addition to that, each data object has a unique name. The name is a short ASCII string without blanks, e.g. "vBat" for the battery voltage.
 
@@ -79,9 +77,10 @@ Each data object belongs to one of the following categories (associated to a cat
 | rpc         | 0x5         | remote procedure call | partly access restricted |
 | calibration | 0x6         | Factory-calibrated settings | read/write access, protected |
 | diagnosis   | 0x7         | Error memory, etc., | read access, at least partly protected |
-|             | 0x8-0xF     | Reserved for future use | unknown |
+|             | 0x8-0xE     | Reserved for future use | unknown |
+|             | 0xF         | Reserved (termination character in binary protocol) | n/a |
 
-Data object IDs are stored as a 16-bit unsigned integer. The ID includes the category ID of 4 bits. The remaining 12 bits can be freely chosen. In total, 4095 different values can be associated via an ID per category, with 0 being the wildcard ID again. The wildcard category and data object IDs are used to query the accessible data of a device (see below).
+Data object IDs are stored as 16-bit unsigned integers. The ID includes the category ID of 4 bits. The remaining 12 bits can be freely chosen. In total, 4095 different values can be associated via an ID per category, with 0 being the wildcard ID again. The wildcard category and data object IDs are used to query the accessible data of a device (see below).
 
 The follwing table describes the bits inside the 2-byte unique data object ID:
 
@@ -101,36 +100,32 @@ The follwing table describes the bits inside the 2-byte unique data object ID:
 
 For explanation of the protocol functions, the following exemplary device data object structure will be used:
 
-```JSON
-{
-    "info" : {
-        "manufacturer" : "Test Company Inc."
-    },
-    "input" : {
-        "enableSwitch" : true
-    },
-    "output" : {
-        "vBat"     : 14.2,
-        "tAmbient" : 22
-    } 
-}
-```
+    {
+        "info" : {
+            "manufacturer" : "Test Company Inc."
+        },
+        "input" : {
+            "enableSwitch" : true
+        },
+        "output" : {
+            "vBat"     : 14.2,
+            "tAmbient" : 22
+        } 
+    }
 
 The above data structure contains 4 data objects in total, grouped into 3 different categories (info, output and input). The device will have an internal map to associate the object name with a unique ID. In C code this might look like the following:
 
-```C
-struct data_object_t {
-    char* name;
-    uint16_t id;
-};
+    struct data_object_t {
+        char* name;
+        uint16_t id;
+    };
 
-const data_object_t data_objects[] = {
-    {"manufacturer", 0x1001}, // ID = (0x1 << 12) + 1 = 0x1001
-    {"enableSwitch", 0x3001}, // ID = (0x3 << 12) + 1 = 0x3001
-    {"vBat",         0x4001}, // ID = (0x4 << 12) + 1 = 0x4001
-    {"tAmbient",     0x4002}  // ID = (0x4 << 12) + 2 = 0x4002
-};
-```
+    const data_object_t data_objects[] = {
+        {"manufacturer", 0x1001}, // ID = (0x1 << 12) + 1 = 0x1001
+        {"enableSwitch", 0x3001}, // ID = (0x3 << 12) + 1 = 0x3001
+        {"vBat",         0x4001}, // ID = (0x4 << 12) + 1 = 0x4001
+        {"tAmbient",     0x4002}  // ID = (0x4 << 12) + 2 = 0x4002
+    };
 
 In addition to that, the programmer must link the name or ID to the actual variable containing the data.
 
@@ -150,7 +145,7 @@ It is *not* allowed to publish a voltage in millivolts (mV) instead of volts (V)
 
 Each request fulfills a specified function, e.g. a command to read data from the device. The function is associated to a unique function ID, which defines the layout of the payload and the actions to be performed. 
 
-The different functions are encoded using 1 byte. IDs 0-31 are used for requests, 128-255 for responses.
+The different functions are encoded using 1 byte, i.e. a number between 0 and 255.
 
 Function IDs 10, 13 and 32-127 are reserved, as they represent the ASCII characters for readable text including CR and LF. Invalid function IDs are ignored by the ThingSet parser, so that other text output (e.g. status information) can be used in parallel to the ThingSet protocol on the same serial interface.
 
@@ -161,225 +156,46 @@ The ID of a response includes a status code which shows if the request could be 
 ### Overview of currently defined request functions
 
 | Function ID | Function name | Description |
-|-------------|--------------|--------------|
-|  1          | read         | Read data object(s) |
-|  2          | write        | Write data object(s) |
-|  3          | list         | List all data objects of one category (device-discovery) |
-|  4          | name         | Get the name of a function by ID |
-|  5          | pub          | Request publication of data object(s) |
+|-------------|---------------|--------------|
+| 0x01        | read          | Read data object(s) |
+| 0x02        | write         | Write data object(s) |
+| 0x03        | list          | List all data objects of one category (device-discovery) |
+| 0x04        | name          | Get the name of a function by ID |
+| 0x05        | pub           | Request publication of data object(s) |
+| 0x06        | auth          | Authentication for access to access-restricted data objects |
 
 ### Possible future request functions (not yet specified)
 
 | Function ID | Function name | Description |
-|-------------|--------------|--------------|
-|  ?          | ping         | Ping a device |
-|  ?          | auth         | Authentication for access to access-restricted data objects |
-|  ?          | sync         | Time synchronization |
-|  ?          | file         | File access |
-|  ?          | reset        | Request too long. |
-|  ?          | dfu          | Device firmware upgrade. |
+|-------------|---------------|--------------|
+|  ?          | ping          | Ping a device |
+|  ?          | sync          | Time synchronization |
+|  ?          | file          | File access |
+|  ?          | reset         | Reset the device |
+|  ?          | dfu           | Device firmware upgrade. |
+
+### Text-based protocol
+
+| Function ID | ASCII character | Description         |
+|-------------|-----------------|---------------------|
+| 0x21 (33)   | !               | Request             |
+| 0x3a (58)   | :               | Response            |
+| 0x23 (35)   | #               | Publication message |
+
 
 ### Response functions (status codes)
 
 | Function ID | Status Code | Description |
 |-------------|-------------|-------------|
-| 128         |  0          | Success. |
-| 129         |  1          | Partial Success. (e.g. not all data values could be changed) |
+| 0x80 (128)  | 0x00 (0)    | Success. |
+| 0x81 (129)  | 0x01 (1)    | Partial Success. (e.g. not all data values could be changed) |
 | 158         | 30          | General Error. |
 | 159         | 31          | Unknown/unsupported function. |
 | 160         | 32          | Unknown data object. |
 | 161         | 33          | Wrong format. |
 | 162         | 34          | Wrong data type. |
 | 163         | 35          | Device busy. |
-| 164         | 36          | Unauthorized. |
+| 164         | 36          | Access denied. |
 | 165         | 37          | Request too long. |
 | 166         | 38          | Response too long. |
-
-## Message Layout
-
-The first byte of a request contains either the function ID in binary format or the first character of the text-mode function name. If the first byte is one of !, : and #, the parser is switched to text-based mode.
-
-### Text-based mode (JSON)
-
-Each request message consists of a function name (e.g. read) followed by valid JSON string containing the payload data. A request starts with an exclamation mark (!) in front of the function name.
-
-The response starts with a colon (:) followed by the the status code and a plain text description of the status finished with a ".". The description message content is not strictly specified and can be either the description from above table or a more verbose message. However, it must contain only one dot at the end of the description, signfying the end of the description.
-
-The following bytes after the dot contain the requested data. The end of the data is automatically recognized when the last character for a valid JSON text is received, e.g. '}'. In addition to that, the response must be finished with a newline (\n recommended, but \r\n also allowed).
-
-Some examples are shown below.
-
-### Binary mode (CBOR)
-
-In the binary mode, the payload data follows directly after the first byte defining the function ID. The payload data is encoded using the CBOR format. Thus, numbers are encoded using big endian format (most significant byte transferred first). 
-
-Example encoding of the bits inside a 32-bit integer:
-
-<table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th>
-</tr></thead><tbody><tr>
-    <td>b31 ... b24</td>
-    <td>b23 ... b16</td>
-    <td>b15 ... b8</td>
-	<td>b7 ... b0</td>
-</tr></tbody></table>
-
-#### Message format
-
-    +-------------+====================+
-    | Function ID | Data object(s) ... |
-    +-------------+====================+
-
-    Data = single ID/name or array of IDs (binary) or names (JSON)
-
-## Function Overview
-
-### Read data object (0x01)
-
-Request data field: Single ID or array of IDs (binary) / name(s) of data objects (JSON)
-
-Response data field: Requested data
-
-#### Examples
-
-<!--
-Read the measurement values of *vBat* (ID 1) and *tAmbient* (ID 2):
-
-<table><thead><tr>
-    <th></th><th>JSON</th><th>CBOR (hex)</th>
-</tr></thead><tbody><tr>
-    <td>Request</td>
-    <td>`!read [ "vBat", "tAmbient" ]`</td>
-	<td>`00 82 194001 194002`</td>
-</tr><tr>
-    <td>Response</td>
-    <td>`:0 [14.2,22]`</td>
-	<td>`80 00 82 FA41633333 16`</td>
-</tr></tbody></table>
-
-Read all device information values:
-
-<table><thead><tr>
-    <th></th><th>JSON</th><th>CBOR (hex)</th>
-</tr></thead><tbody><tr>
-    <td>Request</td>
-    <td>`!read { "info" : "*" }`</td>
-	<td>`00 10 00`</td>
-</tr><tr>
-    <td>Response</td>
-    <td>`:0 [14.2,22]`</td>
-	<td>`80 00 82 FA 41633333 16`</td>
-</tr></tbody></table>
--->
-
-    !read ["vBat", "tAmbient"]
-    :0 Success. [15.2, 22]
-
-    !read [1, 2]
-    :0 Success. [15.2, 22]
-
-    !read "vBat"
-    :0 Success. 15.2
-
-Maybe in future releases:
-
-    !read { "output" : "*" }
-    :0 Success. {"vBat":15.2,"tAmbient":22}
-
-    !read "*"
-    :0 Success. {"output" : {"vBat":15.2, "tAmbient":22}, "input" : {"loadEn":false} }
-
-
-### Write data object (0x02)
-
-Requests to overwrite a data object.
-
-The device must support a write request using the same data type as used in the response of a read request for the given objects. Optionally, the device may also accept different data types (e.g. int32 + exp or float32) and convert the data internally.
-
-Data of settings will be written into persistent memory, so it is not allowed to change settings periodically. Only data types of category input might be changed regularly.
-
-    Request Data:
-        map of { id : value } (binary) or { name : value } (JSON)
-    
-    Response Data:
-        (empty)
-
-If the data type is not supported, an error status code (TS_STATUS_WRONG_TYPE 0x87) is responded.
-
-#### Examples
-
-    !write { "vBat" : 15.2, "tAmbient" : 22 }
-    :0 Success.
-
-    !write {"vBat" : 15.2}
-    :0 Success.
-
-    binary:
-    !write {1:15.2}
-
-
-
-### Get data object name
-
-Returns the name of a data object specified by its ID. It makes only sense in binary mode, as the text-based mode uses the names directly.
-
-#### Examples
-
-    name [ 1, 2 ]
-    0 OK
-    [ "vBat", "tAmbient" ]
-
-    name 1
-    0 OK
-    "vBat"
-
-### List data objects
-
-Useful function for device discovery, as it lists all available data objects of one category.
-
-In binary mode, the data IDs are returned, in text mode, an array of strings.
-
-#### Examples
-
-    !list "output"
-    :0 Success. [ "vBat", "tAmbient" ]
-
-    !list
-    :0 Success. { "output" : [ "vBat", "tAmbient" ], "input" : [ "loadEn" ]}
-
-    Binary: returns IDs instead of names
-
-
-### Authentication challenge request
-
-Requests a challenge from the device to authenticate using secret password + hashing function.
-
-#### Request
-
-<table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th>
-</tr></thead><tbody><tr>
-	<td>Function ID</td>
-	<td>Hash Algorithm</td>
-</tr></tbody></table>
-
-- Function ID: 0x06 (preliminary)
-- Hash Algorithm: select used Hash algorithm (currently only SHA-3) supported
-
-#### Response
-
-<table><thead><tr>
-    <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>Byte 4</th><th></th><th>Byte (n\*2)+1</th><th>Byte (n\*2)+2</th>
-</tr></thead><tbody><tr>
-	<td>Function ID</td>
-    <td>Status | Data Type</td>
-    <td colspan="2">Challenge byte 1</td>
-	<td>...</td>
-    <td colspan="2">Challenge byte n</td>
-</tr></tbody></table>
-
-- Function ID: 0x86 (preliminary)
-- Status | Data Type: Status code (see above) and data type (always uint8)
-- Challenge bytes 1..n: The challenge to be used. Must be random number.
-
 
