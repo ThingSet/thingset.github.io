@@ -167,6 +167,8 @@ The ID of a response includes a status code which shows if the request could be 
 | 0x04        | name          | Get the name of a function by ID |
 | 0x05        | pub           | Request publication of data object(s) |
 | 0x06        | auth          | Authentication for access to access-restricted data objects |
+| 0x07        | exec          | Execute function (remote procedure call) |
+| 0x1f        |               | Publication message for binary protocol |
 
 ### Possible future request functions (not yet specified)
 
@@ -202,4 +204,6 @@ The ID of a response includes a status code which shows if the request could be 
 | 164         | 36          | Access denied. |
 | 165         | 37          | Request too long. |
 | 166         | 38          | Response too long. |
+| 167         | 39          | Invalid value. (e.g. too high or low number) |
+| 168         | 40          | Text-mode not supported. |
 

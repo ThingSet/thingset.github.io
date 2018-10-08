@@ -1,5 +1,5 @@
 ---
-title: "Open Communication for the Things of Internet."
+title: "Open Communication for Internet Things and others."
 layout: splash
 permalink: /
 date: 2016-03-23T11:48:41-04:00

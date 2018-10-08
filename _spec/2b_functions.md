@@ -273,20 +273,115 @@ Example 2: Request name of multiple data objects
 
 ## PRELIMINARY: Publication request (0x05)
 
-*Remark: It should be possible to tell the device to publish certain data on a regular basis through a defined communication channel (UART, CAN, LoRa, etc.). It is not feasible to define different publication intervals and communication channels for each data object, as this would create lots of programming effort. On the other hand, pre-defined fixed intervals are maybe not flexible enough.*
+*Remarks: Work on !pub function is still in progress. This suggested specification is preliminary. Good suggestions and feedback are welcome!*
 
-*Good ideas for simple protocol layout are welcome!*
+It should be possible to tell the device to publish certain data on a regular basis through a defined communication channel (UART, CAN, LoRa, etc.). It is not feasible to define different publication intervals and communication channels for each data object, as this would create lots of programming effort.
+
+The suggestion is that the firmware developer pre-defines some communication channels (e.g. "LoRa 60min"). Each channel has a number which can be discovered using the !pub command. The !pub command can also be used to configure data objects for publication or delete objects from the publication list.
 
 ### Text mode
 
-Example 1: Publish two values every 1000 milliseconds
+Example 1: List all possible publication channels
 
-    !pub 1000 ["vBat", "tAmbient"]
-    :0 Success.
+    !pub
+    :0 Success. ["CAN 100ms", "LoRa 60min", "Serial 1s"]
 
-Now, every second the following message is sent by the device:
+The name of the interface and the publication interval is separated by a blank. The interval is specified in hours (h), minutes (min), seconds (s) or milliseconds (ms). Main intention of the channel description is to be human-readable (for the technician setting up the device).
+
+Each channel is identified by the position in the array of above response, starting at 0 for the first element.
+
+Example 2: List configured data objects for second channel (LoRa 60min)
+
+    !pub 1
+    :0 Success. ["vBat", "tAmbient"]
+
+With this setting, the following message is automatically sent by the device once per hour:
 
     # {"vBat":15.2,"tAmbient":22}
+
+Example 3: Change the list for the second channel.
+
+    !pub 1 ["vBat"]
+    :0 Success.
+
+The data object tAmbient is removed from the publication list.
+
+Example 4: Deactivate a channel (i.e. remove all data objects from the list)
+
+    !pub 1 []
+    :0 Success.
+
+### Binary mode
+
+General format description: 
+
+    Request:
+    +------+======+========+     +========+
+    | 0x04 | 0xXX | 0xYYYY | ... | 0xYYYY |
+    +------+======+========+     +========+
+
+    Response with list members:
+    +------+========+     +========+
+    | 0xZZ | 0xYYYY | ... | 0xYYYY |
+    +------+========+     +========+
+
+    Response with publication channels:
+    +------+=============+     +=============+
+    | 0xZZ | CBOR string | ... | CBOR string |
+    +------+=============+     +=============+
+
+    0xXX:   Channel ID (1 byte unsigned integer)
+    0xYYYY: Data Object ID(s)  (optional, depending on request/response)
+    0xZZ:   Response code (0x80 for success)
+
+
+Example 1: List all possible publication channels
+
+    Request:
+    0x05                        Function ID (name)
+
+    Response:
+    0x80                        Status code: Success.
+        ... CBOR strings        (TODO)
+
+Example 2: List configured data objects for second channel (LoRa 60min)
+
+    Request:
+    0x05                        Function ID (name)
+        0x01                    Channel number
+
+    Response:
+    0x80                        Status code: Success.
+        0x4001                  Data Object ID (vBat)
+        0x4002                  Data Object ID (tAmbient)
+
+Example 3: Change the list for the second channel.
+
+    Request:
+    0x05                        Function ID (name)
+        0x01                    Channel number
+        0x4001                  Data Object ID (vBat)
+
+    Response:
+    0x80                        Status code: Success.
+
+With this setting, the following message is automatically sent by the device once per hour (see below for publication message definition):
+
+    0x1f                    Function ID (publication message)
+        0x4001              Data Object ID (vBat)
+        0xfa 0x41733333     CBOR data (float32): 15.2
+        0x4002              Data Object ID (tAmbient)
+        0x16                CBOR data (integer): 22 
+    
+Example 4: Deactivate a channel (i.e. remove all data objects from the list)
+
+    Request:
+    0x05                        Function ID (name)
+        0x01                    Channel number
+                                (empty, no additional bytes)
+
+    Response:
+    0x80                        Status code: Success.
 
 ## PRELIMINARY: Authentication (0x06)
 
@@ -310,3 +405,57 @@ If the auth request is empty, a new challenge is responded. In the second reques
     :0 Success.
 
 
+## PRELIMINARY: Execute (0x07)
+
+Executes a function identified by a data object name of category "rpc".
+
+#### Text mode
+
+Example: Go into bootloader mode
+
+    !exec "bootloader"
+    :0 Success.
+
+
+## Publication message (0x1F)
+
+Publication messages are sent regularly in a specified interval. The interval and the data objects can be factory-programmed or can be configured via the !pub function. The !pub function requests data to be published, whereas the publication message actually publishes the data.
+
+Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
+
+### Text mode
+
+Example 1: Publication of a single parameter
+
+    # "enableSwitch": false
+
+Example 2: Publication of multiple parameters
+
+    # {"vBat": 15.2, "tAmbient": 22}
+
+### Binary mode
+
+General layout:
+
+    Publication message (broadcast):
+    +------+========+===========+     +========+===========+
+    | 0x1F | 0xYYYY | CBOR data | ... | 0xYYYY | CBOR data |
+    +------+========+===========+     +========+===========+
+    
+    0xYYYY: Data Object ID(s)
+
+Example 1: Publication of a single parameter
+
+    Message:
+    0x1F                Function ID (publication message)
+        0x3001          Data Object ID (enableSwitch)
+        0xf4            CBOR data: false
+
+Example 2: Publication of multiple parameters
+
+    Message:
+    0x1F                    Function ID (publication message)
+        0x4001              Data Object ID (vBat)
+        0xfa 0x41733333     CBOR data (float32): 15.2
+        0x4002              Data Object ID (tAmbient)
+        0x16                CBOR data (integer): 22 
