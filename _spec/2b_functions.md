@@ -27,23 +27,21 @@ Some examples are shown below.
 
 ### Binary mode
 
-In the binary mode, the values of data objects are encoded using the CBOR format. Thus, numbers are encoded using big endian format (most significant byte transferred first).
+In the binary mode, the data is encoded using the CBOR format. Numbers are encoded using big endian format (most significant byte transferred first).
 
 The general format of a binary mode message:
 
-    +-------------+====================+=============================================+
-    | Function ID | Options (optional) | Payload data (object values in CBOR format) |
-    +-------------+====================+=============================================+
+    +-------------+====================+===========+
+    | Function ID | Options (optional) | CBOR data |
+    +-------------+====================+===========+
 
     Legend:
     ---------  single byte
     =========  multiple bytes
 
-In order to minimize data consumption, the CBOR format is only used for the actual data object values (because data format and size are unknown). Well-known data structures like arrays of Data Object IDs in read requests are encoded directly using unsigned 16-bit integers (see below).
+The data structure in binary mode is the same as in text mode, but the data is encoded in CBOR format and the Data Object IDs are used as identifiers instead of the names.
 
-The length of the entire request or response is not encoded in the ThingSet protocol. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
-
-*Remark for future protocol versions:* If proven to be necessary, the data could be terminated with one 0xFF character at the end of each request. Therefore, 0xF is a reserved category ID.
+The length of the entire request or response is not encoded in the ThingSet protocol, but can be determined from the CBOR format. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
 
 ## Read data object (ID 0x01)
 
@@ -70,38 +68,39 @@ Example 2: Request multiple data objects:
 General format description: 
 
     Request:
-    +------+========+     +========+
-    | 0x01 | 0xYYYY | ... | 0xYYYY |
-    +------+========+     +========+
+    +------+==================+
+    | 0x01 | CBOR data: ID(s) |
+    +------+==================+
 
     Response:
-    +------+===========+     +===========+
-    | 0xZZ | CBOR data | ... | CBOR data |
-    +------+===========+     +===========+
+    +------+=====================+
+    | 0xZZ | CBOR data: value(s) |
+    +------+=====================+
     
-    0xYYYY: Function ID(s)
     0xZZ:   Response code (0x80 for success)
 
 Example 1: Request single data object "enableSwitch"
 
     Request:
     0x01                Function ID (read)
-        0x3001          Data Object ID (enableSwitch)
+        0x19 0x3001     Data Object ID (enableSwitch)
        
     Response:
     0x80                Status code (Success)
-        0xf5            CBOR data: true
+        0xF5            CBOR data: true
 
 Example 2: Request multiple data objects:
 
     Request:
-    0x01                Function ID (read)
-        0x4001          Data Object ID (vBat)
-        0x4002          Data Object ID (tAmbient)
+    0x01                    Function ID (read)
+      0x82                  CBOR array (2 elements)
+        0x19 0x4001         Data Object ID (vBat)
+        0x19 0x4002         Data Object ID (tAmbient)
     
     Response:
     0x80                    Status code (Success)
-        0xfa 0x41733333     CBOR data (float32): 15.2
+      0x82                  CBOR array (2 elements)
+        0xFA 0x41733333     CBOR data (float32): 15.2
         0x16                CBOR data (integer): 22 
 
 
@@ -132,24 +131,24 @@ Example 2: Attempt to write read-only measurement values (output category)
 General layout:
 
     Request:
-    +------+========+===========+     +========+===========+
-    | 0x02 | 0xYYYY | CBOR data | ... | 0xYYYY | CBOR data |
-    +------+========+===========+     +========+===========+
+    +------+==========================+
+    | 0x02 | CBOR data: key/value map |
+    +------+==========================+
     
     Response:
     +------+
     | 0xZZ |
     +------+
 
-    0xYYYY: Data Object ID(s)
     0xZZ:   Response code (0x80 for success)
 
 Example 1: Disable the switch
 
     Request:
     0x02                Function ID (write)
-        0x3001          Data Object ID (enableSwitch)
-        0xf4            CBOR data: false
+      0xA1              CBOR map (1 element)
+        0x19 0x3001     Data Object ID (enableSwitch)
+        0xF4            CBOR data: false
 
     Response:
     0x80                Status code: Success
@@ -158,13 +157,14 @@ Example 2: Attempt to write read-only measurement values (output category)
 
     Request:
     0x02                    Function ID (write)
-        0x4001              Data Object ID (vBat)
-        0xfa 0x41733333     CBOR data (float32): 15.2
-        0x4002              Data Object ID (tAmbient)
+      0xA2                  CBOR map (2 elements)
+        0x19 0x4001         Data Object ID (vBat)
+        0xFA 0x41733333     CBOR data (float32): 15.2
+        0x19 0x4002         Data Object ID (tAmbient)
         0x16                CBOR data (integer): 22 
 
     Response:
-    0xa4                    Status code (Access denied)
+    0xA4                    Status code (Access denied)
 
 ## List data objects (0x03)
 
@@ -208,25 +208,27 @@ Example 1: List all values in category output
 
     Request:
     0x03                Function ID (list)
-        0x4000          Data Object ID wildcard (category "output")
+        0x19 0x4000     Data Object ID wildcard (category "output")
 
     Response:
     0x80                Status code (Success)
-        0x4001          Data Object ID (vBat)
-        0x4002          Data Object ID (tAmbient)
+      0x82              CBOR array (2 elements)
+        0x19 0x4001     Data Object ID (vBat)
+        0x19 0x4002     Data Object ID (tAmbient)
 
 Example 2: List all accessible values of the device.
 
     Request:
     0x03                Function ID (list)
-        0x0000          Data Object ID wildcard (all data objects)
+        0x19 0x0000     Data Object ID wildcard (all data objects)
 
     Response:
     0x80                Status code: (Success)
-        0x1001          Data Object ID (manufacturer)
-        0x3001          Data Object ID (enableSwitch)
-        0x4001          Data Object ID (vBat)
-        0x4002          Data Object ID (tAmbient)
+      0x84              CBOR array (4 elements)
+        0x19 0x1001     Data Object ID (manufacturer)
+        0x19 0x3001     Data Object ID (enableSwitch)
+        0x19 0x4001     Data Object ID (vBat)
+        0x19 0x4002     Data Object ID (tAmbient)
 
 ## Get data object name (0x04)
 
@@ -253,7 +255,7 @@ Example 1: Request name of data object ID 0x4001 (vBat)
 
     Request:
     0x04                        Function ID (name)
-        0x4001                  Data Object ID (vBat)
+        0x19 0x4001             Data Object ID (vBat)
 
     Response:
     0x80                        Status code: Success.
@@ -263,11 +265,13 @@ Example 2: Request name of multiple data objects
 
     Request:
     0x04                            Function ID (name)
-        0x4001                      Data Object ID (vBat)
-        0x4002                      Data Object ID (tAmbient)
+      0x82                          CBOR array (2 elements)
+        0x19 0x4001                 Data Object ID (vBat)
+        0x19 0x4002                 Data Object ID (tAmbient)
 
     Response:
     0x80                            Status code: Success.
+      0x82                          CBOR array (2 elements)
         0x64 0x76426174             CBOR data (4-byte string): "vBat"
         0x68 0x74416D6269656E74     CBOR data (8-byte string): "tAmbient"
 
@@ -352,32 +356,34 @@ Example 2: List configured data objects for second channel (LoRa 60min)
 
     Response:
     0x80                        Status code: Success.
-        0x4001                  Data Object ID (vBat)
-        0x4002                  Data Object ID (tAmbient)
+      0x82                      CBOR array (2 elements)
+        0x19 0x4001             Data Object ID (vBat)
+        0x19 0x4002             Data Object ID (tAmbient)
 
 Example 3: Change the list for the second channel.
 
     Request:
     0x05                        Function ID (name)
         0x01                    Channel number
-        0x4001                  Data Object ID (vBat)
+        0x19 0x4001             Data Object ID (vBat)
 
     Response:
     0x80                        Status code: Success.
 
 With this setting, the following message is automatically sent by the device once per hour (see below for publication message definition):
 
-    0x1f                    Function ID (publication message)
-        0x4001              Data Object ID (vBat)
-        0xfa 0x41733333     CBOR data (float32): 15.2
-        0x4002              Data Object ID (tAmbient)
+    0x1F                    Function ID (publication message)
+      0xA2                  CBOR map (2 elements)
+        0x19 0x4001         Data Object ID (vBat)
+        0xFa 0x41733333     CBOR data (float32): 15.2
+        0x19 0x4002         Data Object ID (tAmbient)
         0x16                CBOR data (integer): 22 
     
 Example 4: Deactivate a channel (i.e. remove all data objects from the list)
 
     Request:
     0x05                        Function ID (name)
-        0x01                    Channel number
+        0x19 0x01               Channel number
                                 (empty, no additional bytes)
 
     Response:
@@ -438,24 +444,24 @@ Example 2: Publication of multiple parameters
 General layout:
 
     Publication message (broadcast):
-    +------+========+===========+     +========+===========+
-    | 0x1F | 0xYYYY | CBOR data | ... | 0xYYYY | CBOR data |
-    +------+========+===========+     +========+===========+
+    +------+==========================+
+    | 0x1F | CBOR data: key/value map |
+    +------+==========================+
     
-    0xYYYY: Data Object ID(s)
-
 Example 1: Publication of a single parameter
 
     Message:
     0x1F                Function ID (publication message)
-        0x3001          Data Object ID (enableSwitch)
-        0xf4            CBOR data: false
+      0xA1              CBOR map (1 element)
+        0x19 0x3001     Data Object ID (enableSwitch)
+        0xF4            CBOR data: false
 
 Example 2: Publication of multiple parameters
 
     Message:
     0x1F                    Function ID (publication message)
-        0x4001              Data Object ID (vBat)
-        0xfa 0x41733333     CBOR data (float32): 15.2
-        0x4002              Data Object ID (tAmbient)
+      0xA2                  CBOR map (2 elements)
+        0x19 0x4001         Data Object ID (vBat)
+        0xFa 0x41733333     CBOR data (float32): 15.2
+        0x19 0x4002         Data Object ID (tAmbient)
         0x16                CBOR data (integer): 22 
