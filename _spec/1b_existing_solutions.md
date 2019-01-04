@@ -7,25 +7,17 @@ In order to not re-invent the wheel, existing standards were investigated prior 
 
 This chapter gives an overview about the advantages and disadvantages of existing solutions. If you just want to know how ThingSet works, you can move on to the next chapter.
 
-## Modbus
+As the ThingSet protocol was originally developed for energy management based on CAN communication, below analysis covers this aspect in more detail.
 
-Modbus RTU and Modbus TCP are quite old, quasi-standard protocols to read and write registers of a device. Modbus requires knowledge of the accessible register addresses and the data format. A method to discover available settings and measurement values is not possible.
+## Protocols
 
-This is not considered flexible and generic enough.
+### Modbus
 
-## Firmata
+Modbus RTU and Modbus TCP are quite old, quasi-standard protocols to read and write registers of a device. Modbus requires knowledge of the accessible register addresses and the data format. A method to discover available settings and measurement values is not possible, so it does not fulfill the requirement to be self-describing.
 
-In the Arduino community, a protocol called Firmata is very popular to control Arduino devices directly via the serial interface. The protocol based on the MIDI protocol and very compact. However, the approach is very Arduino-specific. ThingSet aims to be a more general purpose solution.
+### Firmata
 
-## Others
-
-Several others (especially CAN bus based protocols) were investigated. The pro's and con's still have to be written down... (ToDo for later)
-
-<!--
-
-## CAN-based application layer protocols
-
-As CAN is quite popular not only in automotive industry, but also in industrial automation, several high layer protocols exist.
+In the Arduino community, a protocol called [Firmata](http://firmata.org/wiki/Main_Page) is very popular to control Arduino devices directly via the serial interface. The protocol based on the MIDI protocol and very compact. However, the approach is very Arduino-specific and targets to remote-control as many Arduino features as possible. ThingSet aims to be a more general purpose solution.
 
 ### CANopen and EnergyBus
 
@@ -45,11 +37,12 @@ The PDO telegrams are not predefined, but they are configured separately for eac
 
 The connection channels between different devices for PDO exchange are defined using a PDO mapping procedure. This has the advantage that the process data exchange between different devices can be very flexible. However, it makes an initial network setup necessary. If a device is added to the network, it has to be shut down, some PDO mappings have to be defined and afterwards the network is put into operation mode again. This contradicts to the requirement of a plug-and-play capable energy system.
 
-An intelligen master device implementing the network management (NMT) features could be used instead of manual configuration. But also a master device is not beneficial for a distributed, fail-safe energy system.
+An intelligent master device implementing the network management (NMT) features could be used instead of manual configuration. But also a master device is not beneficial for a distributed, fail-safe energy system.
 
 Summary of issues:
 
-- Complicated configuration
+- Pre-defined frame layout defined in not completely open specification
+- Complicated network setup (normally done using proprietary tools)
 - Not intended for master-less operation
 - Only 4 RPDOs and TPDOs possible per node ID for control functions
 
@@ -63,11 +56,11 @@ SAE J1939 uses only the extended format CAN id with 29 bits and encodes message 
 
 In general, SAE J1939 is based on fixed (specified) layout of the data fields in the CAN frame, depending on the PGN.
 
-In addition, the protocol is not designed for configuration of parameters. Writing parameters to a device can be achieved only by specifying special PGNs. In contrast to CANopen, parameters cannot be read or write by default.
+In addition, the protocol is not designed for configuration of parameters. Writing parameters to a device can be achieved only by specifying special PGNs. In contrast to CANopen, parameters cannot be read or written by default.
 
 ### XCP (Universal Measurement and Calibration Protocol)
 
-XCP is an established protocol for ECU (Engine Control Unit) development in the automotive industry. It is not limited to CAN as a low level protocol, but CAN is probably the most commonly used low level protocol.
+XCP is an established protocol for ECU (Engine Control Unit) development in the automotive industry. It is not limited to CAN as a low level interface, but CAN is probably the most commonly used lower layer.
 
 Measurement data and calibration parameters are accessed directly via registers in the microcontroller. Thus, the register values and description has to be generated during linking of the binary code. The register description is typically saved in a .A2L file.
 
@@ -75,26 +68,45 @@ For an agile open source based development, the toolchain for generating the A2L
 
 XCP is also not useable for a master-less control of devices in a system, as this was not a purpose of the protocol.
 
-However, XCP offers a well-suited way for firmware upgrades of devices. This feature might be adapted also in a future version of this specification.
+However, XCP offers a well-suited way for firmware upgrades of devices. This feature might be adapted in a future version of this specification.
 
 ### UAVCAN
 
 [UAVCAN](http://uavcan.org/) is a modern and lightweight protocol based on CAN, also targeting a master-less network. Main applications include aerospace and robotic applications.
 
-The protocol is fully open, well-designed and easy to be implemented. However, it also uses pre-defined messages for the communication between devices..
+The protocol is fully open, well-designed and easy to be implemented. However, it also uses pre-defined messages for the communication between devices.
 
-The node ID assignment process is very complicated compared to SAE J1939.
+The node ID assignment process is more complicated compared to SAE J1939.
 
-Some aspects of the UAVCAN protocol might be adapted in this specification.
+Some aspects of the UAVCAN protocol might be adapted in the CAN lower layer of this specification.
 
-## Other application layer protocols
+<!--
 
-### Sunspec Alliance (Modbus TCP)
+## Serialization Formats
 
-Several global players of the solar industry united under the name Sunspec Alliance in order to define joint, open standards for information exchange in Distributed Energy Resources (DER).
+Flexible data representation needs serialization.
 
-Several major inverter companies (like SMA, Fronius, Solar Edge) already adopted the standards and offer communication interfaces using Sunspec information models.
+### Protocol Buffers
 
-As the sunspec alliance protocol is based on Modbus, read and write actions are performed directly on register level. This requires a map of registers, data types and functional description as a basis for communication. So the protocol is not self-describing, as required.
+This serialization format uses pre-defined schemas for the message layout. It would not be possible to read or write previously unknown data objects or read data objects you did not define a data type for.
+
+Example:
+
+	!read ["var1", "var2"]
+	:0 Success. [1.5, true]
+
+Equivalent in protobuf:
+
+	!read message1
+
+where .proto file defines content of message1 contains one float and one boolean.
+
+Now, if you decide you want to add an additional variable, current thingset concept is like this:
+
+	!read ["var1", "var2", "var3"]
+
+For protobouf you need to define a new message of type message2, which is hard-coded in the device.
+
+Protobuf does not allow to use string identifiers instead of the numbers.
 
 -->
