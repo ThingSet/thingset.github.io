@@ -51,8 +51,8 @@ The length of the entire request or response is not encoded in the ThingSet prot
 | 0x02 (2)    | !conf         | List/read/write data object(s) of *conf* category |
 | 0x03 (3)    | !input        | List/read/write data object(s) of *input* category |
 | 0x04 (4)    | !output       | List/read/write data object(s) of *output* category |
-| 0x05 (5)    | !cal          | List/read/write data object(s) of *cal* category |
-| 0x06 (6)    | !diag         | List/read/write data object(s) of *diag* category |
+| 0x05 (5)    | !rec          | List/read/write data object(s) of *rec* category |
+| 0x06 (6)    | !cal          | List/read/write data object(s) of *cal* category |
 | 0x0B (11)   | !exec         | Execute function (remote procedure call) |
 | 0x0E (14)   | !name         | Get the name of a data object by ID |
 | 0x10 (16)   | !auth         | Authentication for access to access-restricted data objects |

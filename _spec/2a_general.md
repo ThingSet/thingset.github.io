@@ -68,13 +68,17 @@ Each data object belongs to one of the following categories:
 | conf     | Configurable settings, stored in non-volatile memory after change | read/write access, may be protected with user password |
 | input    | Input channels (e.g. actuators) | write access |
 | output   | Output channels (e.g. sensor data) | read access |
+| rec      | Recorded (history-dependent) data (e.g. error counters) | read access, restricted write access to reset |
 | cal      | Factory-calibrated settings | read/write access, protected
-| diag     | Diagnostics (e.g. error memory, etc.) | read access, at least partly protected |
 | exec     | Executable data (remote procedure call) | partly access restricted |
 
 The input and output channels are used for instantaneous data. Changes to an input data object are only stored in RAM, so they get lost after a reset of the device. In contrast to that, conf data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continously.
 
-Factory calibration is only accessible after authentication. Also diagnosis data (like error memory) may be accessible only after authentication.
+The recorded data category is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of *output* category, recorded data cannot be obtained through measurement after reset, so the current state has to be stored in non-volatile memory on a regular basis.
+
+Factory calibration is only accessible after authentication.
+
+Excecutable data means that they trigger a function call in the device firmware. Currently, only void functions without any parameters are supported.
 
 <!-- maybe not a good idea:
 The same data object may belong to multiple categories, e.g. input and conf. If data is written via *conf* function, the value is stored as a default value for next reboot of the device. If written via *input*, it is not permanently stored.
