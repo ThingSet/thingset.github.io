@@ -64,7 +64,7 @@ Each data object belongs to one of the following categories:
 
 | Category | Description | Access  |
 |----------|-------------|---------|
-| info     | Read-only device information (e.g. manufacturer, software version) | |
+| info     | Device information (e.g. manufacturer, software version) | read access |
 | conf     | Configurable settings, stored in non-volatile memory after change | read/write access, may be protected with user password |
 | input    | Input channels (e.g. actuators) | write access |
 | output   | Output channels (e.g. sensor data) | read access |
@@ -76,7 +76,7 @@ The input and output channels are used for instantaneous data. Changes to an inp
 
 The recorded data category is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of *output* category, recorded data cannot be obtained through measurement after reset, so the current state has to be stored in non-volatile memory on a regular basis.
 
-Factory calibration is only accessible after authentication.
+Factory calibration is only accessible for the manufacturer after authentication.
 
 Excecutable data means that they trigger a function call in the device firmware. Currently, only void functions without any parameters are supported.
 
@@ -97,7 +97,7 @@ For explanation of the protocol functions, the following exemplary device data o
 | 0x03           | Bat_V        | 14.2                | output   |
 | 0x04           | Ambient_degC | 22                  | output   |
 
-The above data structure contains 4 data objects in total, grouped into 3 different categories (info, output and input). The device will have an internal map to associate the object name, unique ID, category and a pointer to the variable containing the actual data.
+The above data structure contains 4 data objects in total, grouped into 3 different categories (info, input and output). The device will have an internal map to associate the object name, unique ID, category and a pointer to the variable containing the actual data.
 
 ### Units
 
@@ -111,14 +111,14 @@ It is *not* allowed to publish a voltage in millivolts (mV) instead of volts (V)
 
 ## Functions
 
-Each request fulfills a specified function, e.g. a command to read data from the device. The function is associated to a and function ID, which defines the layout of the payload and the actions to be performed.
+Each request fulfills a specified function, e.g. a command to read data from the device. The function is associated to a function ID, which defines the layout of the payload and the actions to be performed.
 
-The different functions are encoded using 1 byte, i.e. a number between 0 and 255.
+The different functions are encoded in the first byte of a message, i.e. by a number between 0 and 255.
 
 Function IDs 10, 13 and 32-127 are reserved, as they represent the ASCII characters for readable text including CR and LF. Invalid function IDs are ignored by the ThingSet parser, so that other text output (e.g. status information) can be used in parallel to the ThingSet protocol on the same serial interface.
 
 The ASCII characters '!', '#' and ':' (function IDs 33, 35 and 58) are used as identifiers for the text mode protocol. In this way, text-based or binary mode can be automatically detected based on the first byte.
 
-The ID of a response includes a status code which shows if the request could be handled successfully. The ID is calculated as 0x80 + status code. For status codes between 0 and 29, the response was successful. If the status code is greater than or equal to 30, an error occured. The remaining bits are used to specify the error in more detail.
+Function IDs greater than or equal to 128 (0x80) are used for response messages and include a status code which shows if the request could be handled successfully. The function ID is calculated as 0x80 + status code. For status codes between 0 and 31, the response was successful. If the status code is greater than or equal to 32, an error occured.
 
 Details regarding the ThingSet Protocol functions will be explained in the next chapter.

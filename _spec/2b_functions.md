@@ -4,11 +4,11 @@ excerpt: "Overview of all ThingSet protocol functions / commands"
 permalink: /spec/functions
 ---
 
-The first byte of a request contains either the function ID in binary format or a text-mode identifier (one of '!', ':' or '#'). Input data with unknown first byte is ignored.
+The first byte of a message contains either the function ID in binary format or a text-mode identifier (one of '!', ':' or '#'). Input data with unknown first byte is ignored.
 
 ### Text mode
 
-Each request message consists of a function name (e.g. read) followed by valid JSON string containing the payload data. A request starts with an exclamation mark (!) in front of the function name.
+Each request message consists of a function name (e.g. exec) followed by valid JSON string containing the payload data. A request starts with an exclamation mark (!) in front of the function name.
 
 The response starts with a colon (:) followed by the the status code and a plain text description of the status finished with a '.'. The description message content is not strictly specified and can be either the description from above table or a more verbose message. However, it must contain only one dot at the end of the description, signifying the end of the description.
 
@@ -18,7 +18,7 @@ The following bytes after the dot contain the requested data. The end of the dat
     !(function name) (JSON data)
 
     Response:
-    :(status code) (status message). (JSON data)
+    :(status code)(optional status message). (JSON data)
 
     Publication message:
     # (JSON data)
@@ -31,9 +31,9 @@ In the binary mode, the data is encoded using the CBOR format. Numbers are encod
 
 The general format of a binary mode message:
 
-    +-------------+====================+===========+
-    | Function ID | Options (optional) | CBOR data |
-    +-------------+====================+===========+
+    +-------------+===========+
+    | Function ID | CBOR data |
+    +-------------+===========+
 
     Legend:
     ---------  single byte
@@ -53,6 +53,7 @@ The length of the entire request or response is not encoded in the ThingSet prot
 | 0x04 (4)    | !output       | List/read/write data object(s) of *output* category |
 | 0x05 (5)    | !rec          | List/read/write data object(s) of *rec* category |
 | 0x06 (6)    | !cal          | List/read/write data object(s) of *cal* category |
+| 0x09 (9)    | !             | List/read data object(s) of any category (PRELIMINARY) <!-- could be useful to poll for several different data objects at once without defining a publication message) --> |
 | 0x0B (11)   | !exec         | Execute function (remote procedure call) |
 | 0x0E (14)   | !name         | Get the name of a data object by ID |
 | 0x10 (16)   | !auth         | Authentication for access to access-restricted data objects |
@@ -70,7 +71,6 @@ Possible future request functions (not yet specified):
 |  ?          | ping          | Ping a device |
 |  ?          | sync          | Time synchronization |
 |  ?          | file          | File access |
-|  ?          | reset         | Reset the device |
 |  ?          | dfu           | Device firmware upgrade. |
 
 
@@ -80,28 +80,28 @@ Possible future request functions (not yet specified):
 |-------------|-------------|-------------|
 | 0x80 (128)  | 0x00  (0)   | Success. |
 | 0x81 (129)  | 0x01  (1)   | Partial Success. (e.g. not all data values could be changed) |
-| 0x9E (158)  | 0x1E (30)   | General Error. |
-| 0x9F (159)  | 0x1F (31)   | Unknown/unsupported function. |
-| 0xA0 (160)  | 0x20 (32)   | Unknown data object. |
-| 0xA1 (161)  | 0x21 (33)   | Wrong format. |
-| 0xA2 (162)  | 0x22 (34)   | Wrong data type. |
-| 0xA3 (163)  | 0x23 (35)   | Device busy. |
-| 0xA4 (164)  | 0x24 (36)   | Access denied. |
-| 0xA5 (165)  | 0x25 (37)   | Request too long. |
-| 0xA6 (166)  | 0x26 (38)   | Response too long. |
-| 0xA7 (167)  | 0x27 (39)   | Invalid value. (e.g. too high or low number) |
-| 0xA8 (168)  | 0x28 (40)   | Text-mode not supported. |
+| 0xA0 (160)  | 0x20 (32)   | General Error. |
+| 0xA1 (161)  | 0x21 (33)   | Unknown/unsupported function. |
+| 0xA2 (162)  | 0x22 (34)   | Unknown data object. |
+| 0xA3 (163)  | 0x23 (35)   | Wrong format. |
+| 0xA4 (164)  | 0x24 (36)   | Wrong data type. |
+| 0xA5 (165)  | 0x25 (37)   | Device busy. |
+| 0xA6 (166)  | 0x26 (38)   | Access denied. |
+| 0xA7 (167)  | 0x27 (39)   | Request too long. |
+| 0xA8 (168)  | 0x28 (40)   | Response too long. |
+| 0xA9 (169)  | 0x29 (41)   | Invalid value. (e.g. too high or low number) |
+| 0xAA (170)  | 0x2A (42)   | Text-mode not supported. |
 
 
-## Data object access (function IDs 0x01-0x05)
+## Data object access (function IDs 0x01-0x06)
 
-Three different access functions are defined:
+Three different access methods are defined:
 
 - List all data objects of one category
 - Read the content of specific data objects
 - Write new values to specific data ojbects
 
-As data objects of each category serve different functions, the data is accessed using their category as the function name. See table
+As data objects of each category serve different purposes, the data is accessed using their category as the function name (see above table).
 
 ## List data objects
 
@@ -189,7 +189,7 @@ Allows to read one or more data objects. The objects are identified by their ID 
 
 The names of the data objects are passed to the function as a single string or as an array of strings.
 
-The response contains a status code and the requested data. If a single data object was requested, the returned data is also a single CBOR primitive (number, string, true/false, depending on data type). Multiple objects were requested, the response is an array containing the requested data objects in the same order.
+The response contains a status code and the requested data. If a single data object was requested, the returned data is also a single JSON primitive (number, string, true/false, depending on data type). Multiple objects were requested, the response is an array containing the requested data objects in the same order.
 
 Example 1: Read single data object "enableSwitch"
 
@@ -242,7 +242,7 @@ Example 2: Read multiple data objects:
         0xFA 0x41633333     CBOR data (float32): 14.2
         0x16                CBOR data (integer): 22
 
-The binary mode may also allow to use strings instead of IDs (which increases the amount of data).
+The binary mode also allows to use data object names (strings) instead of numeric IDs, which increases the amount of data.
 
 ## Write data object(s)
 
@@ -252,7 +252,7 @@ The device must support a write request using the same data type as used in the 
 
 Data of category *conf* will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category *input* might be changed regularly.
 
-If the data type is not supported, an error status code (34) is responded.
+If the data type is not supported, an error status code (36) is responded.
 
 ### Text mode
 
@@ -264,7 +264,7 @@ Example 1: Disable the switch
 Example 2: Attempt to write read-only measurement values (output category)
 
     !output {"Bat_V":15.2, "Ambient_degC":22}
-    :36 Access denied.
+    :38 Access denied.
 
 ### Binary mode
 
@@ -305,7 +305,18 @@ Example 2: Attempt to write read-only measurement values (output category)
         0x16                CBOR data (integer): 22
 
     Response:
-    0xA4                    Status code (Access denied)
+    0xA6                    Status code (Access denied)
+
+## Execute (0x0B)
+
+Executes a function identified by a data object name of category "exec".
+
+#### Text mode
+
+Example: Go into bootloader mode
+
+    !exec "Bootloader"
+    :0 Success.
 
 ## Get data object name (0x0E)
 
@@ -316,16 +327,15 @@ Returns the name of a data object specified by its ID. This function makes sense
 General format description:
 
     Request:
-    +------+======+     +======+
-    | 0x0E | 0xYY | ... | 0xYY |
-    +------+======+     +======+
+    +------+==================+
+    | 0x0E | CBOR data: ID(s) |
+    +------+==================+
 
     Response:
-    +------+===========+     +===========+
-    | 0xZZ | CBOR data | ... | CBOR data |
-    +------+===========+     +===========+
+    +------+====================+
+    | 0xZZ | CBOR data: name(s) |
+    +------+====================+
 
-    0xYY:   Data Object ID(s)
     0xZZ:   Response code (0x80 for success)
 
 Example 1: Request name of data object ID 0x03 (Bat_V)
@@ -352,127 +362,119 @@ Example 2: Request name of multiple data objects
         0x65 0x4261745F56           Data Object name (Bat_V)
         0x6C 0x416D6269656E745F64656743     Data Object name (Ambient_degC)
 
-## PRELIMINARY: Publication request (0x12)
 
-*Remarks: Work on !pub function is still in progress. This suggested specification is preliminary. Good suggestions and feedback are welcome!*
+## Authentication (0x10)
 
-It should be possible to tell the device to publish certain data on a regular basis through a defined communication channel (UART, CAN, LoRa, etc.). It is not feasible to define different publication intervals and communication channels for each data object, as this would create lots of programming effort.
+Some of the device parameters like calibration or config settings should be protected against unauthorized change. The protocol provides a simple authentication method. Multiple user levels can be implemented in the firmware using different passwords. The manufacturer would use a different one to authenticate than a normal user and thus get more rights to access data objects.
 
-The suggestion is that the firmware developer pre-defines some communication channels (e.g. "LoRa 60min"). Each channel has a number which can be discovered using the !pub command. The !pub command can also be used to configure data objects for publication or delete objects from the publication list.
+*Remark:* Previous versions of this specification suggested a challenge-response method with hashed passwords in order to avoid plain text transmission of the password on the bus and prevent replay attacks. However, this contradicts with the stateless nature of the protocol, as the device needs to store the challenge it sent out and wait for the second message of the host. In addition to that, it does not provide a method for verification of the sender, so any participant on the bus could change data objects requiring authentication once one of the hosts successfully authenticated. That's why it was decided to use the much more simple method with plain text password. Encryption can be added on lower layer protocols, though.
 
-### Text mode
+#### Text mode
 
-Example 1: List all possible publication channels
+The password is transferred as a plain text string.
 
-    !pub
-    :0 Success. ["CAN 100ms", "LoRa 60min", "Serial 1s"]
-
-The name of the interface and the publication interval is separated by a blank. The interval is specified in hours (h), minutes (min), seconds (s) or milliseconds (ms). Main intention of the channel description is to be human-readable (for the technician setting up the device).
-
-Each channel is identified by the position in the array of above response, starting at 0 for the first element.
-
-Example 2: List configured data objects for second channel (LoRa 60min)
-
-    !pub "CAN 100ms"
-    :0 Success. ["vBat", "tAmbient"]
-
-With this setting, the following message is automatically sent by the device once per hour:
-
-    # {"vBat":15.2,"tAmbient":22}
-
-Example 3: Change the list for the second channel.
-
-    !pub "CAN 100ms":["vBat"]
+    !auth "mypass"
     :0 Success.
 
-The data object tAmbient is removed from the publication list.
-
-Example 4: Deactivate a channel (i.e. remove all data objects from the list)
-
-    !pub "CAN 100ms":[]
-    :0 Success.
+After successful authentication, the device exposes restricted data objects via the normal data object access commands. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
 ### Binary mode
 
-General format description:
+Analog to text mode.
+
+
+## Publication request (0x12)
+
+A publication request tells the device to publish certain data on a regular basis through a defined communication channel (UART, CAN, LoRa, etc.). It is not feasible to define different publication intervals and communication channels for each data object, as this would create lots of programming effort. Instead, the firmware developer pre-defines some communication channels and a given interval (e.g. "LoRa_60min"). The available channels can be discovered using the !pub command. The !pub command can also be used to configure data objects for publication or delete objects from the publication list.
+
+### Text mode
+
+Example 1: List all available publication channels
+
+    !pub
+    :0 Success. ["CAN_100ms", "LoRa_60min", "Serial_1s"]
+
+The name of the interface and the publication interval is separated by an underscore. The interval is specified in hours (h), minutes (min), seconds (s) or milliseconds (ms). Main intention of the channel description is to be human-readable (e.g. for the technician setting up the device).
+
+Example 2: List configured data objects for second channel (LoRa_60min)
+
+    !pub "CAN_100ms"
+    :0 Success. ["Bat_V", "Ambient_degC"]
+
+With this setting, the following message is automatically sent by the device once per hour:
+
+    # {"Bat_V":15.2,"Ambient_degC":22}
+
+Example 3: Change the list for the "CAN_100ms" channel.
+
+    !pub {"CAN_100ms":["Bat_V"]}
+    :0 Success.
+
+The data object Ambient_degC is removed from the publication list.
+
+Example 4: Enable a publication channel
+
+    !pub {"CAN_100ms":true}
+    :0 Success.
+
+To disable the channel, send `false` instead of `true`.
+
+### Binary mode
+
+The format in binary mode is analog to the text mode format.
+
+Example 1: List all available publication channels (as strings)
 
     Request:
-    +------+======+========+     +========+
-    | 0x04 | 0xXX | 0xYYYY | ... | 0xYYYY |
-    +------+======+========+     +========+
-
-    Response with list members:
-    +------+========+     +========+
-    | 0xZZ | 0xYYYY | ... | 0xYYYY |
-    +------+========+     +========+
-
-    Response with publication channels:
-    +------+=============+     +=============+
-    | 0xZZ | CBOR string | ... | CBOR string |
-    +------+=============+     +=============+
-
-    0xXX:   Channel ID (1 byte unsigned integer)
-    0xYYYY: Data Object ID(s)  (optional, depending on request/response)
-    0xZZ:   Response code (0x80 for success)
-
-
-Example 1: List all possible publication channels as data object IDs
-
-    Request:
-    0x12                        Function ID (pub)
-        0xf6                    CBOR null (otherwise we don't know how long the message is)
+    0x12                            Function ID (pub)
+        0x60                        CBOR empty string (otherwise we don't know the length of the message)
 
     Response:
-    0x80                        Status code: Success.
-        ... CBOR uints          (TODO)
+    0x80                            Status code: Success.
+      0x83                          CBOR array (3 elements)
+        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
+        0x6A 4C6F52615F36306D696E   String of length 10: "LoRa_60min"
+        0x69 53657269616C5F3173     String of length 9: "Serial_1s"
 
-Example 1b: List all possible publication channels as string
-
-    Request:
-    0x12                        Function ID (pub)
-        0x60                    CBOR empty string
-
-    Response:
-    0x80                        Status code: Success.
-        ... CBOR strings        (TODO)
-
-Example 2: List configured data objects for second channel (LoRa 60min)
+Example 2: List configured data objects for second channel (LoRa_60min)
 
     Request:
-    0x12                        Function ID (pub)
-        0x01                    Channel number
+    0x12                            Function ID (pub)
+        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
 
     Response:
-    0x80                        Status code: Success.
-      0x82                      CBOR array (2 elements)
-        0x19 0x4001             Data Object ID (vBat)
-        0x19 0x4002             Data Object ID (tAmbient)
+    0x80                            Status code: Success.
+      0x82                          CBOR array (2 elements)
+        0x19 0x4001                 Data Object ID (Bat_V)
+        0x19 0x4002                 Data Object ID (Ambient_degC)
 
 Example 3: Change the list for the second channel.
 
     Request:
-    0x12                        Function ID (pub)
-        0x01                    Channel number
-        0x19 0x4001             Data Object ID (vBat)
+    0x12                            Function ID (pub)
+      0xA1                          CBOR map (1 element)
+        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
+        0x19 0x4001                 Data Object ID (Bat_V)
 
     Response:
-    0x80                        Status code: Success.
+    0x80                            Status code: Success.
 
 With this setting, the following message is automatically sent by the device once per hour (see below for publication message definition):
 
-    0x1F                    Function ID (publication message)
-      0xA2                  CBOR map (2 elements)
-        0x19 0x4001         Data Object ID (vBat)
-        0xFa 0x41733333     CBOR data (float32): 15.2
-        0x19 0x4002         Data Object ID (tAmbient)
-        0x16                CBOR data (integer): 22
+    0x1F                            Function ID (publication message)
+      0xA2                          CBOR map (2 elements)
+        0x19 0x4001                 Data Object ID (Bat_V)
+        0xFa 0x41733333             CBOR data (float32): 15.2
+        0x19 0x4002                 Data Object ID (Ambient_degC)
+        0x16                        CBOR data (integer): 22
 
-Example 4: Deactivate a channel (i.e. remove all data objects from the list)
+Example 4: Enable a publication channel
 
     Request:
-    0x12                        Function ID (pub)
-        0x01                    Channel number
-                                (empty, no additional bytes)
+    0x12                            Function ID (pub)
+      0xA1                          CBOR map (1 element)
+        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
+        0xF5                        CBOR pimitive (true)
 
     Response:
     0x80                        Status code: Success.
@@ -495,8 +497,6 @@ Example 1: List all available log files
 
 The name of the log file should describe the log level (e.g. a daily log will contain less details per day, the logging of last 24hours may contain more data).
 
-Each log file is identified by the position in the array of above response, starting at 0 for the first element.
-
 Example 2: List number of log entries in first log file (daily)
 
     !log "daily"
@@ -504,47 +504,19 @@ Example 2: List number of log entries in first log file (daily)
 
 Example 3: Request log entry 20 of daily log file
 
-    !log "daily":1
-    :0 Success. {"vBatMax":14.5, "numSomething":7}
+    !log {"daily":1}
+    :0 Success. {"BatMax_V":14.5, "Errors":7}
 
 Maybe also allow to request multiple log file entries at the same time, like this:
 
 Example 4: Request first and last log entry
 
-    !log "daily":[0,33]
-    :0 Success. [{"vBatMax":14.5, "numSomething":7},{"vBatMax":14.3, "numSomething":11}]
+    !log {"daily":[0,33]}
+    :0 Success. [{"BatMax_V":14.5, "Errors":7},{"BatMax_V":14.3, "Errors":11}]
 
-## PRELIMINARY: Authentication (0x10)
+### Binary mode
 
-Procedure of authentication:
-
-1. The client requests a challenge from the device.
-2. The device responds with the challenge (random number, length t.b.d.)
-3. The client generates a response code based on the received challenge and the secret password. The response code is hashed (algorithm t.b.d., maybe SHA-3) and sent to the device.
-4. The device calculates the same response code (with the same secret password stored in the device) and compares it with the received code. If both math, authentication was successful.
-
-#### Text mode
-
-If the auth request is empty, a new challenge is responded. In the second request, the calculated response code follows after the auth request. In case of successful authentication, status code 0 is responded (without additional data).
-
-    !auth
-    :0 Success. <challenge>
-
-    !auth <response code>
-    :0 Success.
-
-
-## PRELIMINARY: Execute (0x07)
-
-Executes a function identified by a data object name of category "rpc".
-
-#### Text mode
-
-Example: Go into bootloader mode
-
-    !exec "bootloader"
-    :0 Success.
-
+ToDo
 
 ## Publication message (0x1F)
 
