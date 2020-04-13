@@ -1,27 +1,15 @@
-# Introduction
+# ThingSet Protocol Specification
 
-This specification describes a communication protocol for control, configuration and monitoring of connected devices. The application layer protocol is widely independent of the underlying transport protocols and physical interfaces, so it can be used with e.g. CAN, USB, WiFi, Bluetooth or a simple serial interface.
+This repository hosts the specification of the ThingSet communication protocol for control, configuration and monitoring of connected devices. The application layer protocol is widely independent of the underlying transport protocols and physical interfaces, so it can be used with e.g. CAN, USB, WiFi, Bluetooth or a simple serial interface.
 
-Even though this protocol was developed with the focus on energy management, it can be used for other purposes aswell. The specification is published under a permissive license for both commercial and personal use.
+Even though this protocol was developed with the focus on energy management, it can be used for other purposes aswell. The specification is published under the [CC-BY-SA 4.0 License](https://creativecommons.org/licenses/by/4.0/) and can be freely used for private and commercial purposes.
 
-The working name of the protocol is ThingSet Protocol - a protocol for settings of "things".
+You can contribute to the protocol specification by cloning the repository to your private GitHub workspace and sending pull-requests with updates or suggestions.
 
-# Important Notice
+## Development status
 
-This repository is used for the development of the ThingSet protocol. Releases are afterwards published on the [ThingSet website](https://thingset.github.io).
+The protocol specification is still under active development and improved based on experiences made with Libre Solar devices. A release of version v1.0 is expected end of 2020.
 
-# Content
+## Local deployment for development
 
-1. Application Layer Protocol
-
-	- [General Concept](general.md)
-	- [Functions](functions.md)
-	- Control Protocol (ToDo)
-
-2. Lower Layer Protocols
-
-	- Serial (ToDo)
-	- [CAN](can.md)
-	- LoRa (ToDo)
-	- ...
-
+ For local deployment of the website install [VuePress v1](https://v1.vuepress.vuejs.org/) and run `yarn docs:dev` in the root directory of this repository. Afterwards, you can see the result in your favourite web browser at `http://localhost:8080`.
