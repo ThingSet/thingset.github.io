@@ -2,7 +2,7 @@
 
 The ThingSet protocol provides a consistent, standardized way to configure, monitor and control ressource-constrained devices via different communication interfaces. It specifies the higher layers (5 to 7) of the [OSI (Open Systems Interconnection) model](https://en.wikipedia.org/wiki/OSI_model). The payload data is independent of the underlying lower layer protocol or interface, which can be CAN, USB, LoRa, WiFi, Bluetooth, UART (serial) or similar.
 
-![ISO/OSI layer setup](./images/osi_layers.png)
+![ISO/OSI layer setup](./../images/osi_layers.png)
 
 The underlying layers have to ensure reliable transfer, correct packet order (if messages are packetized) and error-checking of the transferred data.
 
@@ -27,7 +27,7 @@ ThingSet defines three types of messages: Requests, responses and publication me
 
 The communication between two specific devices uses a request/response messaging pattern via so-called channels. A communication channel can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device/node has to be uniquely addressable.
 
-![Communication Channels](./images/communication_channels.png)
+![Communication Channels](./../images/communication_channels.png)
 
 The device acts as the server and responds to the requests by a client. The client might be a laptop or mobile phone with a human interface application.
 

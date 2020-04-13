@@ -1,4 +1,8 @@
-# CAN lower layer
+---
+title: "CAN"
+---
+
+# CAN Transport and Network Layer
 
 This specification defines layer 3 (Network) and 4 (Transport) of the ThingSet Protocol via CAN bus. Layer 1 and 2 are provided by the CAN bus itself.
 
@@ -33,7 +37,7 @@ A service message is used for the request/response communication model. A single
 
 The service message CAN ID layout is shown in the following picture:
 
-![CAN service message ID](././images/service_msg_can_id.png)
+![CAN service message ID](./images/service_msg_can_id.png)
 
 - Priority (28-26): Defines the importance of the message. For service messages, only 3 (high priority) or 7 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
@@ -147,7 +151,7 @@ Subsequent frames:
 
 Publication messages are not sent to a single node, so the destination address does not need to be specified. So, instead of the function ID byte and the destination address byte, the data object ID is specified in the CAN identifier to have more bytes available for payload in the data bytes.
 
-![CAN data object publication message ID](././images/publication_msg_can_id.png)
+![CAN data object publication message ID](./images/publication_msg_can_id.png)
 
 - Priority (28-26): Defines the importance of the message. For data object publication messages, only 4 (high priority), 5 (medium priority) and 6 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
@@ -279,3 +283,4 @@ ToDo:
 
 - RJ45 connector using CANopen pinout
 - Bus Power supply
+

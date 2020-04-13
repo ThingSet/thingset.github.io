@@ -20,11 +20,46 @@ module.exports = {
     ],
     themeConfig: {
         logo: '/favicons/apple-touch-icon.png',
-        sidebar: [
-            'general',
-            'functions',
-            'can'
+        nav: [
+            {
+                text: 'History',
+                ariaLabel: 'History Menu',
+                items: [
+                    { text: 'v0.2 (current)', link: '/' },
+                    { text: 'v0.1', link: '/v0.1/' }
+                ]
+            }
         ],
+        sidebar: {
+            '/v0.1/': [
+                'general',
+                'functions',
+                'can'
+            ],
+            '/': [{
+                title: 'Why ThingSet?',
+                collapsable: false,
+                children: [
+                    '',
+                    '1b_existing_solutions'
+                ]
+            },{
+                title: 'Application Layer',
+                collapsable: false,
+                children: [
+                    '2a_general',
+                    '2b_functions'
+                ]
+            },{
+                title: 'Lower Layers',
+                collapsable: false,
+                children: [
+                    '3a_serial',
+                    '3b_can',
+                    '3c_lora'
+                ]
+            }]
+        },
         // if your docs are in a different repo from your main project:
         docsRepo: 'LibreSolar/thingset',
         // if your docs are not at the root of the repo:
