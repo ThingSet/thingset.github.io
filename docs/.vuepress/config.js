@@ -25,22 +25,42 @@ module.exports = {
                 text: 'History',
                 ariaLabel: 'History Menu',
                 items: [
-                    { text: 'v0.2 (current)', link: '/' },
+                    { text: 'develop', link: '/' },
+                    { text: 'v0.2', link: '/v0.2/' },
                     { text: 'v0.1', link: '/v0.1/' }
                 ]
             }
         ],
         sidebar: {
-            '/v0.1/': [
-                'general',
-                'functions',
-                'can'
-            ],
             '/': [{
                 title: 'Why ThingSet?',
                 collapsable: false,
                 children: [
                     '',
+                    '1b_existing_solutions'
+                ]
+            },{
+                title: 'Application Layer',
+                collapsable: false,
+                children: [
+                    '2a_general',
+                    '2b_text_mode',
+                    '2c_binary_mode',
+                ]
+            },{
+                title: 'Lower Layers',
+                collapsable: false,
+                children: [
+                    '3a_serial',
+                    '3b_can',
+                    '3c_lora'
+                ]
+            }],
+            '/v0.2/': [{
+                title: 'Why ThingSet?',
+                collapsable: false,
+                children: [
+                    '/v0.2/',
                     '1b_existing_solutions'
                 ]
             },{
@@ -58,7 +78,12 @@ module.exports = {
                     '3b_can',
                     '3c_lora'
                 ]
-            }]
+            }],
+            '/v0.1/': [
+                'general',
+                'functions',
+                'can'
+            ]
         },
         // if your docs are in a different repo from your main project:
         docsRepo: 'LibreSolar/thingset',

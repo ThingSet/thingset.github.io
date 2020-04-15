@@ -1,4 +1,4 @@
-# General Protocol Concept
+# General Concept
 
 The ThingSet protocol provides a consistent, standardized way to configure, monitor and control ressource-constrained devices via different communication interfaces. It specifies the higher layers (5 to 7) of the [OSI (Open Systems Interconnection) model](https://en.wikipedia.org/wiki/OSI_model). The payload data is independent of the underlying lower layer protocol or interface, which can be CAN, USB, LoRa, WiFi, Bluetooth, UART (serial) or similar.
 
@@ -6,15 +6,7 @@ The ThingSet protocol provides a consistent, standardized way to configure, moni
 
 The underlying layers have to ensure encryption, reliable transfer, correct packet order (if messages are packetized) and error-checking of the transferred data.
 
-<!---
-
-
-## OSI layer setup
-
-Layers 1-4 depend on the lower layer protocols used. In case of a simple serial connection between two devices, no transport and netork layers are needed. The protocol payload as specified below is directly transferred over the line.
-
-For IP based networks (over Ethernet or Wifi), the network layer will be the IP protocol. The source and destination addresses are IP addresses in this case. The transport layer might be TCP or UDP, adding additional headers to the entire protocol frame.
--->
+A major feature of the ThingSet protocol is a seamless integration with other application layer protocols such as HTTP and [CoAP](https://tools.ietf.org/html/rfc7252). Suggestions for implementing gateways to convert between ThingSet messages and HTTP/CoAP payload will be added in a future separate chapter.
 
 ## Message Types
 
@@ -22,99 +14,176 @@ ThingSet defines three types of messages: Requests, responses and publication me
 
 ### Request/response or client/server model
 
-The communication between two specific devices uses a request/response messaging pattern via so-called channels. A communication channel can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device/node has to be uniquely addressable.
+The communication between two specific devices uses a request/response messaging pattern via so-called communication channels. A channel can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device/node has to be uniquely addressable.
 
 ![Communication Channels](./images/communication_channels.png)
 
-The device acts as the server and responds to the requests by a client. The client might be a laptop or mobile phone with a human interface application.
+The device acts as the server and responds to the requests by a client. The client might be a laptop or mobile phone with a human interface application or a gateway.
 
-The data transfer is always synchronous: The client sends a request, waits for the response (status code and/or requested data), handles the data of the response and possibly starts with additional requests.
+The data transfer is always synchronous: The client sends a request, waits for the response (status code and requested data), processes the response and possibly starts with additional requests.
 
 ### Publication messages
 
 Monitoring data is not intended for only a single device, but could be interesting for several devices (e.g. data logger, display, human interface device, etc.). Thus, the monitoring data is exchanged via a publish/subscribe messaging pattern.
 
-Publication messages are directly broadcast through the network. There is *no* intermediate broker (like in MQTT) to store the messages and published messages are *not* confirmed by recipients, so there is no guarantee if the message was received.
+Publication messages are directly broadcast through the network. Unlike in MQTT, there is no intermediate broker to store the messages and published messages are not confirmed by recipients, so there is no guarantee if the message was received.
 
 ## Protocol Modes
 
 Similar to Modbus, the ThingSet protocol supports two different modes: A human-readable text mode and a binary mode.
 
-In the text mode, payload data is encoded in JSON format ([RFC 8259](https://tools.ietf.org/html/rfc8259)). This mode is recommended when using USB or serial interfaces as the low layer protocol, as it can be easily used directly on a terminal.
+In the text mode, payload data is encoded in JSON format ([RFC 8259](https://tools.ietf.org/html/rfc8259)). This mode is recommended when using serial communication interfaces as the low layer protocol, as it can be easily used directly on a terminal.
 
-The binary protocol uses the CBOR binary encoding ([RFC 7049](https://tools.ietf.org/html/rfc7049)) instead of JSON payload data in order to reduce the protocol overhead for ressource-constrained devices or low bandwith communication protocols like CAN and LoRa.
+The binary mode uses the CBOR binary encoding ([RFC 7049](https://tools.ietf.org/html/rfc7049)) instead of JSON payload data in order to reduce the protocol overhead for ressource-constrained devices or low bandwith communication protocols like CAN and LoRa.
 
-Each device must implement the binary encoding of the protocol. The the text-based JSON variant is optional, but recommended.
+A device may implement both variants of the protocol, but it is also allowed to support only the mode most suitable for the application.
 
-## Data Objects
+## Data Structure
 
-All accessible data of a device is structured in so-called data objects. A data object might be any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar.
+All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). Actual data is stored in leaf nodes, called data nodes. The data can be any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar. Internal nodes are used to structure the data and define paths for data access.
 
-Each data object is identified by a unique Data Object ID. The ID can be chosen by the firmware developer. In addition to that, each data object has a unique name. The name is a short case-sensitive ASCII string without blanks. If applicable, the unit is appended with an underscore, e.g. "Bat_V" for the battery voltage or "Manufacturer" (without a unit). The underscore is only allowed to separate the name and the unit, there is no additional underscore allowed in the name.
+Each node is identified by a unique node ID and a name. The ID can be chosen by the firmware developer. The name of a data node must be unique per device. It is a short case-sensitive ASCII string containing only alphanumeric characters, an underscore, dots or dashes without any whitespace characters. The underscore is only used to specify the unit of the data (if applicable, also see below). No additional underscore is allowed in the name.
 
-The numeric IDs are used in the binary protocol to reduce message length. For all interactions with users and in the text-based mode, only the object name is used.
+The numeric IDs are used to define the relations between each nodes and to directly access data nodes in the binary protocol for reduced message size. For all interactions with users and in the text-based mode, only the node names and paths consisting of node names are used.
 
-### Data object categories
+### Example
 
-Each data object belongs to one of the following categories:
+For explanation of the protocol, the following simplified data structure of an MPPT charge controller will be used:
+
+```JSON
+{
+    "info": {
+        "DeviceType": "MPPT 1210 HUS",
+    },
+    "conf": {
+        "BatCharging_V": 14.4,
+    },
+    "input": {
+        "EnableCharging": true
+    },
+    "output": {
+        "Bat_V": 14.1,
+        "Bat_A": 5.13,
+        "Ambient_degC": 22
+    },
+    "rec": {
+        "BatChgDay_Wh": 1984,
+    },
+    "exec": {
+        "reset": null,
+        "auth": "password"
+    },
+    "pub": {
+        "serial": {
+            "Enable": true,
+            "Interval": 1.0,
+            "IDs": ["Bat_V", "Bat_A"]
+        },
+        "can": {
+            "Enable": false,
+            "Interval": 0.1,
+            "IDs": ["Bat_V"]
+        }
+    }
+}
+```
+
+The data nodes are structured in 5 different categories info, conf, input, output and rec. By convention, data node names use [upper camel case](https://en.wikipedia.org/wiki/Camel_case), inner nodes nodes use lower case names.
+
+The exec category is special, as it contains functions that can be called. In order to distinguish it from a normal data node, executable node names are lower case.
+
+The pub node is used to configure different types of publication messages, so it doesn't hold actual data nodes.
+
+### Categories
+
+The following categories for data nodes are used for the ThingSet protocol by default:
 
 | Category | Description | Access  |
 |----------|-------------|---------|
 | info     | Device information (e.g. manufacturer, software version) | read access |
 | conf     | Configurable settings, stored in non-volatile memory after change | read/write access, may be protected with user password |
-| input    | Input channels (e.g. actuators) | write access |
-| output   | Output channels (e.g. sensor data) | read access |
+| input    | Input nodes (e.g. actuators) | write access |
+| output   | Output nodes (e.g. sensor data) | read access |
 | rec      | Recorded (history-dependent) data (e.g. error counters) | read access, restricted write access to reset |
 | cal      | Factory-calibrated settings | read/write access, protected
-| exec     | Executable data (remote procedure call) | partly access restricted |
+| exec     | Executable functions | partly access restricted |
 
-The input and output channels are used for instantaneous data. Changes to an input data object are only stored in RAM, so they get lost after a reset of the device. In contrast to that, conf data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continously.
+The nodes of input and output categories are used for instantaneous data. Changes to input nodes are only stored in RAM, so they get lost after a reset of the device. In contrast to that, conf data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continously.
 
-The recorded data category is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of *output* category, recorded data cannot be obtained through measurement after reset, so the current state has to be stored in non-volatile memory on a regular basis.
+The recorded data category is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of output category, recorded data cannot be obtained through measurement after reset, so the current state has to be stored in non-volatile memory on a regular basis.
 
 Factory calibration is only accessible for the manufacturer after authentication.
 
 Excecutable data means that they trigger a function call in the device firmware. Currently, only void functions without any parameters are supported.
 
-<!-- maybe not a good idea:
-The same data object may belong to multiple categories, e.g. input and conf. If data is written via *conf* function, the value is stored as a default value for next reboot of the device. If written via *input*, it is not permanently stored.
--->
-
-Data object IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
-
-### Examples
-
-For explanation of the protocol functions, the following exemplary device data objects will be used:
-
-| Data Object ID | Name         | Value               | Category |
-|----------------|--------------|---------------------|----------|
-| 0x01           | Manufacturer | "Test Company Inc." | info     |
-| 0x02           | EnableSwitch | true                | input    |
-| 0x03           | Bat_V        | 14.2                | output   |
-| 0x04           | Ambient_degC | 22                  | output   |
-
-The above data structure contains 4 data objects in total, grouped into 3 different categories (info, input and output). The device will have an internal map to associate the object name, unique ID, category and a pointer to the variable containing the actual data.
+Data node IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
 
 ### Units
 
-All data communicated with the outside world use [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and the different numeric data types should be used for scaling instead of prefixes like *milli* or *kilo* to the units.
+Only [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and derived units (e.g. kWh for energy instead of Ws) are allowed.
 
-If the basic SI unit for a given measurement value is not common or not feasible (e.g. use of kWh for energy instead of Ws), the unit must be properly defined with an underscore in the name of the data object, e.g. "Battery_kWh" for the battery energy content in kWh. Units which cannot be derived from the SI basic units (e.g. °F) are not recommended.
+The unit is appended to the data object name using an underscore. In order to keep the data object name very compact, the unit is also used to identify the physical quantity of the value. So instead of "BatteryEnergy_kWh" a short name like "Bat_kWh" is preferred.
 
-<!--
-It is *not* allowed to publish a voltage in millivolts (mV) instead of volts (V). Instead, the decimal fraction data type of CBOR can be used in the binary protocol, if internal calculation is done in fixed point math.
--->
+Some special characters have to be replaced according to the following table in order to be compatible with URIs (see [RFC 3986, section 2.3](https://tools.ietf.org/html/rfc3986#section-2.3)):
 
-## Functions
+| Character | Replacement | Example                                      |
+|-----------|-------------|----------------------------------------------|
+| °         | deg         | "Ambient_degC" for ambient temperature in °C |
+| %         | pct         | "Humidity_pct" for relative humidity in %    |
+| /         | -           | "Veh_m-s" for vehicle speed in m/s           |
+| ^         | (omitted)   | "Surface_m2" for surface area in m^2         |
 
-Each request fulfills a specified function, e.g. a command to read data from the device. The function is associated to a function ID, which defines the layout of the payload and the actions to be performed.
+## Function Codes
 
-The different functions are encoded in the first byte of a message, i.e. by a number between 0 and 255.
+The first byte of a ThingSet message is either a text-mode identifier ('?', '=', '!', '+', '-', ':' and '#'), a binary request code or a binary status code. Received data with unknown first byte is ignored, so that other text output (e.g. debug print information) can be used in parallel to the ThingSet protocol on the same serial interface.
 
-Function IDs 10, 13 and 32-127 are reserved, as they represent the ASCII characters for readable text including CR and LF. Invalid function IDs are ignored by the ThingSet parser, so that other text output (e.g. status information) can be used in parallel to the ThingSet protocol on the same serial interface.
+### Requests
 
-The ASCII characters '!', '#' and ':' (function IDs 33, 35 and 58) are used as identifiers for the text mode protocol. In this way, text-based or binary mode can be automatically detected based on the first byte.
+The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP in order to allow transparent translation and routing between ThingSet and HTTP APIs or CoAP devices.
 
-Function IDs greater than or equal to 128 (0x80) are used for response messages and include a status code which shows if the request could be handled successfully. The function ID is calculated as 0x80 + status code. For status codes between 0 and 31, the response was successful. If the status code is greater than or equal to 32, an error occured.
+| Code | Text ID | Method | Description                                 |
+|------|---------|--------|---------------------------------------------|
+| 0x01 | ?       | GET    | Retrieve all data from a node               |
+| 0x02 | + or !  | POST   | Append data to a node or execute a function |
+| 0x04 | -       | DELETE | Delete data from a node                     |
+| 0x05 | ?       | FETCH  | Retrieve a subset of data from a node       |
+| 0x07 | =       | iPATCH | Update (overwrite) data of a node           |
 
-Details regarding the ThingSet Protocol functions will be explained in the next chapter.
+Additional request codes may be introduced in the future. Codes 0x0A, 0x0D and 0x20-0x7F are reserved, as they represent the ASCII characters for readable text including LF and CR.
+
+### Responses
+
+Response messages in binary format are identified by a first byte greater than or equal to 128 (0x80) containing a status code which shows if the request could be handled successfully. For status codes between 0x80 and 0x9F, the response was successful. If the status code is greater than or equal to 0xA0, an error occured.
+
+The status codes are again aligned with CoAP response codes, but contain an offset so that there is no interference with ASCII characters (less than 0x80).
+
+| Code | CoAP | HTTP | Description   | Comment                    |
+|------|------|------|---------------|----------------------------|
+| 0x81 | 2.01 | 201  | Created.      | Answer to POST requests appending data |
+| 0x82 | 2.02 | 204  | Deleted.      | Answer to DELETE request   |
+| 0x83 | 2.03 | 200  | Valid.        | Answer to POST requests to exec nodes |
+| 0x84 | 2.04 | 204  | Changed.      | Answer to PATCH requests   |
+| 0x85 | 2.05 | 205  | Content.      | Answer to GET / FETCH requests |
+| 0xA0 | 4.00 | 400  | Bad Request.  | |
+| 0xA1 | 4.01 | 401  | Unauthorized. | Authentication needed       |
+| 0xA3 | 4.03 | 403  | Forbidden.    | Trying to write read-only value |
+| 0xA4 | 4.04 | 404  | Not Found.    | |
+| 0xA5 | 4.04 | 404  | Method Not Allowed.         | If e.g. DELETE is not allowed for that node |
+| 0xA8 | 4.08 |      | Request Entity Incomplete.  | |
+| 0xA9 | 4.09 | 409  | Conflict.                   | Configuration conflicts with other settings |
+| 0xAD | 4.13 | 413  | Request Entity Too Large.   | |
+| 0xAF | 4.15 | 415  | Unsupported Content-Format. | If trying to assign a string to an int |
+| 0xC0 | 5.00 | 500  | Internal Server Error.      | |
+| 0xC1 | 5.01 | 501  | Not Implemented.            | |
+
+The text mode converts the the hexadecimal response code into a string without the 0x prefix. The binary mode uses the code directly as the first byte.
+
+### Publication messages
+
+Publication messages are neither requests nor response messages, as they are sent without expecting a confirmation. Below table lists the message specifier in text and binary mode.
+
+| Code | Text ID | Description         |
+|------|---------|---------------------|
+| 0x1F | #       | Publication message |
+
+More details regarding the ThingSet protocol methods for data access will be explained in the next chapter.

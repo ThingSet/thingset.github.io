@@ -4,10 +4,6 @@ title: "CAN"
 
 # CAN Transport and Network Layer
 
-::: warning
-The CAN bus part of the ThingSet protocol is still in an early stage and may be changed significantly in the future.
-:::
-
 This specification defines layer 3 (Network) and 4 (Transport) of the ThingSet Protocol via CAN bus. Layer 1 and 2 are provided by the CAN bus itself.
 
 Only the binary messages of the ThingSet Protocol are supported via CAN.
@@ -41,7 +37,7 @@ A service message is used for the request/response communication model. A single
 
 The service message CAN ID layout is shown in the following picture:
 
-![CAN service message ID](./images/service_msg_can_id.png)
+![CAN service message ID](./../images/service_msg_can_id.png)
 
 - Priority (28-26): Defines the importance of the message. For service messages, only 3 (high priority) or 7 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
@@ -155,7 +151,7 @@ Subsequent frames:
 
 Publication messages are not sent to a single node, so the destination address does not need to be specified. So, instead of the function ID byte and the destination address byte, the data object ID is specified in the CAN identifier to have more bytes available for payload in the data bytes.
 
-![CAN data object publication message ID](./images/publication_msg_can_id.png)
+![CAN data object publication message ID](./../images/publication_msg_can_id.png)
 
 - Priority (28-26): Defines the importance of the message. For data object publication messages, only 4 (high priority), 5 (medium priority) and 6 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
@@ -249,7 +245,7 @@ Compared to NMEA 2000 fast-packet, the Tiny-TP format reduces the overhead of si
 
 A single-frame message uses only the first bit of the Tiny-TP. The remaining bits of the first byte are used for a timestamp flag and the data type, thus using the 8 CAN data bytes very efficiently.
 
-![CAN data object publication message ID](./images/pub_msg_single.png)
+![CAN data object publication message ID](./../images/pub_msg_single.png)
 
 - Multi-frame message flag: 0b (single-frame message)
 - Timestamp flag: 1b if timestamp will be sent, otherwise 0b
@@ -261,7 +257,7 @@ A single-frame message uses only the first bit of the Tiny-TP. The remaining bit
 
 Multi-frame messages need the entire first byte for the Tiny-TP header information. The timestamp flag and the data type are moved to the second byte, followed by the data content and timestamp (if enabled).
 
-![CAN data object publication message ID](./images/pub_msg_multi_first.png)
+![CAN data object publication message ID](./../images/pub_msg_multi_first.png)
 
 - Multi-frame message flag: 1b
 - Last frame flag: 0b
@@ -273,7 +269,7 @@ Multi-frame messages need the entire first byte for the Tiny-TP header informati
 
 Consecutive messages also contain the Tiny-TP header, directly followed by the data / timestamp bytes.
 
-![CAN data object publication message ID](./images/pub_msg_multi_consecutive.png)
+![CAN data object publication message ID](./../images/pub_msg_multi_consecutive.png)
 
 - Multi-frame message flag: 1b
 - Last frame flag: 1b if last frame, otherwise 0b
