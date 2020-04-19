@@ -55,6 +55,13 @@ module.exports = {
                     '3b_can',
                     '3c_lora'
                 ]
+            },{
+                title: 'Protocol Mapping',
+                collapsable: false,
+                children: [
+                    '4a_http',
+                    '4b_coap'
+                ]
             }],
             '/v0.2/': [{
                 title: 'Why ThingSet?',
