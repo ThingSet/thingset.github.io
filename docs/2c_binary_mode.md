@@ -1,328 +1,304 @@
 # Binary Mode
 
-::: warning
-The binary mode is currently being revised and may be changed significantly in the future.
-:::
-
-In the binary mode, the data is encoded using the CBOR format. Numbers are encoded using big endian format (most significant byte transferred first).
-
-The general format of a binary mode message:
-
-    +-------------+===========+
-    | Function ID | CBOR data |
-    +-------------+===========+
-
-    Legend:
-    ---------  single byte
-    =========  multiple bytes
-
-The data structure in binary mode is the same as in text mode, but the data is encoded in CBOR format and the Data Object IDs are used as identifiers by default instead of the names.
+In the binary mode, the data is encoded using the CBOR format. The data structure is the same as in text mode, but numeric node IDs are used as identifiers by default instead of the node names.
 
 The length of the entire request or response is not encoded in the ThingSet protocol, but can be determined from the CBOR format. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
 
+### Requests
 
-## Query and list data objects (function IDs 0x01-0x06)
+Each request message consists of a first byte as the request method identifier, a path or ID specifying the endpoint of the request and CBOR data as payload (if applicable).
 
-Allows to read one or more data objects. The objects are identified by their ID (binary mode only) or by their name.
+    bin-request = bin-get / bin-post / bin-delete / bin-fetch / bin-ipatch / bin-nameid
 
-Useful call for device discovery, as it lists all data objects of one category.
+    bin-get    = %x01 endpoint get-type
 
-In text mode, an array of strings with the data object names is returned. In binary mode, either the names or the numeric IDs can be requested.
+    bin-post   = %x02 endpoint cbor-data      ; exec or create is determined
+                                              ; based on node type
 
-Only those data objects are returned which are at least readable. Thus, the result might differ after authentication.
+    bin-delete = %x04 endpoint cbor-uint      ; only for valid node IDs
 
+    bin-fetch  = %x05 endpoint cbor-array     ; returns only values, no keys
 
-The binary mode also allows to query only the IDs of all data objects in one category in order to
-allow shorter messages during device recovery. So the host can first query all IDs in one category,
-afterwards query the names for each ID once and then request the value for any data object on
-demand.
+    bin-ipatch = %x07 endpoint cbor-map       ; map containing
 
-General format description:
+    bin-nameid = %x1E endpoint cbor-array     ; get names of ids or vice versa
+
+    endpoint   = path         ; CBOR string: path same as text mode
+               / parent-id    ; CBOR uint: parent node ID instead of path
+               / %xF7         ; CBOR undefined: wildcard matching any path / parent
+
+    get-type   = %xF7         ; CBOR undefined: returns array of node IDs (default)
+               / %x80         ; CBOR emtpy array: returns array of names
+               / %xA0         ; CBOR empty map: returns name:value map
+
+### Response
+
+Responses in binary mode start with the error/status code as specified before, followed by the data if applicable.
+
+    bin-response = %x80-FF [ cbor-data ]      ; response code and data
+
+### Publication message
+
+Binary publication messages follow the same concept as in text mode.
+
+    bin-pubmsg = %x1F cbor-map                ; map containing node IDs and values
+
+## Name and ID mapping
+
+The examples in this chapter are based on the same data structure as introduced in the [General Concept chapter](2a_general.md#data-structure), but each node is identified by an ID. The assignment of IDs and names is shown in the following JSON-like structure (actual JSON supports neither numbers as keys nor comments):
+
+```JSON
+{
+    "18": {                             // info
+        "19": "MPPT 1210 HUS",          // DeviceType
+    },
+    "30": {                             // conf
+        "31": 14.4,                     // BatCharging_V
+    },
+    "60": {                             // input
+        "61": true                      // EnableCharging
+    },
+    "70": {                             // output
+        "71": 14.1,                     // Bat_V
+        "72": 5.13,                     // Bat_A
+        "73": 22                        // Ambient_degC
+    },
+    "A0": {                             // rec
+        "A1": 1984,                     // BatChgDay_Wh
+    },
+    "D0": {                             // cal
+    },
+    "E0": {                             // exec
+        "E1": null,                     // reset
+    },
+    "EF": ["Password"],                 // auth
+    "F0": {                             // pub
+        "F1": {                         // serial
+            "F2": true,                 // Enable
+            "F3": 1.0,                  // Interval
+            "F4": ["71", "72"]          // IDs
+        },
+        "F5": {                         // can
+            "F6": false,                // Enable
+            "F7": 0.1,                  // Interval
+            "F8": ["71"]                // IDs
+        }
+    }
+}
+```
+
+The firmware developer is free to choose the IDs. However, above IDs for the nodes of the first layer are used by Libre Solar devices and recommended for the following reasons:
+
+- IDs from 0x00 to 0x17 are left for data nodes that are sent very often, as they consume only a single byte in CBOR encoding
+- The node IDs specifying the categories are spaced such that there should be enough free node IDs for most devices
+- As the node IDs are strictly increasing, the data layot is compatible with the draft standard [CBOR Encoding of Data Modeled with YANG](https://tools.ietf.org/html/draft-ietf-core-yang-cbor).
+
+In contrast to the text mode, the binary mode has a special NAMEID request (without CoAP equivalent) that allows to get a name for an ID or vice versa.
+
+**Example 1:** Request name of node IDs 0x71 and 0x72
 
     Request:
-    +------+=================================+
-    | 0xXX | CBOR data: Query byte or string |
-    +------+=================================+
+    1E                                      NAMEID request
+       18 70                                # CBOR uint: 0x70 (parent ID)
+       82                                   # CBOR array (2 elements)
+          18 71                             # CBOR uint: 0x71 (node ID)
+          18 72                             # CBOR uint: 0x72 (node ID)
 
     Response:
-    +------+===========================================+
-    | 0xZZ | CBOR data: ID(s), name(s) and/or value(s) |
-    +------+===========================================+
+    85                                      Content.
+       82                                   # CBOR array (2 elements)
+          65 4261745F56                     # CBOR string: "Bat_V"
+          65 4261745F41                     # CBOR string: "Bat_A"
 
-    0xXX:   Function defining the category
-    0xZZ:   Response code (0x80 for success)
+If the parent ID is passed as the endpoint, only the data node name is returned. All requested nodes must be children of the same parend node in this case.
 
-Example 1: Query all data objects in category output
+**Example 2:** Request full path of node ID 0x71 (Bat_V)
 
     Request:
-    0x04        Function ID (output)
-        0xA0    CBOR empty map              ToDo: empty string
+    1E                                      NAMEID request
+       F7                                   # CBOR undefined as a wildcard
+       18 71                                # CBOR uint: 0x71 (node ID)
 
     Response:
-    0x80                    Status code (Success)
-      0xa2                  CBOR map (2 elements)
-        0x65 0x4261745F56   Data Object name (Bat_V)
-        0xFA 0x41633333     CBOR data (float32): 14.2
-        0x6C 0x416D6269656E745F64656743     Data Object name (Ambient_degC)
-        0x16                CBOR data (integer): 22
+    85                                      Content.
+       6C 6F75747075742F4261745F56          # CBOR string: "output/Bat_V"
 
-Example 2: Query single data object "EnableSwitch" by ID
+If the path of a node is unknown (e.g. because it was obtained from a publication message), the entire path (see text mode) can be determined by setting the endpoint to undefined, as shown above.
+
+**Example 3:** Request IDs for known data node names
 
     Request:
-    0x03                Function ID (input)
-        0x02            Data Object ID (EnableSwitch)
+    1E                                      NAMEID request
+       F7                                   # CBOR undefined as a wildcard
+       82                                   # CBOR array (2 elements)
+          65 4261745F56                     # CBOR string: "Bat_V"
+          65 4261745F41                     # CBOR string: "Bat_A"
 
     Response:
-    0x80                Status code (Success)
-        0xF5            CBOR data: true
+    85                                      Content.
+       82                                   # CBOR array (2 elements)
+          18 71                             # CBOR uint: 0x71 (node ID)
+          18 72                             # CBOR uint: 0x72 (node ID)
 
-Example 2: Query single data object "EnableSwitch" by name
+Also here a wildcard for the endpoint can be used to query the entire database. However, if multiple nodes with the same name are found, an error must be returned. This should not be the case for a properly designed data structure.
+
+## Read data
+
+Similar to the text mode, the binary variants of the GET and FETCH functions also allow to read one or more data objects. The objects are identified by their parent node (endpoint of a path) and their ID or their name.
+
+The GET function is useful for device discovery, as it can list all childs of a node. Depending on the computing power of the device and the host, the GET request can either return only the IDs of the next layer or maps including the values. In order to be compatible to the text mode, it is also possible to retrieve all child nodes of a resource as a map of name/value pairs.
+
+The binary mode also allows to work only with IDs and no paths or node names to keep message size at a minimum. In order to discover the nodes of a device, the host can first query all child IDs of a node (starting with root node of ID 0), afterwards query the names for each ID once and then request the value for any data object on demand.
+
+**Example 1:** Discover all child nodes of the root node (i.e. categories)
 
     Request:
-    0x03                Function ID (input)
-        0x02            Data Object ID (EnableSwitch)
+    01                                      GET request
+       00                                   # CBOR uint: 0x00 (root node)
+       F7                                   # CBOR undefined as a wildcard
 
     Response:
-    0x80                Status code (Success)
-        0xF5            CBOR data: true
+    85                                      Content.
+       89                                   # CBOR array (9 elements)
+          18 18                             # CBOR uint: 0x18
+          18 30                             # CBOR uint: 0x30
+           ...
+          18 F0                             # CBOR data: 0xF0
 
-Example 2: Read multiple data objects:
+**Example 2:** Retrieve all data of output path (keys + values)
+
+    Request (alternative 1):
+    01                                      GET request
+       18 70                                # CBOR uint: 0x70
+       A0                                   # CBOR empty map
+
+    Request (alternative 2):
+    01                                      GET request
+       66 6F7574707574                      # CBOR string: "output"
+       A0                                   # CBOR empty map
+
+    Response:
+    85                                      Content.
+       A3                                   # CBOR map (3 elements)
+          65 4261745F56                     # CBOR string: "Bat_V"
+          FA 4161999A                       # CBOR float: 14.1
+          65 4261745F41                     # CBOR string: "Bat_A"
+          FA 40A428F6                       # CBOR float: 5.13
+          6C 416D6269656E745F64656743       # CBOR string: "Ambient_degC"
+          16                                # CBOR uint: 22
+
+Note that the empty map requests to respond with name/value pairs as specified in the request grammar at the beginning of the chapter.
+
+**Example 3:** Retrieve value of data node "Bat_V"
+
+    Request (alternative 1):
+    05                                      FETCH request
+       66 6F7574707574                      # CBOR string: "output" (path)
+       65 4261745F56                        # CBOR string: "Bat_V" (node name)
+
+    Request (alternative 2):
+    05                                      FETCH request
+       18 70                                # CBOR uint: 0x70 (parent ID)
+       18 71                                # CBOR uint: 0x71 (node ID)
+
+    Response:
+    85                                      Content.
+       FA 4161999A                          # CBOR float: 14.1
+
+**Example 4:** Retrieve multiple data nodes:
 
     Request:
-    0x04                    Function ID (output)
-      0x82                  CBOR array (2 elements)
-        0x03                Data Object ID (Bat_V)
-        0x05                Data Object ID (Ambient_degC)
+    05                                      FETCH request
+       18 70                                # CBOR uint: 0x70 (parent ID)
+       82                                   # CBOR array (2 elements)
+          18 71                             # CBOR uint: 0x71 (node ID)
+          18 72                             # CBOR uint: 0x72 (node ID)
 
     Response:
-    0x80                    Status code (Success)
-      0x82                  CBOR array (2 elements)
-        0xFA 0x41633333     CBOR data (float32): 14.2
-        0x16                CBOR data (integer): 22
+    85                                      Content.
+       82                                   # CBOR array (2 elements)
+          FA 4161999A                       # CBOR float: 14.1
+          16                                # CBOR uint: 22
 
-Example 1: List all data object IDs in category output
+The binary mode also allows to use data object names (strings) instead of numeric IDs, which increases the amount of transferred data.
 
-    Request:
-    0x04        Function ID (output)
-        0xF6    CBOR null                       ToDo: empty array
+## Update data
 
-    Response:
-    0x80        Status code (Success)
-      0x82      CBOR array (2 elements)
-        0x03    Data Object ID (Bat_V)
-        0x05    Data Object ID (Ambient_degC)
+Requests to overwrite the value a data node.
 
-Example 2: List all data object names in category output
-
-    Request:
-    0x04        Function ID (output)
-        0x80    CBOR empty array                ToDo: remove
-
-    Response:
-    0x80                    Status code (Success)
-      0x82                  CBOR array (2 elements)
-        0x65 0x4261745F56   Data Object name (Bat_V)
-        0x6C 0x416D6269656E745F64656743     Data Object name (Ambient_degC)
-
-The binary mode also allows to use data object names (strings) instead of numeric IDs, which increases the amount of data.
-
-## Update data object(s)
-
-Requests to overwrite the value a data object.
-
-The device must support a patch request using the same data type as used in the response of a GET or FETCH request for the given objects. Optionally, the device may also accept different data types (e.g. float32 instead of int) and convert the data internally.
-
-Data of category *conf* will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category *input* might be changed regularly.
+The device must support a patch request using the same CBOR data type as used in the response of a GET or FETCH request for the given objects. Optionally, the device may also accept different data types (e.g. float32 instead of int) and convert the data internally.
 
 If the data type is not supported, an error status code (36) is responded.
 
-
-General layout:
-
-    Request:
-    +------+==========================+
-    | 0xXX | CBOR data: key/value map |
-    +------+==========================+
-
-    Response:
-    +------+
-    | 0xZZ |
-    +------+
-
-    0xXX:   Function defining the category
-    0xZZ:   Response code (0x80 for success)
-
-Example 1: Disable the switch
+**Example 1:** Disable charging
 
     Request:
-    0x03                Function ID (input)
-      0xA1              CBOR map (1 element)
-        0x02            Data Object ID (EnableSwitch)
-        0xF4            CBOR data: false
+    07                                      PATCH request
+       18 70                                # CBOR uint: 0x70
+       A1                                   # CBOR map (1 element)
+          18 61                             # CBOR uint: 0x61
+          F4                                # CBOR data: false
 
     Response:
-    0x80                Status code: Success
+    84                                      Changed.
 
-Example 2: Attempt to write read-only measurement values (output category)
+**Example 2:** Attempt to write read-only measurement values (output category)
 
     Request:
-    0x04                    Function ID (output)
-      0xA2                  CBOR map (2 elements)
-        0x03                Data Object ID (Bat_V)
-        0xFA 0x41633333     CBOR data (float32): 14.2
-        0x05                Data Object ID (Ambient_degC)
-        0x16                CBOR data (integer): 22
+    07                                      PATCH request
+       A2                                   # CBOR map (2 elements)
+          18 71                             # CBOR uint: 0x71
+          FA 0x41633333                     # CBOR float32: 14.2
+          18 73                             # CBOR uint: 0x73
+          16                                # CBOR uint: 22
 
     Response:
-    0xA6                    Status code (Access denied)
+    A3                                      Forbidden.
 
-## Execute (0x0B)
+## Create data
 
-Executes a function identified by a data object name of category "exec".
+Appends new data to a data node in a similar way as in the text mode.
 
-ToDo
-
-## Get data object name (0x0E)
-
-Returns the name of a data object specified by its ID. This function makes sense for binary mode only, as the text-based mode uses the names directly.
-
-General format description:
+**Example 1:** Add node ID 0x72 (Bat_A) to the serial publication channel
 
     Request:
-    +------+==================+
-    | 0x0E | CBOR data: ID(s) |
-    +------+==================+
+    02                                      POST request
+       18 F4                                # CBOR uint: 0xF4 (parent ID)
+       18 72                                # CBOR uint: 0x72 (node ID)
 
     Response:
-    +------+====================+
-    | 0xZZ | CBOR data: name(s) |
-    +------+====================+
+    81                                      Created.
 
-    0xZZ:   Response code (0x80 for success)
+## Delete data
 
-Example 1: Request name of data object ID 0x03 (Bat_V)
+Removes data from a node of array type.
+
+**Example 1:** Remove node ID 0x72 (Bat_A) from serial publication channel
 
     Request:
-    0x0E                        Function ID (name)
-        0x03                    Data Object ID (Bat_V)
+    04                                      DELETE request
+       18 F4                                # CBOR uint: 0xF4 (parent ID)
+       18 72                                # CBOR uint: 0x72 (node ID)
 
     Response:
-    0x80                        Status code: OK.
-        0x65 0x4261745F56       String of length 5: "Bat_V"
+    82                                      Deleted.
 
-Example 2: Request name of multiple data objects
+## Execute function
+
+For execution of a function, the same POST request is used as when creating data. The device decides based on the type of the endpoint whether the request is a function call or a request to create data.
+
+**Example 1:** Reset the device
 
     Request:
-    0x0E                            Function ID (name)
-      0x82                          CBOR array (2 elements)
-        0x03                        Data Object ID (Bat_V)
-        0x04                        Data Object ID (Ambient_degC)
+    02                                      POST request
+       18 E1                                # CBOR uint: 0xE1 (node ID)
+       80                                   # CBOR empty array
 
     Response:
-    0x80                            Status code: OK.
-      0x82                          CBOR array (2 elements)
-        0x65 0x4261745F56           Data Object name (Bat_V)
-        0x6A 0x416D6269656E745F6F43     Data Object name (Ambient_degC)
+    83                                      Valid.
 
+Note that the endpoint is the node of the executable function itself. Data can be passed to the called function as the second parameter, but the "reset" function does not require any parameters, so it receives an empty array.
 
-## Authentication (0x10)
+## Other functions
 
-Analog to text mode.
-
-
-## Publication request (0x12)
-
-The format in binary mode is analog to the text mode format.
-
-Example 1: List all available publication channels (as strings)
-
-    Request:
-    0x12                            Function ID (pub)
-        0x60                        CBOR empty string (otherwise we don't know the length of the message)
-
-    Response:
-    0x80                            Status code: OK.
-      0x83                          CBOR array (3 elements)
-        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
-        0x6A 4C6F52615F36306D696E   String of length 10: "LoRa_60min"
-        0x69 53657269616C5F3173     String of length 9: "Serial_1s"
-
-Example 2: List configured data objects for second channel (LoRa_60min)
-
-    Request:
-    0x12                            Function ID (pub)
-        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
-
-    Response:
-    0x80                            Status code: OK.
-      0x82                          CBOR array (2 elements)
-        0x19 0x03                   Data Object ID (Bat_V)
-        0x19 0x05                   Data Object ID (Ambient_degC)
-
-Example 3: Change the list for the second channel.
-
-    Request:
-    0x12                            Function ID (pub)
-      0xA1                          CBOR map (1 element)
-        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
-        0x19 0x03                   Data Object ID (Bat_V)
-
-    Response:
-    0x80                            Status code: OK.
-
-With this setting, the following message is automatically sent by the device once per hour (see below for publication message definition):
-
-    0x1F                            Function ID (publication message)
-      0xA2                          CBOR map (2 elements)
-        0x19 0x4001                 Data Object ID (Bat_V)
-        0xFa 0x41733333             CBOR data (float32): 15.2
-        0x19 0x4002                 Data Object ID (Ambient_degC)
-        0x16                        CBOR data (integer): 22
-
-Example 4: Enable a publication channel
-
-    Request:
-    0x12                            Function ID (pub)
-      0xA1                          CBOR map (1 element)
-        0x69 0x43414E5F3130306D73   String of length 9: "CAN_100ms"
-        0xF5                        CBOR pimitive (true)
-
-    Response:
-    0x80                        Status code: OK.
-
-
-## PRELIMINARY: Logging data (0x??)
-
-ToDo
-
-## Publication message (0x1F)
-
-Publication messages are sent regularly in a specified interval. The interval and the data objects can be factory-programmed or can be configured via the !pub function. The !pub function requests data to be published, whereas the publication message actually publishes the data.
-
-Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
-
-
-General layout:
-
-    Publication message (broadcast):
-    +------+==========================+
-    | 0x1F | CBOR data: key/value map |
-    +------+==========================+
-
-Example 1: Publication of a single parameter
-
-    Message:
-    0x1F                Function ID (publication message)
-      0xA1              CBOR map (1 element)
-        0x19 0x3001     Data Object ID (enableSwitch)
-        0xF4            CBOR data: false
-
-Example 2: Publication of multiple parameters
-
-    Message:
-    0x1F                    Function ID (publication message)
-      0xA2                  CBOR map (2 elements)
-        0x19 0x4001         Data Object ID (vBat)
-        0xFa 0x41733333     CBOR data (float32): 15.2
-        0x19 0x4002         Data Object ID (tAmbient)
-        0x16                CBOR data (integer): 22
+Authentication, publication request setup and publication messages work analog to text mode.
