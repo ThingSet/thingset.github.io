@@ -55,10 +55,10 @@ For explanation of the protocol, the following simplified data structure of an M
     "info": {
         "DeviceType": "MPPT 1210 HUS",
     },
-    "conf": {
+    "conf": {                                       // data stored in NVM
         "BatCharging_V": 14.4,
     },
-    "input": {
+    "input": {                                      // data stored in RAM
         "EnableCharging": true
     },
     "output": {
@@ -70,19 +70,33 @@ For explanation of the protocol, the following simplified data structure of an M
         "BatChgDay_Wh": 1984,
     },
     "exec": {
-        "reset": null,
+        "reset": null,                              // void function
     },
-    "auth": ["Password"],
-    "pub": {
+    "auth": ["Password"],                           // function with 1 parameter
+    "pub": {                                        // publication channels
         "serial": {
             "Enable": true,
             "Interval": 1.0,
-            "IDs": ["Bat_V", "Bat_A"]
+            "Topic": "",                            // default: empty topic
+            "IDs": ["Bat_V", "Bat_A"]               // array of node names
         },
         "can": {
             "Enable": false,
             "Interval": 0.1,
+            "Topic": 12345,                         // e.g. CAN ID
             "IDs": ["Bat_V"]
+        },
+        "mqtt": {
+            "Enable": true,
+            "Interval": 3600,
+            "Topic": "chargers/device-id/pub",
+            "IDs": ["Bat_V", "Bat_A"]
+        }
+    },
+    "sub": {                                        // subscription channels
+        "mqtt": {                                   // may have callback attached
+            "Topic": "chargers/device-id/sub",
+            "IDs": ["EnableCharging"]
         }
     }
 }

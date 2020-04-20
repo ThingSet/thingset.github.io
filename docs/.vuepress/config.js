@@ -60,7 +60,8 @@ module.exports = {
                 collapsable: false,
                 children: [
                     '4a_http',
-                    '4b_coap'
+                    '4b_coap',
+                    '4c_mqtt'
                 ]
             }],
             '/v0.2/': [{
