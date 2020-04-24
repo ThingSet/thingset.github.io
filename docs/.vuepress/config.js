@@ -25,7 +25,7 @@ module.exports = {
                 text: 'History',
                 ariaLabel: 'History Menu',
                 items: [
-                    { text: 'develop', link: '/' },
+                    { text: 'v0.3', link: '/' },
                     { text: 'v0.2', link: '/v0.2/' },
                     { text: 'v0.1', link: '/v0.1/' }
                 ]
