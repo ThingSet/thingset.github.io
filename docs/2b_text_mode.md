@@ -48,10 +48,7 @@ The bytes after the dot contain the requested data.
 
 The publication message is very simple and consists of a hash sign and a whitespace at the beginning, followed by a map of data node name/value pairs.
 
-    txt-pubmsg = "#" [ topic ] " " json-map         ; publication message
-
-    topic = path                                    ; same format as path, used to
-                                                    ; distinguish pub msg origins
+    txt-pubmsg = "# " json-map                      ; publication message
 
 ## Read data
 
@@ -157,6 +154,4 @@ With this setting, the following message is automatically sent by the device onc
 
 Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
 
-A publication message can have a dedicated topic which is chosen depending on the application. With CAN as a lower layer it could be the device ID of the sender so that the application can select the device of highest priority if multiple devices publish the same data node.
-
-The data nodes to be published in each channel can be configured using POST and DELETE requests to the pub/serial/IDs endpoint, as shown in the examples above.
+The data nodes to be published via one channel (e.g. serial) can be configured using POST and DELETE requests to the pub/serial/IDs endpoint, as shown in the examples above.

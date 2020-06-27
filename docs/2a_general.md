@@ -77,13 +77,11 @@ For explanation of the protocol, the following simplified data structure of an M
         "serial": {
             "Enable": true,
             "Interval": 1.0,
-            "Topic": "",                            // default: empty topic
             "IDs": ["Bat_V", "Bat_A"]               // array of node names
         },
         "can": {
             "Enable": false,
             "Interval": 0.1,
-            "Topic": 12345,                         // e.g. CAN ID
             "IDs": ["Bat_V"]
         },
         "mqtt": {

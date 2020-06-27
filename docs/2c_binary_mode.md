@@ -41,9 +41,7 @@ Responses in binary mode start with the error/status code as specified before, f
 
 Binary publication messages follow the same concept as in text mode.
 
-    bin-pubmsg = %x1F bin-topic cbor-map      ; map containing node IDs and values
-
-    bin-topic = cbor-string                   ; empty string 0x60 if not specified
+    bin-pubmsg = %x1F cbor-map                ; map containing node IDs and values
 
 ## Name and ID mapping
 
