@@ -76,7 +76,7 @@ Only those data nodes are returned which are at least readable. Thus, the result
 **Example 4:** Retrieve single data node "Bat_V"
 
     ?output ["Bat_V"]
-    :85 Content. {"Bat_V":14.2}
+    :85 Content. [14.2]
 
 ## Update data
 
