@@ -145,7 +145,7 @@ The pub node is used to configure the device to publish certain data on a regula
 
 **Example 2:** Enable "serial" publication channel
 
-    ?pub/serial {"Enable":true}
+    =pub/serial {"Enable":true}
     :84 Changed.
 
 With this setting, the following message is automatically sent by the device once per second:
