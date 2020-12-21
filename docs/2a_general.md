@@ -173,22 +173,22 @@ The status codes are again aligned with CoAP response codes, but contain an offs
 
 | Code | CoAP | HTTP | Description   | Comment                    |
 |------|------|------|---------------|----------------------------|
-| 0x81 | 2.01 | 201  | Created.      | Answer to POST requests appending data |
-| 0x82 | 2.02 | 204  | Deleted.      | Answer to DELETE request   |
-| 0x83 | 2.03 | 200  | Valid.        | Answer to POST requests to exec nodes |
-| 0x84 | 2.04 | 204  | Changed.      | Answer to PATCH requests   |
-| 0x85 | 2.05 | 205  | Content.      | Answer to GET / FETCH requests |
-| 0xA0 | 4.00 | 400  | Bad Request.  | |
-| 0xA1 | 4.01 | 401  | Unauthorized. | Authentication needed       |
-| 0xA3 | 4.03 | 403  | Forbidden.    | Trying to write read-only value |
-| 0xA4 | 4.04 | 404  | Not Found.    | |
-| 0xA5 | 4.04 | 404  | Method Not Allowed.         | If e.g. DELETE is not allowed for that node |
-| 0xA8 | 4.08 |      | Request Entity Incomplete.  | |
-| 0xA9 | 4.09 | 409  | Conflict.                   | Configuration conflicts with other settings |
-| 0xAD | 4.13 | 413  | Request Entity Too Large.   | |
-| 0xAF | 4.15 | 415  | Unsupported Content-Format. | If trying to assign a string to an int |
-| 0xC0 | 5.00 | 500  | Internal Server Error.      | |
-| 0xC1 | 5.01 | 501  | Not Implemented.            | |
+| 0x81 | 2.01 | 201  | Created       | Answer to POST requests appending data |
+| 0x82 | 2.02 | 204  | Deleted       | Answer to DELETE request   |
+| 0x83 | 2.03 | 200  | Valid         | Answer to POST requests to exec nodes |
+| 0x84 | 2.04 | 204  | Changed       | Answer to PATCH requests   |
+| 0x85 | 2.05 | 200  | Content       | Answer to GET / FETCH requests |
+| 0xA0 | 4.00 | 400  | Bad Request   | |
+| 0xA1 | 4.01 | 401  | Unauthorized  | Authentication needed       |
+| 0xA3 | 4.03 | 403  | Forbidden     | Trying to write read-only value |
+| 0xA4 | 4.04 | 404  | Not Found     | |
+| 0xA5 | 4.05 | 405  | Method Not Allowed         | If e.g. DELETE is not allowed for that node |
+| 0xA8 | 4.08 | 400  | Request Entity Incomplete  | |
+| 0xA9 | 4.09 | 409  | Conflict                   | Configuration conflicts with other settings |
+| 0xAD | 4.13 | 413  | Request Entity Too Large   | |
+| 0xAF | 4.15 | 415  | Unsupported Content-Format | If trying to assign a string to an int |
+| 0xC0 | 5.00 | 500  | Internal Server Error      | |
+| 0xC1 | 5.01 | 501  | Not Implemented            | |
 
 The text mode converts the the hexadecimal response code into a string without the 0x prefix. The binary mode uses the code directly as the first byte.
 
