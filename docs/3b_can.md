@@ -5,7 +5,7 @@ title: "CAN"
 # CAN Transport and Network Layer
 
 ::: warning
-The CAN bus part of the ThingSet protocol is still in an early stage and may be change in the future.
+The CAN bus part of the ThingSet protocol is still in an early stage and may change in the future.
 :::
 
 This specification defines layer 3 (Network) and 4 (Transport) of the ThingSet Protocol via CAN bus. Layer 1 and 2 are provided by the CAN bus itself.
@@ -34,19 +34,21 @@ Two general types of messages are specified: Service message and publication mes
 
 ## Service message
 
-A service message is used for the request/response messaging pattern. A single byte each for source and destination node address are defined as part of the CAN ID to identify sender and receiver of the message. In addition to that, the function code is specified as part of the CAN ID.
+A service message is used for the request/response messaging pattern. A single byte each for source and destination node address are defined as part of the CAN ID to identify sender and receiver of the message.
 
 ### CAN identifier layout
 
-The service message CAN ID layout is shown in the following picture:
+The service message addressing in 29-bit CAN ID is similar to SAE J1939:
 
-![CAN service message ID](./images/service_msg_can_id.png)
+| Bits | 28 .. 26 | 25 | 24 |    23 .. 16     |   15 .. 8      |   7 .. 0       |
+|------|:--------:|:--:|:--:|:---------------:|:--------------:|:--------------:|
+|      | Priority | 1  | 0  | reserved (0xDA) | Target address | Source address |
 
 - Priority (28-26): Defines the importance of the message. For service messages, only 3 (high priority) or 7 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
 - Message type (24): 0b for service message
-- Function code (23-16): Function code of application layer protocol
-- Destination address (15-8): Destination node address (255 for broadcast)
+- Reserved (23-16): Set to 218 (0xDA) as suggested by ISO-TP standard (ISO 15765-2) for normal fixed addressing with N_TAtype = physical
+- Target address (15-8): Destination node address
 - Source address (7-0): Source node address (255 for anonymous message during address claiming)
 
 ### Transport protocol (ISO 15765-2)
@@ -55,36 +57,36 @@ In order to transfer data with a length of more than 8 bytes, the transfer proto
 
 It allows a maximum number of 4095 data bytes (defined by 12 bit unsigned int length code in first frame). Flow control mechanisms ensure the reliability of data reception.
 
-As a very important feature, ISO-TP allows the efficient transfer of single-frame messages with only one byte of overhead (and no flow control packets). This feature is necessary, as it is not known before if a certain function of the ThingSet protocol will transfer only a few bytes or a large amount of data.
+As a very important feature, ISO-TP allows the efficient transfer of single-frame messages with only one byte of overhead (and no flow control packets). This feature is necessary, as it is not known in advance if a certain function of the ThingSet protocol will transfer only a few bytes or a large amount of data.
 
 The ISO-TP standard is not accessible for free. However, several open source implementations (including [SocketCAN for Linux](https://github.com/hartkopp/can-isotp)) of the ISO-TP are available. Most important information about the frame layout can be found on [Wikipedia](https://en.wikipedia.org/wiki/ISO_15765-2).
 
 #### Single-frame message request/response
 
-Application protocol data of 8 bytes or lower can be transferred using a single CAN frame. The function ID of the application protocol (byte 1) is already included in the CAN indentifier. The first byte of the CAN data contains the ISO-TP header for a single-frame message. Bytes 2 to n (with n <= 8) are contained in the remaining data bytes of the CAN frame.
+Application protocol data of 7 bytes or lower can be transferred using a single CAN frame. The first byte of the CAN data contains the ISO-TP header for a single-frame message. Bytes 2 to n (with n <= 7) are contained in the remaining data bytes of the CAN frame.
 
 <table><thead><tr>
     <th>Byte 1</th><th>Byte 2</th><th>...</th><th>Byte 8</th>
 </tr></thead><tbody><tr>
 	<td>ISO-TP header</td>
-    <td>Application protocol (byte 2)</td>
+    <td>Application protocol (byte 1)</td>
 	<td>...</td>
-    <td>Application protocol (byte 8)</td>
+    <td>Application protocol (byte 7)</td>
 </tr></tbody></table>
 
 #### Multi-frame message request/response
 
-More than 8 bytes of application protocol data are sent as multi-frame messages.
+More than 7 bytes of application protocol data are sent as multi-frame messages.
 
-The first message contains two bytes for the ISO-TP header (including also the total message length). As the function ID (first byte of application protocol data) is already stored in the CAN identifier, the application protocol byte numbering starts with 2.
+The first message contains two bytes for the ISO-TP header (including the total message length).
 
 <table><thead><tr>
     <th>Byte 1</th><th>Byte 2</th><th>Byte 3</th><th>...</th><th>Byte 8</th>
 </tr></thead><tbody><tr>
 	<td colspan="2">ISO-TP header</td>
-    <td>Application protocol (byte 2)</td>
+    <td>Application protocol (byte 1)</td>
 	<td>...</td>
-    <td>Application protocol (byte 7)</td>
+    <td>Application protocol (byte 6)</td>
 </tr></tbody></table>
 
 Consecutive messages i = 2...585 consume only one byte for the ISO-TP header:
@@ -93,9 +95,9 @@ Consecutive messages i = 2...585 consume only one byte for the ISO-TP header:
     <th>Byte 1</th><th>Byte 2</th><th>...</th><th>Byte 8</th>
 </tr></thead><tbody><tr>
 	<td>ISO-TP header</td>
-    <td>Application protocol (byte i\*7-6)</td>
+    <td>Application protocol (byte (i-1)*7)</td>
 	<td>...</td>
-    <td>Application protocol (byte i\*7)</td>
+    <td>Application protocol (byte i*7-1)</td>
 </tr></tbody></table>
 
 
@@ -115,12 +117,12 @@ With the fast packet protocol, a single frame transfer is possible. However, a s
 
 Overview of different CAN based transport protocols:
 
-|                       | ISO-TP  | NMEA 2000<br/>fast packet | SAE J1939-21 | RV-C    |
-|-----------------------|:-------:|:-------------------------:|:------------:|:-------:|
-|Number of data bytes   | 0..4095 | 0..223                    | 9..1785      | 9..1785 |
-|Flow control           | yes     | no                        | yes          | no      |
-|Efficient single frame | yes     | no                        | no           | no      |
-|Open standard          | no      | no                        | no           | yes     |
+|                        | ISO-TP  | NMEA 2000<br/>fast packet | SAE J1939-21 | RV-C    |
+|------------------------|:-------:|:-------------------------:|:------------:|:-------:|
+| Number of data bytes   | 0..4095 | 0..223                    | 9..1785      | 9..1785 |
+| Flow control           | yes     | no                        | yes          | no      |
+| Efficient single frame | yes     | no                        | no           | no      |
+| Open standard          | no      | no                        | no           | yes     |
 
 
 <!---
@@ -154,9 +156,11 @@ The publication message provides a very efficient way to send data in a regular 
 
 ### CAN identifier layout
 
-Publication messages are not sent to a single node, so the destination address does not need to be specified. Instead of the function code and the destination address byte, the data node ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
+Publication messages are not sent to a single node, so the destination address does not need to be specified. Instead, the data node ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
 
-![CAN publication message ID](./images/publication_msg_can_id.png)
+| Bits | 28 .. 26 | 25 | 24 |   23 .. 16         |   15 .. 8          |   7 .. 0       |
+|------|:--------:|:--:|:--:|:------------------:|:------------------:|:--------------:|
+|      | Priority | 1  | 1  | Data node ID (MSB) | Data node ID (LSB) | Source address |
 
 - Priority (28-26): Defines the importance of the message. For publication messages, only 4 (high priority), 5 (medium priority) and 6 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
@@ -174,10 +178,15 @@ In order to acquire real-time measurement values, a 16-bit timestamp (unsigned i
 
 The maximum length of the value and the optional timestamp is defined by the maximum data section size of the CAN frame (8 bytes for classic CAN).
 
-
 ## Physical layer
 
-Standard RJ45 jack as used for Ethernet are used as the default for ThingSet via CAN. The cables should be Cat 5e twisted pair or better, allowing reliable communication with easily available parts.
+### Bit rate
+
+ThingSet uses a fixed bit rate of 500 kbit/s, which supports a maximum bus length of 100 m according to CiA 301.
+
+### Connector
+
+Standard RJ45 jacks as used for Ethernet are also used as the default for ThingSet via CAN. The cables should be Cat 5e twisted pair or better, allowing reliable communication with easily available parts.
 
 The pinout of the connector is similar to the CANopen specification:
 
