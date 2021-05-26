@@ -63,6 +63,13 @@ module.exports = {
                     '4b_coap',
                     '4c_mqtt'
                 ]
+            },{
+                title: 'Tools',
+                collapsable: false,
+                children: [
+                    '5a_serial',
+                    '5b_can',
+                ]
             }],
             '/v0.2/': [{
                 title: 'Why ThingSet?',
