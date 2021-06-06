@@ -84,7 +84,7 @@ module.exports = {
                     children: [
                         '3a_serial',
                         '3b_can',
-                        '3c_lora'
+                        '3c_lorawan'
                     ]
                 },{
                     title: 'Protocol Mapping',
