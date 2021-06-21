@@ -1,6 +1,6 @@
 # Introduction
 
-This specification describes a communication protocol for control, configuration and monitoring of connected devices. It is published under the permissive [CC BY-SA 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).
+This specification describes a communication protocol for control, configuration and monitoring of connected devices. It is published under the [CC BY-SA 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 The protocol is called ThingSet - a protocol for **set**tings of **thing**s. The main goals of the protocol are:
 
@@ -18,7 +18,7 @@ Similar to Modbus, the protocol should have a text-based mode which is human-rea
 
 ### Compact footprint
 
-Implementation and binary data representations should be very compact to enable transport via LoRa and CAN. Standard CAN frames allow a payload of only 8 bytes per frame, LoRa allows [51 bytes](https://www.thethingsnetwork.org/forum/t/limitations-data-rate-packet-size-30-seconds-uplink-and-10-messages-downlink-per-day-fair-access-policy/1300) of application payload per message.
+Implementation and binary data representations should be very compact to enable transport via LoRa and CAN. Standard CAN frames allow a payload of only 8 bytes per frame, LoRaWAN allows [51 bytes](https://www.thethingsnetwork.org/forum/t/limitations-data-rate-packet-size-30-seconds-uplink-and-10-messages-downlink-per-day-fair-access-policy/1300) of application payload per message.
 
 ### Schema-less and self-explaining
 
