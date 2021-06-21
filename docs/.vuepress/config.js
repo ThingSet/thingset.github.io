@@ -25,7 +25,8 @@ module.exports = {
                 text: 'History',
                 ariaLabel: 'History Menu',
                 items: [
-                    { text: 'v0.3', link: '/' },
+                    { text: 'v0.4', link: '/' },
+                    { text: 'v0.3', link: '/v0.3/' },
                     { text: 'v0.2', link: '/v0.2/' },
                     { text: 'v0.1', link: '/v0.1/' }
                 ]
@@ -62,7 +63,48 @@ module.exports = {
                     ]
                 }
             ],
-            '/': [  // v0.3 (must be defined at the end as fallback)
+            '/v0.3/': [
+                {
+                    title: 'Why ThingSet?',
+                    collapsable: false,
+                    children: [
+                        '',
+                        '1b_existing_solutions'
+                    ]
+                },{
+                    title: 'Application Layer',
+                    collapsable: false,
+                    children: [
+                        '2a_general',
+                        '2b_text_mode',
+                        '2c_binary_mode',
+                    ]
+                },{
+                    title: 'Lower Layers',
+                    collapsable: false,
+                    children: [
+                        '3a_serial',
+                        '3b_can',
+                        '3c_lorawan'
+                    ]
+                },{
+                    title: 'Protocol Mapping',
+                    collapsable: false,
+                    children: [
+                        '4a_http',
+                        '4b_coap',
+                        '4c_mqtt'
+                    ]
+                },{
+                    title: 'Tools',
+                    collapsable: false,
+                    children: [
+                        '5a_serial',
+                        '5b_can',
+                    ]
+                }
+            ],
+            '/': [  // v0.4 (must be defined at the end as fallback)
                 {
                     title: 'Why ThingSet?',
                     collapsable: false,
