@@ -156,23 +156,23 @@ The publication message provides a very efficient way to send data in a regular 
 
 ### CAN identifier layout
 
-Publication messages are not sent to a single node, so the destination address does not need to be specified. Instead, the data node ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
+Publication messages are not sent to a single node, so the destination address does not need to be specified. Instead, the data object ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
 
 | Bits | 28 .. 26 | 25 | 24 |   23 .. 16         |   15 .. 8          |   7 .. 0       |
 |------|:--------:|:--:|:--:|:------------------:|:------------------:|:--------------:|
-|      | Priority | 1  | 1  | Data node ID (MSB) | Data node ID (LSB) | Source address |
+|      | Priority | 1  | 1  | Data object ID (MSB) | Data object ID (LSB) | Source address |
 
 - Priority (28-26): Defines the importance of the message. For publication messages, only 4 (high priority), 5 (medium priority) and 6 (low priority) are valid.
 - Extended data page / EDP (25): Always 1b to prevent collision with SAE J1939 and NMEA2000 devices on the same bus
 - Message type (24): 1b for publication message
-- Data node ID (23-8): Data node ID as a 16-bit unsigned integer. The most significant byte is stored first (bits 23 to 16).
+- Data object ID (23-8): Data object ID as a 16-bit unsigned integer. The most significant byte is stored first (bits 23 to 16).
 - Source address (7-0): Source node address (255 for anonymous message during address claiming)
 
-The data node ID is not encoded in the CBOR format, but as a raw 16-bit unsigned integer. The publication messages are limited to IDs that fit into 16 bits.
+The data object ID is not encoded in the CBOR format, but as a raw 16-bit unsigned integer. The publication messages are limited to IDs that fit into 16 bits.
 
 ### CAN data format
 
-The data section of the CAN frame contains the CBOR-encoded value of the data node with the specified ID.
+The data section of the CAN frame contains the CBOR-encoded value of the data object with the specified ID.
 
 In order to acquire real-time measurement values, a 16-bit timestamp (unsigned int) can be appended to the CBOR-encoded value. The timestamp contains the 16 least significant bits of the microcontroller's system clock in milliseconds. It is a rolling counter and restarts at 0 after an overflow. The timestamp cannot be used to determine the absolute time of a measurement, but the time difference between subsequent measurements. This is important to obtain correct sampling of time-series data if higher priority messages cause a delay of the data delivery on the bus.
 

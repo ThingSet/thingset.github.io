@@ -26,7 +26,7 @@ Each request message consists of a first character as the request method identif
 
     node-name = ALPHA / DIGIT / "_" / "-" / "."     ; compatible to URIs (RFC 3986)
 
-The path to access a specific node is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for node names are further restricted to allow un-escaped usage in URLs.
+The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for node names are further restricted to allow un-escaped usage in URLs.
 
 ### Response
 
@@ -46,19 +46,19 @@ The bytes after the dot contain the requested data.
 
 ### Publication message
 
-The publication message is very simple and consists of a hash sign and a whitespace at the beginning, followed by a map of data node name/value pairs.
+The publication message is very simple and consists of a hash sign and a whitespace at the beginning, followed by a map of data object name/value pairs.
 
     txt-pubmsg = "# " json-map                      ; publication message
 
 ## Read data
 
-The GET function allows to read all child nodes of the specified path. If a forward slash is appended at the end of the path, only an array with the child node names is returned. Otherwise all content below that path (names and values) is returned.
+The GET function allows to read all child objects of the specified path. If a forward slash is appended at the end of the path, only an array with the child object names is returned. Otherwise all content below that path (names and values) is returned.
 
-The FETCH function allows to retrieve only subset of the child nodes, defined by an array with the node names passed to the function.
+The FETCH function allows to retrieve only subset of the child objects, defined by an array with the object names passed to the function.
 
-Only those data nodes are returned which are at least readable. Thus, the result might differ after authentication.
+Only those data objects are returned which are at least readable. Thus, the result might differ after authentication.
 
-**Example 1:** Discover all child nodes of the root node (i.e. categories)
+**Example 1:** Discover all child objects of the root node (i.e. categories)
 
     ?/
     :85 Content. ["info","conf","input","output","rec","exec","pub"]
@@ -68,19 +68,19 @@ Only those data nodes are returned which are at least readable. Thus, the result
     ?output
     :85 Content. {"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
 
-**Example 3:** List all sub-nodes of output path as an array
+**Example 3:** List all sub-objects of output path as an array
 
     ?output/
     :85 Content. ["Bat_V","Bat_A","Ambient_degC"]
 
-**Example 4:** Retrieve single data node "Bat_V"
+**Example 4:** Retrieve single data object "Bat_V"
 
     ?output ["Bat_V"]
     :85 Content. [14.2]
 
 ## Update data
 
-Requests to overwrite the value of a data node.
+Requests to overwrite the value of a data object.
 
 Data of category conf will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category input can be changed regularly.
 
@@ -96,7 +96,7 @@ Data of category conf will be written into persistent memory, so it is not allow
 
 ## Create data
 
-Appends new data to a data node.
+Appends new data to a data object.
 
 **Example 1:** Add "Bat_V" to the serial publication channel
 
@@ -105,7 +105,7 @@ Appends new data to a data node.
 
 ## Delete data
 
-Removes data from a node of array type.
+Removes data from an object of array type.
 
 **Example 1:** Remove "Bat_V" from "serial" publication channel
 
@@ -127,12 +127,12 @@ Some of the device parameters like calibration or config settings should be prot
 
 The password is transferred as a plain text string. Encryption has to be provided by lower layers.
 
-Internally, the authentication function is implemented as a data node of exec type.
+Internally, the authentication function is implemented as a data object of exec type.
 
     !auth "mypass"
     :83 Valid.
 
-After successful authentication, the device exposes restricted data nodes via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
+After successful authentication, the device exposes restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
 ## Publication messages
 
@@ -154,4 +154,4 @@ With this setting, the following message is automatically sent by the device onc
 
 Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
 
-The data nodes to be published via one channel (e.g. serial) can be configured using POST and DELETE requests to the pub/serial/IDs endpoint, as shown in the examples above.
+The data objects to be published via one channel (e.g. serial) can be configured using POST and DELETE requests to the pub/serial/IDs endpoint, as shown in the examples above.

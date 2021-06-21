@@ -14,7 +14,7 @@ ThingSet defines three types of messages: Requests, responses and publication me
 
 ### Request/response or client/server model
 
-The communication between two specific devices uses a request/response messaging pattern. A connection can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device/node has to be uniquely addressable.
+The communication between two specific devices uses a request/response messaging pattern. A connection can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device has to be uniquely addressable.
 
 ![Communication Channels](./images/communication_channels.png)
 
@@ -40,11 +40,13 @@ A device may implement both variants of the protocol, but it is also allowed to 
 
 ## Data Structure
 
-All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). Internal nodes are used to define paths or endpoints for data access. Actual data is stored in the leaf nodes and can be any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
+All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The nodes of the tree structure are called data objects in this specification and correspond to the JSON object definition.
 
-Each node is identified by a unique node ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, an underscore, dots or dashes without any whitespace characters. The underscore is only used to specify the unit of the data (if applicable, also see below). No additional underscore is allowed in the name and it should be unique per device at least for nodes that are used in publication messages.
+Internal data objects are used to define paths or endpoints for data access. Actual data is stored in the leaf data object, which can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
 
-The numeric IDs are used to define the relations between nodes and to directly access data nodes in the binary protocol for reduced message size. For all interactions with users and in the text-based mode, only the node names and paths (consisting of multiple node names) are used.
+Each data object in the tree is identified by a unique ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, underscores or dashes without any whitespace characters. The underscore is only used to specify the unit of the data object (if applicable, also see below). No additional underscore is allowed in the name and the name should be unique per device at least for data objects that are used in publication messages.
+
+The numeric IDs are used to define the relations in the data structure and to directly access data objects in the binary protocol for reduced message size. For all interactions with users and in the text-based mode, only the object names and paths are used.
 
 ### Example
 
@@ -53,10 +55,10 @@ For explanation of the protocol, the following simplified data structure of an M
 ```JSON
 {
     "info": {
-        "DeviceType": "MPPT 1210 HUS",
+        "DeviceType": "MPPT 1210 HUS"
     },
     "conf": {                                       // data stored in NVM
-        "BatCharging_V": 14.4,
+        "BatCharging_V": 14.4
     },
     "input": {                                      // data stored in RAM
         "EnableCharging": true
@@ -67,26 +69,26 @@ For explanation of the protocol, the following simplified data structure of an M
         "Ambient_degC": 22
     },
     "rec": {
-        "BatChgDay_Wh": 1984,
+        "BatChgDay_Wh": 1984
     },
     "exec": {
-        "reset": null,                              // void function
+        "reset": null                               // void function
     },
     "auth": ["Password"],                           // function with 1 parameter
     "pub": {                                        // publication channels
         "serial": {
             "Enable": true,
             "Interval": 1.0,
-            "IDs": ["Bat_V", "Bat_A"]               // array of node names
+            "IDs": ["Bat_V", "Bat_A"]               // array of object names
         },
         "can": {
             "Enable": false,
-            "Interval": 0.1,
+            "Interval_s": 0.1,
             "IDs": ["Bat_V"]
         },
         "mqtt": {
             "Enable": true,
-            "Interval": 3600,
+            "Interval_s": 3600,
             "Topic": "chargers/device-id/pub",
             "IDs": ["Bat_V", "Bat_A"]
         }
@@ -100,35 +102,35 @@ For explanation of the protocol, the following simplified data structure of an M
 }
 ```
 
-The data nodes are structured in the main different categories info, conf, input, output and rec. By convention, data node names use [upper camel case](https://en.wikipedia.org/wiki/Camel_case), inner nodes nodes use lower case names.
+The data objects are structured in the main different categories info, conf, input, output and rec. By convention, leaf object names use [upper camel case](https://en.wikipedia.org/wiki/Camel_case), inner objects to define a path use lower case names.
 
-The exec category is special, as it provides functions that can be called. In order to distinguish functions from a normal data nodes, executable node names are lower case.
+The exec category is special, as it provides functions that can be called. In order to distinguish functions from a normal data object, executable object names are lower case.
 
-The pub node is used to configure different types of publication messages, so it doesn't hold normal data nodes.
+The pub path is used to configure different types of publication messages, so it doesn't hold normal data objects.
 
 ### Categories
 
-The following categories for data nodes are used for the ThingSet protocol by default:
+The following categories for data objects are used for the ThingSet protocol by default:
 
 | Category | Description | Access  |
 |----------|-------------|---------|
 | info     | Device information (e.g. manufacturer, software version) | read access |
 | conf     | Configurable settings, stored in non-volatile memory after change | read/write access, expert settings may be password-protected |
-| input    | Input nodes (e.g. actuators) | write access |
-| output   | Output nodes (e.g. sensor data) | read access |
+| input    | Input objects (e.g. actuators) | write access |
+| output   | Output objects (e.g. sensor data) | read access |
 | rec      | Recorded (history-dependent) data (e.g. min/max values) | read access, restricted write access to reset |
 | cal      | Factory-calibrated settings | read/write access, protected
 | exec     | Executable functions | partly access restricted |
 
-The nodes of input and output categories are used for instantaneous data. Changes to input nodes are only stored in RAM, so they get lost after a reset of the device. In contrast to that, conf data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continously.
+The data objects of input and output categories are used for instantaneous data. Changes to input data objects are only stored in RAM, so they get lost after a reset of the device. In contrast to that, conf data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continously.
 
 The recorded data category is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of output category, recorded data cannot be obtained through measurement after reset, so the current state has to be stored in non-volatile memory on a regular basis.
 
-Factory calibration data nodes are only accessible for the manufacturer after authentication.
+Factory calibration data objects are only accessible for the manufacturer after authentication.
 
-Excecutable data means that they trigger a function call in the device firmware. Child nodes of the executable node can be used to define parameters that can be passed to the function.
+Excecutable data means that they trigger a function call in the device firmware. Child objects of the executable object can be used to define parameters that can be passed to the function.
 
-Data node IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
+Data object IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
 
 ### Units
 
@@ -153,15 +155,15 @@ The first byte of a ThingSet message is either a text-mode identifier ('?', '=',
 
 The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent translation and routing between ThingSet and HTTP APIs or CoAP devices.
 
-| Code | Text ID | Method | Description                                 |
-|------|---------|--------|---------------------------------------------|
-| 0x01 | ?       | GET    | Retrieve all data from a node               |
-| 0x02 | + or !  | POST   | Append data to a node or execute a function |
-| 0x04 | -       | DELETE | Delete data from a node                     |
-| 0x05 | ?       | FETCH  | Retrieve a subset of data from a node       |
-| 0x07 | =       | iPATCH | Update (overwrite) data of a node           |
+| Code | Text ID | Method | Description                                    |
+|------|---------|--------|------------------------------------------------|
+| 0x01 | ?       | GET    | Retrieve all data from a path                  |
+| 0x02 | + or !  | POST   | Append data to an object or execute a function |
+| 0x04 | -       | DELETE | Delete data from an object                     |
+| 0x05 | ?       | FETCH  | Retrieve a subset of data from a path          |
+| 0x07 | =       | iPATCH | Update (overwrite) data of a path              |
 
-The CoAP PUT and PATCH methods are not explicitly implemented. PUT is equivalent to an update of all sub-nodes of a resource using a PATCH request. PATCH requests for ThingSet are always idempotent, so only the iPATCH request code is supported. The two different text IDs for POST requests are synonyms. It is decided based on the type of the node if the request is understood as a function call or a request to create a resource.
+The CoAP PUT and PATCH methods are not explicitly implemented. PUT is equivalent to an update of all sub-objects of a resource using a PATCH request. PATCH requests for ThingSet are always idempotent, so only the iPATCH request code is supported. The two different text IDs for POST requests are synonyms. It is decided based on the type of the data object if the request is understood as a function call or a request to create a resource.
 
 Additional request codes may be introduced in the future. Codes 0x0A, 0x0D and 0x20-0x7F are reserved, as they represent the ASCII characters for readable text including LF and CR.
 
@@ -175,14 +177,14 @@ The status codes are again aligned with CoAP response codes, but contain an offs
 |------|------|------|---------------|----------------------------|
 | 0x81 | 2.01 | 201  | Created       | Answer to POST requests appending data |
 | 0x82 | 2.02 | 204  | Deleted       | Answer to DELETE request   |
-| 0x83 | 2.03 | 200  | Valid         | Answer to POST requests to exec nodes |
+| 0x83 | 2.03 | 200  | Valid         | Answer to POST requests to exec objects |
 | 0x84 | 2.04 | 204  | Changed       | Answer to PATCH requests   |
 | 0x85 | 2.05 | 200  | Content       | Answer to GET / FETCH requests |
 | 0xA0 | 4.00 | 400  | Bad Request   | |
 | 0xA1 | 4.01 | 401  | Unauthorized  | Authentication needed       |
 | 0xA3 | 4.03 | 403  | Forbidden     | Trying to write read-only value |
 | 0xA4 | 4.04 | 404  | Not Found     | |
-| 0xA5 | 4.05 | 405  | Method Not Allowed         | If e.g. DELETE is not allowed for that node |
+| 0xA5 | 4.05 | 405  | Method Not Allowed         | If e.g. DELETE is not allowed for that object |
 | 0xA8 | 4.08 | 400  | Request Entity Incomplete  | |
 | 0xA9 | 4.09 | 409  | Conflict                   | Configuration conflicts with other settings |
 | 0xAD | 4.13 | 413  | Request Entity Too Large   | |

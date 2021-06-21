@@ -1,6 +1,6 @@
 # Binary Mode
 
-In the binary mode, the data is encoded using the CBOR format. The data structure is the same as in text mode, but numeric node IDs are used as identifiers by default instead of the node names.
+In the binary mode, the data is encoded using the CBOR format. The data structure is the same as in text mode, but numeric object IDs are used as identifiers by default instead of the object names.
 
 The length of the entire request or response is not encoded in the ThingSet protocol, but can be determined from the CBOR format. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
 
@@ -13,9 +13,9 @@ Each request message consists of a first byte as the request method identifier, 
     bin-get    = %x01 endpoint get-type
 
     bin-post   = %x02 endpoint cbor-data      ; exec or create is determined
-                                              ; based on node type
+                                              ; based on object type
 
-    bin-delete = %x04 endpoint cbor-uint      ; only for valid node IDs
+    bin-delete = %x04 endpoint cbor-uint      ; only for valid object IDs
 
     bin-fetch  = %x05 endpoint cbor-array     ; returns only values, no keys
 
@@ -24,10 +24,10 @@ Each request message consists of a first byte as the request method identifier, 
     bin-nameid = %x1E endpoint cbor-array     ; get names of ids or vice versa
 
     endpoint   = path         ; CBOR string: path same as text mode
-               / parent-id    ; CBOR uint: parent node ID instead of path
+               / parent-id    ; CBOR uint: parent object ID instead of path
                / %xF7         ; CBOR undefined: wildcard matching any path / parent
 
-    get-type   = %xF7         ; CBOR undefined: returns array of node IDs (default)
+    get-type   = %xF7         ; CBOR undefined: returns array of object IDs (default)
                / %x80         ; CBOR emtpy array: returns array of names
                / %xA0         ; CBOR empty map: returns name:value map
 
@@ -41,11 +41,11 @@ Responses in binary mode start with the error/status code as specified before, f
 
 Binary publication messages follow the same concept as in text mode.
 
-    bin-pubmsg = %x1F cbor-map                ; map containing node IDs and values
+    bin-pubmsg = %x1F cbor-map                ; map containing object IDs and values
 
 ## Name and ID mapping
 
-The examples in this chapter are based on the same data structure as introduced in the [General Concept chapter](2a_general.md#data-structure), but each node is identified by an ID. The assignment of IDs and names is shown in the following JSON-like structure (actual JSON supports neither numbers as keys nor comments):
+The examples in this chapter are based on the same data structure as introduced in the [General Concept chapter](2a_general.md#data-structure), but each object is identified by an ID. The assignment of IDs and names is shown in the following JSON-like structure (actual JSON supports neither numbers as keys nor comments):
 
 ```JSON
 {
@@ -87,22 +87,22 @@ The examples in this chapter are based on the same data structure as introduced 
 }
 ```
 
-The firmware developer is free to choose the IDs. However, above IDs for the nodes of the first layer are used by Libre Solar devices and recommended for the following reasons:
+The firmware developer is free to choose the IDs. However, above IDs for the objects of the first layer are used by Libre Solar devices and recommended for the following reasons:
 
-- IDs from 0x00 to 0x17 are left for data nodes that are sent very often, as they consume only a single byte in CBOR encoding
-- The node IDs specifying the categories are spaced such that there should be enough free node IDs for most devices
-- As the node IDs are strictly increasing, the data layot is compatible with the draft standard [CBOR Encoding of Data Modeled with YANG](https://tools.ietf.org/html/draft-ietf-core-yang-cbor).
+- IDs from 0x00 to 0x17 are left for data objects that are sent very often, as they consume only a single byte in CBOR encoding
+- The object IDs specifying the categories are spaced such that there should be enough free object IDs for most devices
+- As the object IDs are strictly increasing, the data layot is compatible with the draft standard [CBOR Encoding of Data Modeled with YANG](https://tools.ietf.org/html/draft-ietf-core-yang-cbor).
 
 In contrast to the text mode, the binary mode has a special NAMEID request (without CoAP equivalent) that allows to get a name for an ID or vice versa.
 
-**Example 1:** Request name of node IDs 0x71 and 0x72
+**Example 1:** Request name of object IDs 0x71 and 0x72
 
     Request:
     1E                                      NAMEID request
        18 70                                # CBOR uint: 0x70 (parent ID)
        82                                   # CBOR array (2 elements)
-          18 71                             # CBOR uint: 0x71 (node ID)
-          18 72                             # CBOR uint: 0x72 (node ID)
+          18 71                             # CBOR uint: 0x71 (object ID)
+          18 72                             # CBOR uint: 0x72 (object ID)
 
     Response:
     85                                      Content.
@@ -110,22 +110,22 @@ In contrast to the text mode, the binary mode has a special NAMEID request (with
           65 4261745F56                     # CBOR string: "Bat_V"
           65 4261745F41                     # CBOR string: "Bat_A"
 
-If the parent ID is passed as the endpoint, only the data node name is returned. All requested nodes must be children of the same parend node in this case.
+If the parent ID is passed as the endpoint, only the data object name is returned. All requested objects must be children of the same parent object in this case.
 
-**Example 2:** Request full path of node ID 0x71 (Bat_V)
+**Example 2:** Request full path of object ID 0x71 (Bat_V)
 
     Request:
     1E                                      NAMEID request
        F7                                   # CBOR undefined as a wildcard
-       18 71                                # CBOR uint: 0x71 (node ID)
+       18 71                                # CBOR uint: 0x71 (object ID)
 
     Response:
     85                                      Content.
        6C 6F75747075742F4261745F56          # CBOR string: "output/Bat_V"
 
-If the path of a node is unknown (e.g. because it was obtained from a publication message), the entire path (see text mode) can be determined by setting the endpoint to undefined, as shown above.
+If the path of an object is unknown (e.g. because it was obtained from a publication message), the entire path (see text mode) can be determined by setting the endpoint to undefined, as shown above.
 
-**Example 3:** Request IDs for known data node names
+**Example 3:** Request IDs for known data object names
 
     Request:
     1E                                      NAMEID request
@@ -137,24 +137,24 @@ If the path of a node is unknown (e.g. because it was obtained from a publicatio
     Response:
     85                                      Content.
        82                                   # CBOR array (2 elements)
-          18 71                             # CBOR uint: 0x71 (node ID)
-          18 72                             # CBOR uint: 0x72 (node ID)
+          18 71                             # CBOR uint: 0x71 (object ID)
+          18 72                             # CBOR uint: 0x72 (object ID)
 
-Also here a wildcard for the endpoint can be used to query the entire database. However, if multiple nodes with the same name are found, an error must be returned. This should not be the case for a properly designed data structure.
+Also here a wildcard for the endpoint can be used to query the entire database. However, if multiple objects with the same name are found, an error must be returned. This should not be the case for a properly designed data structure.
 
 ## Read data
 
-Similar to the text mode, the binary variants of the GET and FETCH functions also allow to read one or more data objects. The objects are identified by their parent node (endpoint of a path) and their ID or their name.
+Similar to the text mode, the binary variants of the GET and FETCH functions also allow to read one or more data objects. The objects are identified by their parent object (endpoint of a path) and their ID or their name.
 
-The GET function is useful for device discovery, as it can list all childs of a node. Depending on the computing power of the device and the host, the GET request can either return only the IDs of the next layer or maps including the values. In order to be compatible to the text mode, it is also possible to retrieve all child nodes of a resource as a map of name/value pairs.
+The GET function is useful for device discovery, as it can list all childs of an object. Depending on the computing power of the device and the host, the GET request can either return only the IDs of the next layer or maps including the values. In order to be compatible to the text mode, it is also possible to retrieve all child objects of a resource as a map of name/value pairs.
 
-The binary mode also allows to work only with IDs and no paths or node names to keep message size at a minimum. In order to discover the nodes of a device, the host can first query all child IDs of a node (starting with root node of ID 0), afterwards query the names for each ID once and then request the value for any data object on demand.
+The binary mode also allows to work only with IDs and no paths or object names to keep message size at a minimum. In order to discover the objects of a device, the host can first query all child IDs of an object (starting with root object of ID 0), afterwards query the names for each ID once and then request the value for any data object on demand.
 
-**Example 1:** Discover all child nodes of the root node (i.e. categories)
+**Example 1:** Discover all child objects of the root object (i.e. categories)
 
     Request:
     01                                      GET request
-       00                                   # CBOR uint: 0x00 (root node)
+       00                                   # CBOR uint: 0x00 (root object)
        F7                                   # CBOR undefined as a wildcard
 
     Response:
@@ -189,30 +189,30 @@ The binary mode also allows to work only with IDs and no paths or node names to 
 
 Note that the empty map requests to respond with name/value pairs as specified in the request grammar at the beginning of the chapter.
 
-**Example 3:** Retrieve value of data node "Bat_V"
+**Example 3:** Retrieve value of data object "Bat_V"
 
     Request (alternative 1):
     05                                      FETCH request
        66 6F7574707574                      # CBOR string: "output" (path)
-       65 4261745F56                        # CBOR string: "Bat_V" (node name)
+       65 4261745F56                        # CBOR string: "Bat_V" (object name)
 
     Request (alternative 2):
     05                                      FETCH request
        18 70                                # CBOR uint: 0x70 (parent ID)
-       18 71                                # CBOR uint: 0x71 (node ID)
+       18 71                                # CBOR uint: 0x71 (object ID)
 
     Response:
     85                                      Content.
        FA 4161999A                          # CBOR float: 14.1
 
-**Example 4:** Retrieve multiple data nodes:
+**Example 4:** Retrieve multiple data objects:
 
     Request:
     05                                      FETCH request
        18 70                                # CBOR uint: 0x70 (parent ID)
        82                                   # CBOR array (2 elements)
-          18 71                             # CBOR uint: 0x71 (node ID)
-          18 72                             # CBOR uint: 0x72 (node ID)
+          18 71                             # CBOR uint: 0x71 (object ID)
+          18 72                             # CBOR uint: 0x72 (object ID)
 
     Response:
     85                                      Content.
@@ -224,7 +224,7 @@ The binary mode also allows to use data object names (strings) instead of numeri
 
 ## Update data
 
-Requests to overwrite the value a data node.
+Requests to overwrite the value a data object.
 
 The device must support a patch request using the same CBOR data type as used in the response of a GET or FETCH request for the given objects. Optionally, the device may also accept different data types (e.g. float32 instead of int) and convert the data internally.
 
@@ -257,28 +257,28 @@ If the data type is not supported, an error status code (36) is responded.
 
 ## Create data
 
-Appends new data to a data node in a similar way as in the text mode.
+Appends new data to a data object in a similar way as in the text mode.
 
-**Example 1:** Add node ID 0x72 (Bat_A) to the serial publication channel
+**Example 1:** Add object ID 0x72 (Bat_A) to the serial publication channel
 
     Request:
     02                                      POST request
        18 F4                                # CBOR uint: 0xF4 (parent ID)
-       18 72                                # CBOR uint: 0x72 (node ID)
+       18 72                                # CBOR uint: 0x72 (object ID)
 
     Response:
     81                                      Created.
 
 ## Delete data
 
-Removes data from a node of array type.
+Removes data from an object of array type.
 
-**Example 1:** Remove node ID 0x72 (Bat_A) from serial publication channel
+**Example 1:** Remove object ID 0x72 (Bat_A) from serial publication channel
 
     Request:
     04                                      DELETE request
        18 F4                                # CBOR uint: 0xF4 (parent ID)
-       18 72                                # CBOR uint: 0x72 (node ID)
+       18 72                                # CBOR uint: 0x72 (object ID)
 
     Response:
     82                                      Deleted.
@@ -291,13 +291,13 @@ For execution of a function, the same POST request is used as when creating data
 
     Request:
     02                                      POST request
-       18 E1                                # CBOR uint: 0xE1 (node ID)
+       18 E1                                # CBOR uint: 0xE1 (object ID)
        80                                   # CBOR empty array
 
     Response:
     83                                      Valid.
 
-Note that the endpoint is the node of the executable function itself. Data can be passed to the called function as the second parameter, but the "reset" function does not require any parameters, so it receives an empty array.
+Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the "reset" function does not require any parameters, so it receives an empty array.
 
 ## Other functions
 
