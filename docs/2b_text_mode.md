@@ -22,9 +22,9 @@ Each request message consists of a first character as the request method identif
 
     txt-exec   = "!" path [ " " json-value ]        ; CoAP equivalent: POST request
 
-    path = node-name [ "/" node-name ]
+    path = object-name [ "/" object-name ]
 
-    node-name = ALPHA / DIGIT / "_" / "-" / "."     ; compatible to URIs (RFC 3986)
+    object-name = ALPHA / DIGIT / "." / "_" / "-"   ; compatible to URIs (RFC 3986)
 
 The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for node names are further restricted to allow un-escaped usage in URLs.
 
@@ -44,15 +44,17 @@ The bytes after the dot contain the requested data.
 
     hex = DIGIT / %x41-46                           ; upper-case HEXDIG
 
-### Publication message
+### Statement
 
-The publication message is very simple and consists of a hash sign and a whitespace at the beginning, followed by a map of data object name/value pairs.
+A statement starts with the hash sign and a data node name, followed by a whitespace and the map of actual payload data as name/value pairs.
 
-    txt-pubmsg = "# " json-map                      ; publication message
+    txt-statement = "#" object-name " " json-object
+
+The object name is either the parent data object (e.g. `meas`) or a dedicated object containing references to other objects as an array (e.g. `std`).
 
 ## Read data
 
-The GET function allows to read all child objects of the specified path. If a forward slash is appended at the end of the path, only an array with the child object names is returned. Otherwise all content below that path (names and values) is returned.
+The GET function allows to read all child objects of the specified path. If a forward slash is appended at the end of the path, only an array with the child object names is returned to allow discovering a device data structure layer by layer. Otherwise all content below that path (names and values) is returned.
 
 The FETCH function allows to retrieve only subset of the child objects, defined by an array with the object names passed to the function.
 
@@ -61,64 +63,67 @@ Only those data objects are returned which are at least readable. Thus, the resu
 **Example 1:** Discover all child objects of the root node (i.e. categories)
 
     ?/
-    :85 Content. ["info","conf","input","output","rec","exec","pub"]
+    :85 Content. ["info","meas","state","rec","input","conf","rpc","dfu","report",
+    "ctrl",".pub"]
 
-**Example 2:** Retrieve all content of output path (keys + values)
+Note that `.name` is not contained in the list, as it is only available in the binary mode.
 
-    ?output
-    :85 Content. {"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
+**Example 2:** Retrieve all content of meas path (keys + values)
 
-**Example 3:** List all sub-objects of output path as an array
+    ?meas
+    :85 Content. {"Time_s":460677600,"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
 
-    ?output/
-    :85 Content. ["Bat_V","Bat_A","Ambient_degC"]
+**Example 3:** List all sub-objects of meas path as an array
+
+    ?meas/
+    :85 Content. ["Time_s","Bat_V","Bat_A","Ambient_degC"]
 
 **Example 4:** Retrieve single data object "Bat_V"
 
-    ?output ["Bat_V"]
+    ?meas ["Bat_V"]
     :85 Content. [14.2]
 
 ## Update data
 
 Requests to overwrite the value of a data object.
 
-Data of category conf will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category input can be changed regularly.
+Data of category `conf` will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category `input` can be changed regularly.
 
 **Example 1:** Disable charging
 
     =input {"EnableCharging":false}
     :84 Changed.
 
-**Example 2:** Attempt to write read-only measurement values (output category)
+**Example 2:** Attempt to write read-only measurement values (meas category)
 
-    =output {"Bat_V":15.2,"Ambient_degC":22}
+    =meas {"Bat_V":0}
     :A3 Forbiden.
 
 ## Create data
 
 Appends new data to a data object.
 
-**Example 1:** Add "Bat_V" to the serial publication channel
+**Example 1:** Add "Bat_A" to the `std` reports
 
-    +pub/serial/ids "Bat_V"
+    +report/std "Bat_A"
     :81 Created.
 
 ## Delete data
 
 Removes data from an object of array type.
 
-**Example 1:** Remove "Bat_V" from "serial" publication channel
+**Example 1:** Remove "Bat_A" from `std` reports
 
-    -pub/serial/ids "Bat_V"
+    -report/std "Bat_A"
     :82 Deleted.
 
 ## Execute function
 
-Executes a function identified by a data object name of category "exec"
+Executes a function in the `rpc` category.
 
 **Example 1:** Reset the device
 
-    !exec/reset
+    !rpc/x-reset
     :83 Valid.
 
 ## Authentication
@@ -129,29 +134,29 @@ The password is transferred as a plain text string. Encryption has to be provide
 
 Internally, the authentication function is implemented as a data object of exec type.
 
-    !auth "mypass"
+    !rpc/x-auth "mypass"
     :83 Valid.
 
 After successful authentication, the device exposes restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
 ## Publication messages
 
-The pub node is used to configure the device to publish certain data on a regular basis through a defined communication channel (UART, CAN, LoRa, etc.). If implemented in the firmware, the publication interval may be adjustable.
-
-**Example 1:** List all available publication channels
-
-    ?pub/
-    :85 Content. ["serial","can"]
-
-**Example 2:** Enable "serial" publication channel
-
-    =pub/serial {"Enable":true}
-    :84 Changed.
-
-With this setting, the following message is automatically sent by the device once per second:
-
-    # {"Bat_V":14.1,"Bat_A":5.13}
-
 Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
 
-The data objects to be published via one channel (e.g. serial) can be configured using POST and DELETE requests to the pub/serial/IDs endpoint, as shown in the examples above.
+**Example 1:** The `std` publication message, sent out by the device every 10 seconds
+
+    #std {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
+
+The `.pub` node is used to configure the publication process itself.
+
+**Example 2:** List all statements available for publication
+
+    ?.pub/
+    :85 Content. ["info","std"]
+
+**Example 3:** Disable `std` publication messages
+
+    =.pub/std {"Period_s":0}
+    :84 Changed.
+
+If the published object is a list of references to data object (and not a category), the data objects contained in the messages can be configured using POST and DELETE requests to the `report/std` endpoint, as shown in the examples above.
