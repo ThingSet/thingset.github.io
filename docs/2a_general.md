@@ -52,7 +52,11 @@ All accessible data of a device is [structured as a tree](https://en.wikipedia.o
 
 Inner nodes in the structure are used to define paths or endpoints for data access. Actual data is stored in the leaf nodes, which can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
 
-Each data object in the tree is identified by a unique ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, dots, underscores or dashes without any whitespace characters. The underscore is only used to specify the unit of the data object (if applicable, also see below). No additional underscore is allowed in the name and the name of each object must be unique per device.
+Each data object in the tree is identified by a unique ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, dots or underscores without any whitespace characters.
+
+The underscore is only used to specify the unit of the data object (if applicable, also see below). No additional underscore is allowed in the name and the name of each object must be unique per device.
+
+A dot is used to identify paths which are used internally by the implementation of the protocol itself (e.g. configuration of publication messages). Other usages of a dot in the data object names is not allowed.
 
 The numeric IDs are used to access data objects in the binary protocol for reduced message size. They can also be used in the firmware to define the relations in the data structure. For all interactions with users and in the text-based mode, only the object names and paths are used.
 
@@ -184,7 +188,7 @@ Some special characters have to be replaced according to the following table in 
 |-----------|-------------|----------------------------------------------|
 | °         | deg         | "Ambient_degC" for ambient temperature in °C |
 | %         | pct         | "Humidity_pct" for relative humidity in %    |
-| /         | -           | "Veh_m-s" for vehicle speed in m/s           |
+| /         | _           | "Veh_m_s" for vehicle speed in m/s           |
 | ^         | (omitted)   | "Surface_m2" for surface area in m^2         |
 
 ## Device Classes
