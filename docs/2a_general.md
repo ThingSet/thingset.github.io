@@ -48,17 +48,21 @@ A device may implement both variants of the protocol, but it is also allowed to 
 
 ## Data Structure
 
-All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The nodes of the tree structure are called data objects and correspond to the JSON object definition.
+All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The nodes of the tree structure are called **data objects** and correspond to the JSON object definition.
 
-Inner nodes in the structure are used to define paths or endpoints for data access. Actual data is stored in the leaf nodes, which can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
+Inner nodes in the structure are used to define the hierarchical structure of the data.
 
-Each data object in the tree is identified by a unique ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, dots or underscores without any whitespace characters.
+Actual data is stored in the leaf nodes, called **data items**. The data items can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
 
-The underscore is only used to specify the unit of the data object (if applicable, also see below). No additional underscore is allowed in the name and the name of each object must be unique per device.
+Each data object in the tree is identified by a numeric ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, dots or underscores without any whitespace characters.
+
+The underscore is only used to specify the unit of a data item (also see below). No additional underscore is allowed in the name.
 
 A dot is used to identify paths which are used internally by the implementation of the protocol itself (e.g. configuration of publication messages). Other usages of a dot in the data object names is not allowed.
 
-The numeric IDs are used to access data objects in the binary protocol for reduced message size. They can also be used in the firmware to define the relations in the data structure. For all interactions with users and in the text-based mode, only the object names and paths are used.
+The IDs must be unique per device. Except for internal data objects (behind in a path starting with a dot) also the name must be unique.
+
+The IDs are used to access data objects in the binary protocol mode for reduced message size. They can also be used in the firmware to define the relations in the data structure. For all interactions with users and in the text-based mode, only the object names and paths are used.
 
 ### Reserved IDs
 
@@ -87,7 +91,6 @@ For explanation of the protocol, the following simplified data structure of an M
         "DeviceID": "ABC12345"                                      // 0x31
     },
     "meas": {                                                       // 0x02
-        "Time_s": 460677600,                                        // 0x10 (fixed)
         "Bat_V": 14.2,                                              // 0x40
         "Bat_A": 5.13,                                              // 0x41
         "Ambient_degC": 22                                          // 0x42
@@ -97,6 +100,7 @@ For explanation of the protocol, the following simplified data structure of an M
         "ErrorFlags": 0                                             // 0x61
     },
     "rec": {                                                        // 0x04
+        "Time_s": 460677600,                                        // 0x10 (fixed)
         "BatChgDay_Wh": 1984,                                       // 0x70
         "AmbientMax_deg": 21.6                                      // 0x71
     },
@@ -114,10 +118,7 @@ For explanation of the protocol, the following simplified data structure of an M
         "x-write": ["Offset_B", "Data"],                            // 0xF0
         "FlashSize_KiB": 128                                        // 0xF1
     },
-    "report": {                                                     // 0x0A
-        "std": ["Time_s", "Bat_V", "Ambient_degC"],                 // 0x20
-        "slow": ["BatChgDay_Wh"]                                    // 0x21
-    },
+    "report": ["Time_s", "Bat_V", "Ambient_degC"],                  // 0x20
     "ctrl": {                                                       // 0x0C
         "bus-voltage": {                                            // 0xDC01
             "Margin_V": 0.7,                                        // 0x7000
@@ -128,11 +129,8 @@ For explanation of the protocol, the following simplified data structure of an M
         "info": {                                                   // 0x100
             "OnChange": true                                        // 0x101
         },
-        "std": {                                                    // 0x102
+        "report": {                                                 // 0x102
             "Period_s": 10                                          // 0x103
-        },
-        "slow": {                                                   // 0x102
-            "Period_h": 24                                          // 0x103
         }
     },
     ".name": {                                                      // 0x17 (fixed)
@@ -140,35 +138,37 @@ For explanation of the protocol, the following simplified data structure of an M
         "2": "info",
         // ...
         "70": "Bat_V"
-    },
+    }
 }
 ```
 
-The data objects are structured in different categories like `info` and `conf` as described below. By convention, leaf object names use [upper camel case](https://en.wikipedia.org/wiki/Camel_case), inner objects to define a path use lower case names.
+The data objects are structured in different groups like `info` and `conf` as described below. By convention, leaf object names use [upper camel case](https://en.wikipedia.org/wiki/Camel_case), inner objects to define a path use lower case names.
 
-The rpc category is special, as it provides functions that can be called. In order to distinguish functions from a normal data object, executable object names are lower case and prefixed with `x-`.
+The `rpc` group provides functions that can be called. In order to distinguish functions from a normal data object, executable object names are lower case and prefixed with `x-`.
 
 The `.pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal nodes are prefixed with a `.`, similar to hidden files or folders in computer file systems.
 
-### Categories
+The data node `report` in above example is a so-called **data set**, which contains an array pointing at existing data items. It can be used to configure the content of statements for publication if data objects of different groups should be combined in a single message.
 
-The following categories for data objects are used for the ThingSet protocol by default:
+### Groups
 
-| Category | ID   | Origin | Description | Access |
-|----------|------|-------|-------------|---------|
-| info     | 0x01 | device | Static device information (e.g. manufacturer, software version) | read |
-| meas     | 0x02 | device | Measurement data (changes regularly) | read |
-| state    | 0x03 | device | Event-based status information | read |
-| rec      | 0x04 | device | Recorded (history-dependent) data (e.g. min/max values) | read + reset |
-| input    | 0x05 | client | Input objects (e.g. actuators) | write |
-| conf     | 0x06 | both   | Configurable settings, stored in non-volatile memory after change | read + write, partly protected |
-| cal      | 0x07 | both   | Factory-calibrated settings | read + write, protected |
-| rpc      | 0x0E | client | Executable functions | execute |
-| dfu      | 0x0D | client | Functions and data for device firmware upgrade | read + execute |
+The following groups for data objects are used for the ThingSet protocol by default:
 
-The data objects of `meas`, `state` and `input` categories are used for instantaneous data. Changes to `input` data objects are only stored in RAM, so they get lost after a reset of the device. In contrast to that, `conf` data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
+| Group | ID   | Origin | Description | Access |
+|-------|------|--------|-------------|--------|
+| info  | 0x01 | device | Static device information (e.g. manufacturer, software version) | read |
+| meas  | 0x02 | device | Measurement data (changes regularly) | read |
+| state | 0x03 | device | Event-based status information | read |
+| rec   | 0x04 | device | Recorded (history-dependent) data (e.g. min/max values) | read + reset |
+| input | 0x05 | client | Input objects (e.g. actuators) | read + write |
+| conf  | 0x06 | both   | Configurable settings, stored in non-volatile memory after change | read + write, partly protected |
+| cal   | 0x07 | both   | Factory-calibrated settings | read + write, protected |
+| rpc   | 0x0E | client | Executable functions | execute |
+| dfu   | 0x0D | client | Functions and data for device firmware upgrade | read + execute |
 
-The `rec` data category is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of `meas` category, recorded data cannot be obtained through measurement after reset, so the current status has to be stored in non-volatile memory on a regular basis.
+The data objects of `meas`, `state` and `input` groups are used for instantaneous data. Changes to `input` data objects are only stored in RAM, so they get lost after a reset of the device. In contrast to that, `conf` data is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
+
+The `rec` data group is used for history-dependent data like error memory, energy counters or min/max values of certain measurements. In contrast to data of `meas` group, recorded data cannot be obtained through measurement after reset, so the current status has to be stored in non-volatile memory on a regular basis. Also the current timestamp `Time_s` is stored in the `rec` group, as it is essentially a counter that is incremented each second.
 
 Factory calibration data objects are only accessible for the manufacturer after authentication.
 
@@ -266,7 +266,7 @@ Statements are neither requests nor response messages, as they are sent without 
 
 The internal path `.pub` is used to configure the device to publish certain data objects on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
 
-By convention, the object names below the `.pub` define which data object should be published. This can be an entire category like `meas` or a data object that contains a list of links to other data objects like `std` in the above example.
+By convention, the object names below the `.pub` define which data object should be published. This can be an entire group like `meas` or a data object that contains a list of links to other data objects like `std` in the above example.
 
 If a `Period_s` data object exists, it can be set to `0` to disable publication of this message. For event-based publication, a data object `OnChange` can be specified, which publishes the message only if one of the data objects has changed.
 

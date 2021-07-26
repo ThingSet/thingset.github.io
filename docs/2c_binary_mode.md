@@ -101,9 +101,7 @@ If the names are used to specify an endpoint, also names are used instead of IDs
 
     Response:
     85                                      # Content.
-       A4                                   # CBOR map (4 elements)
-          66 54696D655F73                   # CBOR string: "Time_s"
-          1A 1B7561E0                       # CBOR uint: 460677600
+       A3                                   # CBOR map (3 elements)
           65 4261745F56                     # CBOR string: "Bat_V"
           FA 41633333                       # CBOR float: 14.2
           65 4261745F41                     # CBOR string: "Bat_A"
@@ -146,9 +144,7 @@ If the names are used to specify an endpoint, also names are used instead of IDs
 
     Response:
     85                                      # Content.
-       A4                                   # CBOR map (4 elements)
-          10                                # CBOR uint: 0x10
-          1A 1B7561E0                       # CBOR uint: 460677600
+       A3                                   # CBOR map (3 elements)
           18 40                             # CBOR uint: 0x40
           FA 41633333                       # CBOR float: 14.2
           18 41                             # CBOR uint: 0x41
@@ -217,7 +213,7 @@ If the data type is not supported, an error status code (36) is responded.
 
 Appends new data to a data object in a similar way as in the text mode.
 
-**Example 1:** Add object ID 0x41 (Bat_A) to the `std` report
+**Example 1:** Add object ID 0x41 (Bat_A) to the `report` data set
 
     Request:
     02                                      # POST
@@ -231,7 +227,7 @@ Appends new data to a data object in a similar way as in the text mode.
 
 Removes data from an object of array type.
 
-**Example 1:** Remove object ID 0x41 (Bat_A) from `std` report
+**Example 1:** Remove object ID 0x41 (Bat_A) from `report` data set
 
     Request:
     04                                      # DELETE
@@ -257,11 +253,11 @@ For execution of a function, the same POST request is used as when creating data
 
 Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the "reset" function does not require any parameters, so it receives an empty array.
 
-## Publication messages
+## Published statements
 
-In contrast to text mode, publication messages in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
+In contrast to text mode, published statements in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
-**Example 1:** Publication message `std`
+**Example 1:** A statement containing the `report` data set, sent out by the device every 10 seconds
 
     1F
        18 20                                # CBOR uint: 0x20 (object ID)

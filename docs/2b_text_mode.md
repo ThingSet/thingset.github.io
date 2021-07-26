@@ -46,11 +46,11 @@ The bytes after the dot contain the requested data.
 
 ### Statement
 
-A statement starts with the hash sign and a data node name, followed by a whitespace and the map of actual payload data as name/value pairs.
+A statement starts with the hash sign and a path, followed by a whitespace and the map of actual payload data as name/value pairs.
 
-    txt-statement = "#" object-name " " json-object
+    txt-statement = "#" path " " json-object
 
-The object name is either the parent data object (e.g. `meas`) or a dedicated object containing references to other objects as an array (e.g. `std`).
+The path is either a group (e.g. `meas`) or a dedicated object (data set) containing references to other objects as an array (e.g. `report`).
 
 ## Read data
 
@@ -71,12 +71,12 @@ Note that `.name` is not contained in the list, as it is only available in the b
 **Example 2:** Retrieve all content of meas path (keys + values)
 
     ?meas
-    :85 Content. {"Time_s":460677600,"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
+    :85 Content. {"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
 
 **Example 3:** List all sub-objects of meas path as an array
 
     ?meas/
-    :85 Content. ["Time_s","Bat_V","Bat_A","Ambient_degC"]
+    :85 Content. ["Bat_V","Bat_A","Ambient_degC"]
 
 **Example 4:** Retrieve single data object "Bat_V"
 
@@ -103,18 +103,18 @@ Data of category `conf` will be written into persistent memory, so it is not all
 
 Appends new data to a data object.
 
-**Example 1:** Add "Bat_A" to the `std` reports
+**Example 1:** Add "Bat_A" to the `report` data set
 
-    +report/std "Bat_A"
+    +report "Bat_A"
     :81 Created.
 
 ## Delete data
 
 Removes data from an object of array type.
 
-**Example 1:** Remove "Bat_A" from `std` reports
+**Example 1:** Remove "Bat_A" from `report` data set
 
-    -report/std "Bat_A"
+    -report "Bat_A"
     :82 Deleted.
 
 ## Execute function
@@ -139,24 +139,24 @@ Internally, the authentication function is implemented as a data object of exec 
 
 After successful authentication, the device exposes restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
-## Publication messages
+## Published statements
 
-Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
+Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
 
-**Example 1:** The `std` publication message, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `report` data set, sent out by the device every 10 seconds
 
-    #std {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
+    #report {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
 
 The `.pub` node is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
     ?.pub/
-    :85 Content. ["info","std"]
+    :85 Content. ["info","report"]
 
-**Example 3:** Disable `std` publication messages
+**Example 3:** Disable publication of `report` data set
 
-    =.pub/std {"Period_s":0}
+    =.pub/report {"Period_s":0}
     :84 Changed.
 
-If the published object is a list of references to data object (and not a category), the data objects contained in the messages can be configured using POST and DELETE requests to the `report/std` endpoint, as shown in the examples above.
+If the published object is a list of references to data items (and not a group), the data objects contained in the messages can be configured using POST and DELETE requests to the data object (e.g. `report`) as shown in the examples above.
