@@ -4,22 +4,317 @@ title: "MQTT"
 
 # ThingSet to MQTT mapping
 
-The MQTT protocol doesn't support the request/response part of the ThingSet protocol, but the publish/subscribe messaging pattern can be easily mapped.
+::: warning
+The MQTT mapping is still work-in-progress and may change in the future.
+:::
 
-## Publication
+This chapter specifies a topic layout that supports the publish/subscribe as well as the request/response feature of ThingSet.
 
-The topic used to publish to the MQTT server may contain the path of the data objects. The topic name itself could be stored as a data object, but it's not relevant to the implementation of publication messages in the ThingSet protocool.
+A gateway has to be used to translate the messages between the device (connected via CAN or serial) and the MQTT broker.
 
-A ThingSet publication message starts with a first byte 0x1F in binary mode or "# " in text mode to indicate a publication message. Whether this byte is also stored in the MQTT topic depends on the application.
+## General thoughts
 
-If a single measurement value is stored in an MQTT topic (e.g. /devices/device-id/Bat_V for the battery voltage), it is recommended that only the JSON or CBOR payload data is stored in the MQTT payload and the path of the ThingSet endpoint is contained in the topic.
+The first part of the MQTT topic contains a user or tenant name and the device ID, followed by `rx` or `tx` to indicate the direction of the message. `tx` means that a message is transmitted from the device to the cloud (uplink), `rx` means that the device receives a message from the cloud (downlink).
 
-If multiple data objects are stored in the same topic, the entire ThingSet publication message could be stored to allow direct passing between MQTT topic and ThingSet.
+Gateway subscribes to (downlink)
 
-## Subscription
+    {user}/+/rx/#
 
-Content fetched from a specific topic is forwarded to the ThingSet protocol as a publication message. The ThingSet device will parse the incoming data similar to a PATCH request. Unknown data objects contained in the subscribed payload are silently ignored.
+and publishes to (uplink)
 
-If the application requires some processing of incoming data before applying them to actual nodes, temporary data objects can be created where the subscribed content is written to. Afterwards a function is called (assigned as a callback to the sub channel node) to process the incoming data and pass it on to the actual nodes.
+    {user}/{device-id}/tx/{path}
 
-This approach can also be used to determine if the received data has changed compared to already existing state and avoid too many storage operations in EEPROM for regularly published messages.
+**Remark:** For MQTT v3.1.1 it is not possible to use the same node for uplink and downlink messages, as a device would receive its own published message if it subscribed to the topic aswell. Only MQTT v5 has a "No Local" bit to prevent getting messages from same clientID.
+
+This topic layout allows to easily grant access rights on user or device basis, e.g. with following wild card:
+
+    {user}/{device-id}/#
+
+Topics are sent with every single MQTT message. In order to keep them as short as possible, no additional versioning prefix is added.
+
+## Statements
+
+### Device to cloud
+
+Messages in text mode are published to the `tx` path and the payload format must be the valid JSON data extracted from a ThingSet statement.
+
+**JSON name:value map, QoS 0/1**
+
+    {user}/{device-id}/tx/{group}
+
+Messages can also be published directly in the binary format to the `txb` topic if the device does not support the text mode.
+
+Binary messages can either be published as a map or with IDs and values in a separate topic.
+
+**CBOR id:value map, QoS 0/1**
+
+    {user}/{device-id}/txb/m/{group-id}
+
+**CBOR ids, retained flag, QoS 1**
+
+    {user}/{device-id}/txb/i/{group-id}
+
+**CBOR values, QoS 0**
+
+    {user}/{device-id}/txb/v/{group-id}
+
+The main topic is ../tx/{group-name}, which should be used by a device / gateway if supported. This topic is also subscribed to for writing into a database.
+
+A cloud service might subscribe to the CBOR topics and convert them into the JSON topic automatically.
+
+The device data specification link will be published to a special topic:
+
+    {user}/{device-id}/tx/TsDataSpec
+
+If the binary mode is used with separated IDs and values, the IDs should be published with QoS 1 and the retained flag in order to make sure they are always available and matching the values that are sent to the `/v/` topic.
+
+In general, static data like firmware version from the `info` group should only be published once after startup and may use the retained flag aswell.
+
+### Cloud to device
+
+**JSON name:value map**
+
+    {user}/{device-id}/rx/{group-name}
+
+**CBOR id:value map**
+
+    {user}/{device-id}/rxb/m/{group-id}
+
+**CBOR ids**
+
+    {user}/{device-id}/rxb/i/{group-id}
+
+**CBOR values**
+
+    {user}/{device-id}/rxb/v/{group-id}
+
+## Request / response
+
+For the request / response messaging mode the response has to be matched with the request. For this reason, the request is stored in a topic with an appended request ID chosen by the requesting device. The response will be stored in a topic containing the same ID.
+
+**Requests (JSON or CBOR)**
+
+    {user}/{device-id}/req/{req-id}
+
+**Response (JSON or CBOR, same as request)**
+
+    {user}/{device-id}/res/{req-id}
+
+The above topics contain the entire ThingSet request or response. Hence, both binary or text mode can be used with the same topic.
+
+## Data Processing
+
+The following diagrams explain the data flow between a device and an MQTT broker.
+
+In case of LoRaWAN or CAN where the binary mode with IDs is used, an agent may be installed which subscribes to the binary messages and translates them to the JSON messages which are later on consumed by a higher-level application.
+
+This translation can also be done on a local gateway.
+
+The mapping of IDs and names can either be retrieved from the device (e.g. via request/response for a device connected via CAN) or it can be stored in a `.json` file on a server which contains extended information. The detailed specification of this file is still work in progress.
+
+### Device to Cloud
+
+#### MQTT direct (low bandwidth, with agent)
+
+- e.g. 2G with global SIM card and very low data rate
+- ID mapping by data agent
+
+```
+Dev       MQTT:bin     Agent       MQTT:txt     Broker
+ |                       |                        |
+ |                       |                        |
+ |     ids (QoS 1)       |                        |
+ | --------------------> |                        |
+ |    values (QoS 0)     |                        |
+ | --------------------> |    objects (QoS 0)     |
+ |                       | ---------------------> |
+ |                       |                        |
+ |         ...           |                        |
+ |                       |                        |
+ |    values (QoS 0)     |                        |
+ | --------------------> |    objects (QoS 0)     |
+ |                       | ---------------------> |
+```
+
+#### MQTT direct (sufficient bandwidth)
+
+- e.g. LTE with local SIM card
+
+```
+Dev       MQTT:txt     Broker
+ |                        |
+ |    objects (QoS 0)     |
+ | ---------------------> |
+```
+
+#### Serial
+
+```
+Dev    UART:txt   GW   HTTP:txt   Web App
+ |                 |                  |
+ |     objects     |                  |
+ | --------------> |      objects     |
+ |                 | ---------------> |
+```
+
+#### CAN (smart gateway)
+
+- ID mapping on gateway
+- Preferred way
+
+```
+Dev     CAN:bin       GW       MQTT:txt       Broker
+ |                    |                         |
+ |      values        |                         |
+ | -----------------> |                         |
+ |    req/resp ids    |                         |
+ | <----------------> |                         |
+ |   req/resp names   |                         |
+ | <----------------> |    objects (QoS 0)      |
+ |                    | ----------------------> |
+ |         ...        |                         |
+ |                    |                         |
+ |      values        |                         |
+ | -----------------> |    objects (QoS 0)      |
+ |                    | ----------------------> |
+```
+
+#### CAN (with data agent)
+
+- ID mapping by data agent
+
+```
+Dev     CAN:bin      GW       MQTT:bin       Agent       MQTT:txt     Broker
+ |                   |                         |                        |
+ |      values       |                         |                        |
+ | ----------------> |                         |                        |
+ |   req/resp ids    |                         |                        |
+ | <---------------> |     ids (QoS 1)         |                        |
+ |                   | ----------------------> |                        |
+ |                   |    values (QoS 0)       |                        |
+ |                   | ----------------------> |    objects (QoS 0)     |
+ |                   |                         | ---------------------> |
+ |        ...        |                         |                        |
+ |                   |                         |                        |
+ |      values       |                         |                        |
+ | ----------------> |    values (QoS 0)       |                        |
+ |                   | ----------------------> |    objects (QoS 0)     |
+ |                   |                         | ---------------------> |
+```
+
+#### LoRaWAN (smart gateway)
+
+- ID mapping on gateway
+
+```
+Dev   LoRaWAN:bin      GW       MQTT:txt      Broker
+ |                     |                        |
+ |     ids (ACK-ed)    |                        |
+ | ------------------> |                        |
+ |       values        |                        |
+ | ------------------> |    objects (QoS 0)     |
+ |                     | ---------------------> |
+ |        ...          |                        |
+ |                     |                        |
+ |       values        |                        |
+ | ------------------> |    objects (QoS 0)     |
+ |                     | ---------------------> |
+```
+
+#### LoRaWAN (with data agent)
+
+- Simple forwarding of messages by gateway
+- ID mapping by data agent or statically via TTN payload formatter
+- Probably preferred way in order to be able to use standard TTN gateways
+
+```
+Dev   LoRaWAN:bin      GW       MQTT:bin     Agent       MQTT:txt     Broker
+ |                     |                       |                        |
+ |     ids (ACK-ed)    |                       |                        |
+ | ------------------> |     ids (QoS 1)       |                        |
+ |       values        | --------------------> |                        |
+ | ------------------> |    values (QoS 0)     |                        |
+ |                     | --------------------> |    objects (QoS 0)     |
+ |                     |                       | ---------------------> |
+ |        ...          |                       |                        |
+ |                     |                       |                        |
+ |       values        |                       |                        |
+ | ------------------> |    values (QoS 0)     |                        |
+ |                     | --------------------> |    objects (QoS 0)     |
+ |                     |                       | ---------------------> |
+```
+
+### Cloud to Device
+
+#### Serial
+
+```
+Dev    UART:txt     GW   MQTT:txt   Web App
+ |                  |                  |
+ |                  |      objects     |
+ |      objects     | <--------------- |
+ | <--------------- |                  |
+```
+
+#### CAN (direct)
+
+- No mapping of IDs needed, as wishes are sent via ISO-TP and can have almost arbitrary length.
+
+```
+Dev     CAN:txt      GW       MQTT:txt       Broker
+ |                   |                         |
+ |                   |      objects (QoS 0)    |
+ |      objects      | <---------------------- |
+ | <---------------- |                         |
+```
+
+#### LoRaWAN (direct)
+
+- ID mapping on gateway
+
+```
+Dev   LoRaWAN:bin      GW       MQTT:txt      Broker
+ |                     |                        |
+ |    ids (ACK-ed)     |                        |
+ | ------------------> |                        |
+ |                     |                        |
+ |        ...          |                        |
+ |                     |                        |
+ |                     |     objects (QoS 0)    |
+ |       values        | <--------------------- |
+ | <------------------ |                        |
+```
+
+#### LoRaWAN (with data agent)
+
+- Simple forwarding of messages by gateway
+- ID mapping by data agent or statically via TTN payload formatter
+- Probably preferred way in order to be able to use standard TTN gateways
+
+```
+Dev   LoRaWAN:bin      GW       MQTT:bin     Agent       MQTT:txt     Broker
+ |                     |                       |                        |
+ |    ids (ACK-ed)     |                       |                        |
+ | ------------------> |     ids (QoS 1)       |                        |
+ |       values        | --------------------> |                        |
+ | ------------------> |    values (QoS 0)     |                        |
+ |                     | --------------------> |    objects (QoS 0)     |
+ |                     |                       | ---------------------> |
+ |        ...          |                       |                        |
+ |                     |                       |                        |
+ |       values        |                       |                        |
+ | ------------------> |    values (QoS 0)     |                        |
+ |                     | --------------------> |    objects (QoS 0)     |
+ |                     |                       | ---------------------> |
+```
+
+### Cloud to Device (requests)
+
+ToDo
+
+## References
+
+[1] [Designing MQTT Topics for AWS IoT Core](https://d1.awsstatic.com/whitepapers/Designing_MQTT_Topics_for_AWS_IoT_Core.pdf)
+
+[2] https://pi3g.com/2019/05/29/mqtt-topic-tree-design-best-practices-tips-examples/
+
