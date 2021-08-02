@@ -71,29 +71,15 @@ In contrast to the text mode, the binary mode has a special `".name"` endpoint (
 
 Similar to the text mode, the binary variants of the GET and FETCH functions also allow to read one or more data objects. The objects are identified by their parent object (endpoint of a path) and their ID or their name.
 
-The FETCH function is useful for device discovery, as it can list all childs of an object. Depending on the computing power of the device and the host, the FETCH request can either return only the IDs of the next layer or maps including the values. In order to be compatible to the text mode, it is also possible to retrieve all child objects of a resource as a map of name/value pairs.
+With the GET function it is possible to retrieve all child objects of a resource as a map of name/value pairs.
 
-The binary mode also allows to work only with IDs and no paths or object names to keep message size at a minimum. In order to discover the objects of a device, the host can first query all child IDs of an object (starting with root object of ID 0), afterwards query the names for each ID once and then request the value for any data object on demand.
+The FETCH function is useful for device discovery, as it can list all childs of an object. Depending on the computing power and the network bandwidth, the childs can be requested as IDs or names. In addition to that, the FETCH function can retrieve only a subset of child item values.
 
 ### Using data object names
 
-If the names are used to specify an endpoint, also names are used instead of IDs in the returned results.
+If a path (string containing names) is used to specify an endpoint, also names are used instead of IDs in the returned results.
 
-**Example 1:** Discover all child objects names of the root object
-
-    Request:
-    05                                      # FETCH
-       60                                   # CBOR empty string (root object)
-       F7                                   # CBOR undefined as a wildcard
-
-    Response:
-    85                                      # Content.
-       89                                   # CBOR array (9 elements)
-          64 696E666F                       # CBOR string: "info"
-          64 6D656173                       # CBOR string: "meas"
-           ...
-
-**Example 2:** Retrieve all data of meas path (names + values)
+**Example 1:** Retrieve all data of meas path (names + values)
 
     Request:
     01                                      # GET
@@ -109,6 +95,20 @@ If the names are used to specify an endpoint, also names are used instead of IDs
           6C 416D6269656E745F64656743       # CBOR string: "Ambient_degC"
           16                                # CBOR uint: 22
 
+**Example 2:** Discover all child object names of the root object
+
+    Request:
+    05                                      # FETCH
+       60                                   # CBOR empty string (root object)
+       F7                                   # CBOR undefined as a wildcard
+
+    Response:
+    85                                      # Content.
+       89                                   # CBOR array (9 elements)
+          64 696E666F                       # CBOR string: "info"
+          64 6D656173                       # CBOR string: "meas"
+           ...
+
 **Example 3:** Retrieve value of data object "Bat_V"
 
     Request:
@@ -122,21 +122,7 @@ If the names are used to specify an endpoint, also names are used instead of IDs
 
 ### Using data object IDs
 
-**Example 4:** Discover all child object IDs of the root object
-
-    Request:
-    05                                      # FETCH
-       00                                   # CBOR uint: 0x00 (root object)
-       F7                                   # CBOR undefined as a wildcard
-
-    Response:
-    85                                      # Content.
-       89                                   # CBOR array (9 elements)
-          01                                # CBOR uint: 0x01
-          02                                # CBOR uint: 0x02
-           ...
-
-**Example 5:** Retrieve all data of meas path (IDs + values)
+**Example 4:** Retrieve all data of meas path (IDs + values)
 
     Request:
     01                                      # GET
@@ -152,6 +138,20 @@ If the names are used to specify an endpoint, also names are used instead of IDs
           18 42                             # CBOR uint: 0x42
           16                                # CBOR uint: 22
 
+**Example 5:** Discover all child object IDs of the root object
+
+    Request:
+    05                                      # FETCH
+       00                                   # CBOR uint: 0x00 (root object)
+       F7                                   # CBOR undefined as a wildcard
+
+    Response:
+    85                                      # Content.
+       89                                   # CBOR array (9 elements)
+          01                                # CBOR uint: 0x01
+          02                                # CBOR uint: 0x02
+           ...
+
 **Example 6:** Retrieve value of data object "Bat_V"
 
     Request:
@@ -162,7 +162,7 @@ If the names are used to specify an endpoint, also names are used instead of IDs
     85                                      # Content.
        FA 41633333                          # CBOR float: 14.2
 
-**Example 7:** Retrieve multiple data objects:
+**Example 7:** Retrieve multiple data items:
 
     Request:
     05                                      # FETCH
@@ -213,7 +213,7 @@ If the data type is not supported, an error status code (36) is responded.
 
 Appends new data to a data object in a similar way as in the text mode.
 
-**Example 1:** Add object ID 0x41 (Bat_A) to the `report` data set
+**Example 1:** Add object ID 0x41 (Bat_A) to the `report` subset
 
     Request:
     02                                      # POST
@@ -227,7 +227,7 @@ Appends new data to a data object in a similar way as in the text mode.
 
 Removes data from an object of array type.
 
-**Example 1:** Remove object ID 0x41 (Bat_A) from `report` data set
+**Example 1:** Remove object ID 0x41 (Bat_A) from `report` subset
 
     Request:
     04                                      # DELETE
@@ -257,7 +257,7 @@ Note that the endpoint is the object of the executable function itself. Data can
 
 In contrast to text mode, published statements in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
-**Example 1:** A statement containing the `report` data set, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `report` subset, sent out by the device every 10 seconds
 
     1F
        18 20                                # CBOR uint: 0x20 (object ID)
@@ -288,7 +288,7 @@ If the name of the object is supplied instead of the ID, also names are returned
 
     Request:
     05                                      # FETCH
-       63 737464                            # CBOR string: "std" (object name)
+       66 7265706F7274                      # CBOR string: "report" (object name)
        F7                                   # CBOR undefined
 
     Response:

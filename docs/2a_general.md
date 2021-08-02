@@ -148,7 +148,7 @@ The `rpc` group provides functions that can be called. In order to distinguish f
 
 The `.pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal nodes are prefixed with a `.`, similar to hidden files or folders in computer file systems.
 
-The data node `report` in above example is a so-called **data set**, which contains an array pointing at existing data items. It can be used to configure the content of statements for publication if data objects of different groups should be combined in a single message.
+The data node `report` in above example is a so-called **subset**, which contains an array pointing at existing data items. It can be used to configure the content of statements for publication if data objects of different groups should be combined in a single message.
 
 ### Groups
 

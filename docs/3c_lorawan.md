@@ -27,7 +27,7 @@ The following table gives an overview of the LoRaWAN ports as they are planned t
 | Port(s)    | Usage |
 |------------|-------|
 | 0x00       | Reserved for LoRaWAN MAC messages
-| 0x01..0x3F | ThingSet statement values (corresponding to ID of group or data set)
+| 0x01..0x3F | ThingSet statement values (corresponding to ID of group or subset)
 | 0x40       | ThingSet request/response channel
 | 0x41..0x7F | ThingSet statement IDs (corresponding to ID + 0x40)
 | 0x80..0xDF | Reserved for future use in ThingSet

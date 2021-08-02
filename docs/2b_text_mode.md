@@ -50,7 +50,7 @@ A statement starts with the hash sign and a path, followed by a whitespace and t
 
     txt-statement = "#" path " " json-object
 
-The path is either a group (e.g. `meas`) or a dedicated object (data set) containing references to other objects as an array (e.g. `report`).
+The path is either a group (e.g. `meas`) or a dedicated object (subset) containing references to other objects as an array (e.g. `report`).
 
 ## Read data
 
@@ -103,7 +103,7 @@ Data of category `conf` will be written into persistent memory, so it is not all
 
 Appends new data to a data object.
 
-**Example 1:** Add "Bat_A" to the `report` data set
+**Example 1:** Add "Bat_A" to the `report` subset
 
     +report "Bat_A"
     :81 Created.
@@ -112,7 +112,7 @@ Appends new data to a data object.
 
 Removes data from an object of array type.
 
-**Example 1:** Remove "Bat_A" from `report` data set
+**Example 1:** Remove "Bat_A" from `report` subset
 
     -report "Bat_A"
     :82 Deleted.
@@ -143,7 +143,7 @@ After successful authentication, the device exposes restricted data objects via 
 
 Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
 
-**Example 1:** A statement containing the `report` data set, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `report` subset, sent out by the device every 10 seconds
 
     #report {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
 
@@ -154,9 +154,9 @@ The `.pub` node is used to configure the publication process itself.
     ?.pub/
     :85 Content. ["info","report"]
 
-**Example 3:** Disable publication of `report` data set
+**Example 3:** Disable publication of `report` subset
 
     =.pub/report {"Period_s":0}
     :84 Changed.
 
-If the published object is a list of references to data items (and not a group), the data objects contained in the messages can be configured using POST and DELETE requests to the data object (e.g. `report`) as shown in the examples above.
+If the published object is subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object (e.g. `report`) as shown in the examples above.
