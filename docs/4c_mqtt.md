@@ -159,7 +159,7 @@ Dev    UART:txt   GW   HTTP:txt   Web App
 
 #### CAN (smart gateway)
 
-- ID mapping on gateway
+- ID mapping and translation between binary and text mode on gateway
 - Preferred way
 
 ```
@@ -167,8 +167,6 @@ Dev     CAN:bin       GW       MQTT:txt       Broker
  |                    |                         |
  |      values        |                         |
  | -----------------> |                         |
- |    req/resp ids    |                         |
- | <----------------> |                         |
  |   req/resp names   |                         |
  | <----------------> |    objects (QoS 0)      |
  |                    | ----------------------> |
@@ -258,7 +256,7 @@ Dev    UART:txt     GW   MQTT:txt   Web App
 
 #### CAN (direct)
 
-- No mapping of IDs needed, as wishes are sent via ISO-TP and can have almost arbitrary length.
+- No mapping of IDs needed, as incoming statements are sent via ISO-TP and can have almost arbitrary length.
 
 ```
 Dev     CAN:txt      GW       MQTT:txt       Broker

@@ -22,3 +22,31 @@ In order to reduce the complexity of the protocol, the features offered by HTTP 
     - Unit of data objects stored in the name (key) of a map, so the required amount of nesting in the JSON data structure is limited to categories only.
 
 The response codes of ThingSet are aligned with CoAP and thus also allow a simple translation to HTTP. The main difference is that HTTP doesn't allow to indicate successful requests as fine-grained as CoAP, so the status will be mostly 200 OK or 204 No Content.
+
+## Data Processing
+
+### HTTP via CAN
+
+```
+Dev     CAN:txt     GW   HTTP:txt   Web App
+ |                  |                  |
+ |                  |   req objects    |
+ |   req objects    | <--------------- |
+ | <--------------- |                  |
+ |   resp objects   |                  |
+ | ---------------> |   resp objects   |
+ |                  | ---------------> |
+```
+
+### HTTP via Serial
+
+```
+Dev    UART:txt     GW   HTTP:txt   Web App
+ |                  |                  |
+ |                  |   req objects    |
+ |   req objects    | <--------------- |
+ | <--------------- |                  |
+ |   resp objects   |                  |
+ | ---------------> |   resp objects   |
+ |                  | ---------------> |
+```

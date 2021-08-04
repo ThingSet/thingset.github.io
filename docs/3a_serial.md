@@ -27,7 +27,7 @@ The CRC is optional so that it is still possible to interact with the device by 
 The baudrate of the serial interface is fixed to 115200 bps.
 
 ::: warning
-The binary protocol mode is curently not supported, as it would require some way to determine the end of a message.
+The binary protocol mode is curently not supported via simple serial interfaces, as it would require some way to determine the end of a message.
 :::
 
 ## USB

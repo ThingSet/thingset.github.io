@@ -48,15 +48,15 @@ A device may implement both variants of the protocol, but it is also allowed to 
 
 ## Data Structure
 
-All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The nodes of the tree structure are called **data objects** and correspond to the JSON object definition.
+All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The nodes in the tree structure are called **data objects** and correspond to the JSON object definition.
 
 Inner nodes in the structure are used to define the hierarchical structure of the data.
 
-Actual data is stored in the leaf nodes, called **data items**. The data items can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
+Actual data is stored in leaf nodes, called **data items**. The data items can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
 
 Each data object in the tree is identified by a numeric ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, dots or underscores without any whitespace characters.
 
-The underscore is only used to specify the unit of a data item (also see below). No additional underscore is allowed in the name.
+The underscore is only used to specify the unit of a data item (also see below). No additional underscores are allowed in the name.
 
 A dot is used to identify paths which are used internally by the implementation of the protocol itself (e.g. configuration of publication messages). Other usages of a dot in the data object names is not allowed.
 
@@ -142,9 +142,9 @@ For explanation of the protocol, the following simplified data structure of an M
 }
 ```
 
-The data objects are structured in different groups like `info` and `conf` as described below. By convention, leaf object names use [upper camel case](https://en.wikipedia.org/wiki/Camel_case), inner objects to define a path use lower case names.
+The data objects are structured in different groups like `info` and `conf` as described below. By convention, data items (leaf nodes) use [upper camel case](https://en.wikipedia.org/wiki/Camel_case) for their names, inner objects to define a path use lower case names.
 
-The `rpc` group provides functions that can be called. In order to distinguish functions from a normal data object, executable object names are lower case and prefixed with `x-`.
+The `rpc` group provides functions that can be called. In order to distinguish functions from normal data objects, executable object names are lower case and prefixed with `x-`.
 
 The `.pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal nodes are prefixed with a `.`, similar to hidden files or folders in computer file systems.
 
@@ -172,7 +172,7 @@ The `rec` data group is used for history-dependent data like error memory, energ
 
 Factory calibration data objects are only accessible for the manufacturer after authentication.
 
-Excecutable data means that they trigger a function call in the device firmware. Child objects of the executable object can be used to define parameters that can be passed to the function.
+Excecutable data means that they trigger a function call in the device firmware. Child objects of the executable object can be used internally to define parameters that can be passed to the function.
 
 Data object IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
 
@@ -203,9 +203,9 @@ Some special characters have to be replaced according to the following table in 
 
 The ThingSet protocol aims at being suitable for all classes.
 
-For class 0 devices and on networks with very low bitrate and payload sizes (CAN, LoRaWAN) it is recommended to use the binary mode with numeric IDs instead of data node names to keep the messages as compact as possible.
+For class 0 devices and on networks with very low bitrate and payload sizes (CAN, LoRaWAN) it is recommended to use the binary mode with numeric IDs instead of data object names to keep the messages as compact as possible.
 
-If the payload size does not have to be optimized to its very minimum, the binary mode can be used with names instead of IDs (see [Binary mode](2c_binary_mode.md) chapter for more details). The advantage of the binary mode is that no support for floating point numbers for `printf` is required, which reduces firmware footprint significantly. This mode is suitable for class 0 and class 1 devices.
+If the payload size does not have to be optimized to its very minimum, the binary mode can be used with names instead of IDs (see [Binary Mode](2c_binary_mode.md) chapter for more details). The advantage of the binary mode is that no support for floating point numbers for `printf` is required, which reduces firmware footprint significantly. This mode is suitable for class 0 and class 1 devices.
 
 For most class 1 and class 2 devices, floating-point support will not be an issue, so they might also use the text mode for easier direct interactions with humans. Also gateways should typically support the text mode in order to map ThingSet to other higher-level protocols like HTTP and MQTT.
 
@@ -215,7 +215,7 @@ The first byte of a ThingSet message is either a text-mode identifier ('?', '=',
 
 ### Requests
 
-The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent translation and routing between ThingSet and HTTP APIs or CoAP devices.
+The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent mapping between ThingSet and HTTP APIs or CoAP devices.
 
 | Code | Text ID | Method | Description                                    |
 |------|---------|--------|------------------------------------------------|
@@ -264,9 +264,9 @@ Statements are neither requests nor response messages, as they are sent without 
 |------|---------|---------------------|
 | 0x1F | #       | Statement message   |
 
-The internal path `.pub` is used to configure the device to publish certain data objects on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
+The internal path `.pub` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
 
-By convention, the object names below the `.pub` define which data object should be published. This can be an entire group like `meas` or a data object that contains a list of links to other data objects like `std` in the above example.
+By convention, the object names below the `.pub` define which data object should be published. This can be an entire group like `meas` or a subset data object that contains a list of references to other data items like `report` in the above example.
 
 If a `Period_s` data object exists, it can be set to `0` to disable publication of this message. For event-based publication, a data object `OnChange` can be specified, which publishes the message only if one of the data objects has changed.
 

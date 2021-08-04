@@ -26,11 +26,11 @@ Each request message consists of a first character as the request method identif
 
     object-name = ALPHA / DIGIT / "." / "_" / "-"   ; compatible to URIs (RFC 3986)
 
-The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for node names are further restricted to allow un-escaped usage in URLs.
+The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for object names are further restricted to allow un-escaped usage in URLs.
 
 ### Response
 
-The response starts with a colon ':' followed by the the status code and a plain text description of the status finished with a '.'. The description is not strictly specified and can be according to the table in the [General Concept chapter](2a_general.md) or a more verbose message. However, it must contain only one dot at the end of the description, signifying the end of the description.
+The response starts with a colon `:` followed by the the status code and a plain text description of the status finished with a `.`. The description is not strictly specified and can be according to the table in the [General Concept chapter](2a_general.md) or a more verbose message. However, it must contain only one dot at the end of the description, signifying the end of the description.
 
 The bytes after the dot contain the requested data.
 
@@ -50,7 +50,7 @@ A statement starts with the hash sign and a path, followed by a whitespace and t
 
     txt-statement = "#" path " " json-object
 
-The path is either a group (e.g. `meas`) or a dedicated object (subset) containing references to other objects as an array (e.g. `report`).
+The path is either a group (e.g. `meas`) or a subset object containing references to other data items as an array (e.g. `report`).
 
 ## Read data
 
@@ -68,58 +68,60 @@ Only those data objects are returned which are at least readable. Thus, the resu
 
 Note that `.name` is not contained in the list, as it is only available in the binary mode.
 
-**Example 2:** Retrieve all content of meas path (keys + values)
+**Example 2:** Retrieve all content of `meas` path (names + values)
 
     ?meas
     :85 Content. {"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
 
-**Example 3:** List all sub-objects of meas path as an array
+**Example 3:** List all sub-item names of `meas` path as an array
 
     ?meas/
     :85 Content. ["Bat_V","Bat_A","Ambient_degC"]
 
-**Example 4:** Retrieve single data object "Bat_V"
+**Example 4:** Retrieve value for single data item `Bat_V`
 
     ?meas ["Bat_V"]
     :85 Content. [14.2]
 
 ## Update data
 
-Requests to overwrite the value of a data object.
+The PATCH request attempts to overwrite the values of data items.
 
-Data of category `conf` will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category `input` can be changed regularly.
+Data of category `conf` will be stored in persistent memory, so it is not allowed to change settings periodically. Only data of category `input` can be changed regularly.
 
-**Example 1:** Disable charging
+**Example 1:** Disable charging `input` value
 
     =input {"EnableCharging":false}
     :84 Changed.
 
-**Example 2:** Attempt to write read-only measurement values (meas category)
+**Example 2:** Attempt to write read-only measurement values (`meas` category)
 
     =meas {"Bat_V":0}
     :A3 Forbiden.
 
 ## Create data
 
-Appends new data to a data object.
+The equivalent of a POST request allows to append new data to an existing data item, usually an array.
 
-**Example 1:** Add "Bat_A" to the `report` subset
+In current implementations it is not possible to add entirely new data objects, as this would be against the nature of statically allocated memory of constrained devices.
+
+**Example 1:** Add `Bat_A` to the `report` subset
 
     +report "Bat_A"
     :81 Created.
 
 ## Delete data
 
-Removes data from an object of array type.
+Deletes data from a data item of array type.
 
-**Example 1:** Remove "Bat_A" from `report` subset
+**Example 1:** Delete `Bat_A` from `report` subset
 
     -report "Bat_A"
     :82 Deleted.
 
 ## Execute function
 
-Executes a function in the `rpc` category.
+Calls an executable data object. Functions are usually part of the `rpc` group, but can also be contained in other sections of the data object tree (e.g. `dfu`).
 
 **Example 1:** Reset the device
 
@@ -128,16 +130,16 @@ Executes a function in the `rpc` category.
 
 ## Authentication
 
-Some of the device parameters like calibration or config settings should be protected against unauthorized change. A simple authentication method is suggested where multiple user levels can be implemented in the firmware using different passwords. The manufacturer would use a different one to authenticate than a normal user and thus get more rights to access data objects.
+Some of the device parameters like calibration data or important settings should be protected against unauthorized change. A simple authentication method is suggested where multiple user levels can be implemented in the firmware using different passwords. The manufacturer would use a different password to authenticate than a normal user and thus get more rights to access data objects.
 
 The password is transferred as a plain text string. Encryption has to be provided by lower layers.
 
-Internally, the authentication function is implemented as a data object of exec type.
+Internally, the authentication function is implemented as an executable data object.
 
     !rpc/x-auth "mypass"
     :83 Valid.
 
-After successful authentication, the device exposes restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
+After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
 ## Published statements
 
@@ -159,4 +161,4 @@ The `.pub` node is used to configure the publication process itself.
     =.pub/report {"Period_s":0}
     :84 Changed.
 
-If the published object is subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object (e.g. `report`) as shown in the examples above.
+If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.

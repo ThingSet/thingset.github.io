@@ -170,6 +170,8 @@ Publication messages are not sent to a single node, so the destination address d
 
 The data object ID is not encoded in the CBOR format, but as a raw 16-bit unsigned integer. The publication messages are limited to IDs that fit into 16 bits.
 
+IDs >= 0x8000 are fixed and reserved for control messages, so the CAN filter can be configured to distinguish between normal data ojbects and (high priority) control messages.
+
 ### CAN data format
 
 The data section of the CAN frame contains the CBOR-encoded value of the data object with the specified ID.
