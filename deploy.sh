@@ -14,8 +14,8 @@ BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})
 # adjust link/directory settings in vuepress
 if [ $BRANCH_NAME != "main" ]; then
     printf "\nPreparing deployment for branch $BRANCH_NAME\n"
-    sed -i -e "s/base: '\/'/base: '\/branch\/$BRANCH_NAME\/'/g" docs/.vuepress/config.js
-    sed -i -e "s/docsBranch: 'master'/docsBranch: '$BRANCH_NAME'/g" docs/.vuepress/config.js
+    sed -i -e "s/base: '\/thingset\/'/base: '\/thingset\/branch\/$BRANCH_NAME\/'/g" docs/.vuepress/config.js
+    sed -i -e "s/docsBranch: 'main'/docsBranch: '$BRANCH_NAME'/g" docs/.vuepress/config.js
 else
     printf "\nPreparing deployment for main branch\n"
 fi

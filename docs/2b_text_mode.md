@@ -22,15 +22,15 @@ Each request message consists of a first character as the request method identif
 
     txt-exec   = "!" path [ " " json-value ]        ; CoAP equivalent: POST request
 
-    path = node-name [ "/" node-name ]
+    path = object-name [ "/" object-name ]
 
-    node-name = ALPHA / DIGIT / "_" / "-" / "."     ; compatible to URIs (RFC 3986)
+    object-name = ALPHA / DIGIT / "." / "_" / "-"   ; compatible to URIs (RFC 3986)
 
-The path to access a specific node is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for node names are further restricted to allow un-escaped usage in URLs.
+The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for object names are further restricted to allow un-escaped usage in URLs.
 
 ### Response
 
-The response starts with a colon ':' followed by the the status code and a plain text description of the status finished with a '.'. The description is not strictly specified and can be according to the table in the [General Concept chapter](2a_general.md) or a more verbose message. However, it must contain only one dot at the end of the description, signifying the end of the description.
+The response starts with a colon `:` followed by the the status code and a plain text description of the status finished with a `.`. The description is not strictly specified and can be according to the table in the [General Concept chapter](2a_general.md) or a more verbose message. However, it must contain only one dot at the end of the description, signifying the end of the description.
 
 The bytes after the dot contain the requested data.
 
@@ -44,114 +44,121 @@ The bytes after the dot contain the requested data.
 
     hex = DIGIT / %x41-46                           ; upper-case HEXDIG
 
-### Publication message
+### Statement
 
-The publication message is very simple and consists of a hash sign and a whitespace at the beginning, followed by a map of data node name/value pairs.
+A statement starts with the hash sign and a path, followed by a whitespace and the map of actual payload data as name/value pairs.
 
-    txt-pubmsg = "# " json-map                      ; publication message
+    txt-statement = "#" path " " json-object
+
+The path is either a group (e.g. `meas`) or a subset object containing references to other data items as an array (e.g. `report`).
 
 ## Read data
 
-The GET function allows to read all child nodes of the specified path. If a forward slash is appended at the end of the path, only an array with the child node names is returned. Otherwise all content below that path (names and values) is returned.
+The GET function allows to read all child objects of the specified path. If a forward slash is appended at the end of the path, only an array with the child object names is returned to allow discovering a device data structure layer by layer. Otherwise all content below that path (names and values) is returned.
 
-The FETCH function allows to retrieve only subset of the child nodes, defined by an array with the node names passed to the function.
+The FETCH function allows to retrieve only subset of the child objects, defined by an array with the object names passed to the function.
 
-Only those data nodes are returned which are at least readable. Thus, the result might differ after authentication.
+Only those data objects are returned which are at least readable. Thus, the result might differ after authentication.
 
-**Example 1:** Discover all child nodes of the root node (i.e. categories)
+**Example 1:** Discover all child objects of the root node (i.e. categories)
 
     ?/
-    :85 Content. ["info","conf","input","output","rec","exec","pub"]
+    :85 Content. ["info","meas","state","rec","input","conf","rpc","dfu","report",
+    "ctrl",".pub"]
 
-**Example 2:** Retrieve all content of output path (keys + values)
+Note that `.name` is not contained in the list, as it is only available in the binary mode.
 
-    ?output
+**Example 2:** Retrieve all content of `meas` path (names + values)
+
+    ?meas
     :85 Content. {"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
 
-**Example 3:** List all sub-nodes of output path as an array
+**Example 3:** List all sub-item names of `meas` path as an array
 
-    ?output/
+    ?meas/
     :85 Content. ["Bat_V","Bat_A","Ambient_degC"]
 
-**Example 4:** Retrieve single data node "Bat_V"
+**Example 4:** Retrieve value for single data item `Bat_V`
 
-    ?output ["Bat_V"]
+    ?meas ["Bat_V"]
     :85 Content. [14.2]
 
 ## Update data
 
-Requests to overwrite the value of a data node.
+The PATCH request attempts to overwrite the values of data items.
 
-Data of category conf will be written into persistent memory, so it is not allowed to change settings periodically. Only data of category input can be changed regularly.
+Data of category `conf` will be stored in persistent memory, so it is not allowed to change settings periodically. Only data of category `input` can be changed regularly.
 
-**Example 1:** Disable charging
+**Example 1:** Disable charging `input` value
 
     =input {"EnableCharging":false}
     :84 Changed.
 
-**Example 2:** Attempt to write read-only measurement values (output category)
+**Example 2:** Attempt to write read-only measurement values (`meas` category)
 
-    =output {"Bat_V":15.2,"Ambient_degC":22}
+    =meas {"Bat_V":0}
     :A3 Forbiden.
 
 ## Create data
 
-Appends new data to a data node.
+The equivalent of a POST request allows to append new data to an existing data item, usually an array.
 
-**Example 1:** Add "Bat_V" to the serial publication channel
+In current implementations it is not possible to add entirely new data objects, as this would be against the nature of statically allocated memory of constrained devices.
 
-    +pub/serial/ids "Bat_V"
+**Example 1:** Add `Bat_A` to the `report` subset
+
+    +report "Bat_A"
     :81 Created.
 
 ## Delete data
 
-Removes data from a node of array type.
+Deletes data from a data item of array type.
 
-**Example 1:** Remove "Bat_V" from "serial" publication channel
+**Example 1:** Delete `Bat_A` from `report` subset
 
-    -pub/serial/ids "Bat_V"
+    -report "Bat_A"
     :82 Deleted.
 
 ## Execute function
 
-Executes a function identified by a data object name of category "exec"
+Calls an executable data object. Functions are usually part of the `rpc` group, but can also be contained in other sections of the data object tree (e.g. `dfu`).
 
 **Example 1:** Reset the device
 
-    !exec/reset
+    !rpc/x-reset
     :83 Valid.
 
 ## Authentication
 
-Some of the device parameters like calibration or config settings should be protected against unauthorized change. A simple authentication method is suggested where multiple user levels can be implemented in the firmware using different passwords. The manufacturer would use a different one to authenticate than a normal user and thus get more rights to access data objects.
+Some of the device parameters like calibration data or important settings should be protected against unauthorized change. A simple authentication method is suggested where multiple user levels can be implemented in the firmware using different passwords. The manufacturer would use a different password to authenticate than a normal user and thus get more rights to access data objects.
 
 The password is transferred as a plain text string. Encryption has to be provided by lower layers.
 
-Internally, the authentication function is implemented as a data node of exec type.
+Internally, the authentication function is implemented as an executable data object.
 
-    !auth "mypass"
+    !rpc/x-auth "mypass"
     :83 Valid.
 
-After successful authentication, the device exposes restricted data nodes via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
+After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
-## Publication messages
+## Published statements
 
-The pub node is used to configure the device to publish certain data on a regular basis through a defined communication channel (UART, CAN, LoRa, etc.). If implemented in the firmware, the publication interval may be adjustable.
+Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
 
-**Example 1:** List all available publication channels
+**Example 1:** A statement containing the `report` subset, sent out by the device every 10 seconds
 
-    ?pub/
-    :85 Content. ["serial","can"]
+    #report {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
 
-**Example 2:** Enable "serial" publication channel
+The `.pub` node is used to configure the publication process itself.
 
-    =pub/serial {"Enable":true}
+**Example 2:** List all statements available for publication
+
+    ?.pub/
+    :85 Content. ["info","report"]
+
+**Example 3:** Disable publication of `report` subset
+
+    =.pub/report {"Period_s":0}
     :84 Changed.
 
-With this setting, the following message is automatically sent by the device once per second:
-
-    # {"Bat_V":14.1,"Bat_A":5.13}
-
-Publication messages are broadcast to all connected devices. No response is sent from devices receiving the message.
-
-The data nodes to be published via one channel (e.g. serial) can be configured using POST and DELETE requests to the pub/serial/IDs endpoint, as shown in the examples above.
+If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.

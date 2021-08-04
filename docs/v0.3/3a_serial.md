@@ -24,10 +24,8 @@ The CRC checksum is calculated over the entire thingset-msg as defined above. Th
 
 The CRC is optional so that it is still possible to interact with the device by humans using a terminal. However, the device should always calculate the CRC and in case of M2M communication, the client should check the CRC and also provide a CRC for requests to increase reliability.
 
-The baudrate of the serial interface is fixed to 115200 bps.
-
 ::: warning
-The binary protocol mode is curently not supported via simple serial interfaces, as it would require some way to determine the end of a message.
+The binary protocol mode is curently not supported, as it would require some way to determine the end of a message.
 :::
 
 ## USB

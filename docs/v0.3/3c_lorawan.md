@@ -1,8 +1,8 @@
 ---
-title: "LoRa"
+title: "LoRaWAN"
 ---
 
-# ThingSet via LoRa
+# ThingSet via LoRaWAN
 
 As the data rate of LoRa is very low, only the binary protocol version is supported.
 
