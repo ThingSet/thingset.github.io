@@ -14,14 +14,14 @@ BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})
 # adjust link/directory settings in vuepress
 if [ $BRANCH_NAME != "main" ]; then
     printf "\nPreparing deployment for branch $BRANCH_NAME\n"
-    sed -i -e "s/base: '\/thingset\/'/base: '\/thingset\/branch\/$BRANCH_NAME\/'/g" docs/.vuepress/config.js
-    sed -i -e "s/docsBranch: 'main'/docsBranch: '$BRANCH_NAME'/g" docs/.vuepress/config.js
+    sed -i -e "s/base: '\/thingset\/'/base: '\/thingset\/branch\/$BRANCH_NAME\/'/g" docs/.vuepress/config.ts
+    sed -i -e "s/docsBranch: 'main'/docsBranch: '$BRANCH_NAME'/g" docs/.vuepress/config.ts
 else
     printf "\nPreparing deployment for main branch\n"
 fi
 
 # build the website
-npm run docs:build
+npm run build
 printf "\n\n"
 
 # get previous gh-pages deployment including all PR and branch folders

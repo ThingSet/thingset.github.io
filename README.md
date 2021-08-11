@@ -8,8 +8,17 @@ You can contribute to the protocol specification by cloning the repository to yo
 
 ## Development status
 
-The protocol specification is still under active development and improved based on experiences made with Libre Solar devices. A release of version v1.0 is expected end of 2020.
+The protocol specification is still under active development and improved based on experiences made with Libre Solar devices. A release of version v1.0 is expected end of 2021.
 
 ## Local deployment for development
 
- For local deployment of the website install [VuePress v1](https://v1.vuepress.vuejs.org/) and run `yarn docs:dev` in the root directory of this repository. Afterwards, you can see the result in your favourite web browser at `http://localhost:8080`.
+You can contribute by cloning the repository to your private GitHub workspace and sending pull-requests with upates you made.
+
+The website is built with [VuePress](https://vuepress.vuejs.org/).
+
+For local deployment run the following commands in the root directory of this repository:
+
+    npm install
+    npm run dev
+
+Afterwards, you can see the result in your favourite web browser at `http://localhost:8080`.

@@ -1,0 +1,16 @@
+
+:root {
+  // brand colors
+  --c-brand: #005e85;
+  --c-brand-light: #005e85;
+}
+
+html.dark {
+  // brand colors
+  --c-brand: #005e85;
+  --c-brand-light: #005e85;
+}
+
+pre {
+  background-color: var(--code-bg-color)
+}

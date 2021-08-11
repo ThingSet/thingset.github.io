@@ -15,7 +15,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - run: yarn add -D vuepress
+    - run: npm install
     - run: ./deploy.sh
 
     - name: Commit generated files

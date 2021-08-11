@@ -83,7 +83,7 @@ The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimi
 
 For explanation of the protocol, the following simplified data structure of an MPPT charge controller will be used:
 
-```JSON
+``` json
 {
     "info": {                                                       // 0x01
         "DataExtURL": "https://files.libre.solar/tsx/cc-v03.json",  // 0x18 (fixed)
