@@ -26,6 +26,15 @@ export default defineUserConfig<DefaultThemeOptions>({
     }
   },
   base: '/thingset/',
+  plugins: [
+    [
+      '@vuepress/plugin-search',
+      {
+        // exclude older versions from search
+        isSearchable: (page) => ! /^\/v0/.test(page.path),
+      },
+    ],
+  ],
   theme: path.resolve(__dirname, './theme'),
   themeConfig: {
     logo: '/favicons/apple-touch-icon.png',
