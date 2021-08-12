@@ -25,7 +25,7 @@ export default defineUserConfig<DefaultThemeOptions>({
       lineNumbers: false
     }
   },
-  base: '/thingset/',
+  base: '/',
   plugins: [
     [
       '@vuepress/plugin-search',
@@ -152,7 +152,7 @@ export default defineUserConfig<DefaultThemeOptions>({
       ]
     },
     contributors: false,
-    docsRepo: 'LibreSolar/thingset',
+    docsRepo: 'ThingSet/thingset.github.io',
     docsDir: 'docs',
     docsBranch: 'main',
     editLinks: true,

@@ -3,18 +3,15 @@
 # This script deploys main branch commits to gh-pages root directory and other branches to
 # sub-directory /branch/<branch-name>.
 #
-# Rendered branches can be accessed via https://libre.solar/thingset/branch/<branch-name>
+# Rendered branches can be accessed via https://thingset.io/branch/<branch-name>
 #
-# See here for documentation of Travis CI environment variables:
-# https://docs.travis-ci.com/user/environment-variables/
-
 
 BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})
 
 # adjust link/directory settings in vuepress
 if [ $BRANCH_NAME != "main" ]; then
     printf "\nPreparing deployment for branch $BRANCH_NAME\n"
-    sed -i -e "s/base: '\/thingset\/'/base: '\/thingset\/branch\/$BRANCH_NAME\/'/g" docs/.vuepress/config.ts
+    sed -i -e "s/base: '\/'/base: '\/branch\/$BRANCH_NAME\/'/g" docs/.vuepress/config.ts
     sed -i -e "s/docsBranch: 'main'/docsBranch: '$BRANCH_NAME'/g" docs/.vuepress/config.ts
 else
     printf "\nPreparing deployment for main branch\n"
@@ -26,7 +23,7 @@ printf "\n\n"
 
 # get previous gh-pages deployment including all PR and branch folders
 rm -rf gh-pages
-git clone -b gh-pages https://github.com/LibreSolar/thingset gh-pages
+git clone -b gh-pages https://github.com/ThingSet/thingset.github.io gh-pages
 
 # compile folders correctly
 if [ $BRANCH_NAME != "main" ]; then

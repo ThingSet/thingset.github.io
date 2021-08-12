@@ -21,6 +21,7 @@ jobs:
     - name: Commit generated files
       run: |
         cd gh-pages
+        echo "thingset.io" > CNAME
         git init
         git add -A
         git config --local user.email "action@github.com"
