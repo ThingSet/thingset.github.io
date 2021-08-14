@@ -31,7 +31,7 @@ export default defineUserConfig<DefaultThemeOptions>({
       '@vuepress/plugin-search',
       {
         // exclude older versions from search
-        isSearchable: (page) => ! /^\/v0/.test(page.path),
+        isSearchable: (page) => !/^\/spec\/v0\.[1-3]+/.test(page.path),
       },
     ],
   ],
@@ -43,20 +43,20 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'History',
         ariaLabel: 'History Menu',
         children: [
-          { text: 'v0.4 (current)', link: '/' },
-          { text: 'v0.3', link: '/v0.3/' },
-          { text: 'v0.2', link: '/v0.2/' },
-          { text: 'v0.1', link: '/v0.1/' }
+          { text: 'v0.4 (current)', link: '/spec/v0.4/' },
+          { text: 'v0.3', link: '/spec/v0.3/' },
+          { text: 'v0.2', link: '/spec/v0.2/' },
+          { text: 'v0.1', link: '/spec/v0.1/' }
         ]
       }
     ],
     sidebar: {
-      '/v0.1/': [
+      '/spec/v0.1/': [
         'general',
         'functions',
         'can'
       ],
-      '/v0.2/': [
+      '/spec/v0.2/': [
         {
           text: 'Why ThingSet?',
           children: [
@@ -78,7 +78,7 @@ export default defineUserConfig<DefaultThemeOptions>({
           ]
         }
       ],
-      '/v0.3/': [
+      '/spec/v0.3/': [
         {
           text: 'Why ThingSet?',
           children: [
@@ -114,7 +114,7 @@ export default defineUserConfig<DefaultThemeOptions>({
           ]
         }
       ],
-      '/': [  // v0.4 (must be defined at the end as fallback)
+      '/spec/v0.4/': [
         {
           text: 'Why ThingSet?',
           children: [
