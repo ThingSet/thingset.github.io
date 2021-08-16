@@ -5,10 +5,8 @@ var path = require('path');
 
 export default defineUserConfig<DefaultThemeOptions>({
   lang: 'en',
-  title: 'ThingSet Protocol Specification',
-  description: 'The ThingSet protocol provides a consistent, standardized way to configure, ' +
-      'monitor and control ressource-constrained devices via different communication ' +
-      'interfaces like Serial, LoRa, USB, Bluetooth or CAN.',
+  title: 'ThingSet',
+  description: 'The Data Accessibility Framework',
   head: [
     ['link', { rel: "apple-touch-icon", sizes: "180x180", href: "/favicons/apple-touch-icon.png"}],
     ['link', { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicons/favicon-32x32.png"}],
@@ -37,11 +35,11 @@ export default defineUserConfig<DefaultThemeOptions>({
   ],
   theme: path.resolve(__dirname, './theme'),
   themeConfig: {
-    logo: '/favicons/apple-touch-icon.png',
+    logo: '/images/thingset-logo.png',
     navbar: [
       {
-        text: 'History',
-        ariaLabel: 'History Menu',
+        text: 'Specification',
+        ariaLabel: 'Specification Menu',
         children: [
           { text: 'v0.4 (current)', link: '/spec/v0.4/1a_introduction' },
           { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },

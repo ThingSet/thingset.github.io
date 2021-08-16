@@ -3,14 +3,65 @@
   // brand colors
   --c-brand: #005e85;
   --c-brand-light: #005e85;
+
+  // background colors
+  --c-bg: #ffffff;
+  --c-bg-light: #f3f4f5;
+  --c-bg-lighter: #eeeeee;
+  --c-bg-navbar: var(--c-bg-light);
+
+  // border colors
+  --c-border: #cfcfcf;
+  --c-border-dark: #dfe2e5;
 }
 
 html.dark {
   // brand colors
-  --c-brand: #005e85;
+  --c-brand: white;
   --c-brand-light: #005e85;
+
+  // background colors
+  --c-bg: #22272e;
+  --c-bg-light: #2b313a;
+  --c-bg-lighter: #262c34;
+
+  // border colors
+  --c-border: #3e4c5a;
+  --c-border-dark: #34404c;
 }
 
 pre {
   background-color: var(--code-bg-color)
+}
+
+html, body, #app {
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+}
+
+.navbar {
+  //max-width: var(--homepage-width);
+  //margin: 0 auto;
+  .site-name {
+    color: white;
+    display: none;
+  }
+  .navbar-links-item {
+    font-size: 1.0rem;
+  }
+  .dropdown-title {
+    font-size: 1.0rem;
+  }
+  .dropdown-item {
+    font-size: 0.9rem;
+  }
+}
+
+.home .hero img {
+  max-height: 320px;
+}
+
+.home .hero .description {
+  color: var(--c-brand);
 }
