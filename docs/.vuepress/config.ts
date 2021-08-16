@@ -43,10 +43,11 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'History',
         ariaLabel: 'History Menu',
         children: [
-          { text: 'v0.4 (current)', link: '/spec/v0.4/' },
-          { text: 'v0.3', link: '/spec/v0.3/' },
-          { text: 'v0.2', link: '/spec/v0.2/' },
-          { text: 'v0.1', link: '/spec/v0.1/' }
+          { text: 'v0.4 (current)', link: '/spec/v0.4/1a_introduction' },
+          { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },
+          { text: 'v0.2', link: '/spec/v0.2/1a_introduction' },
+          { text: 'v0.1', link: '/spec/v0.1/' },
+          { text: 'Changelog', link: '/spec/changelog' }
         ]
       }
     ],
@@ -60,7 +61,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         {
           text: 'Why ThingSet?',
           children: [
-            { text: 'Introduction', link: 'README.md' },
+            '1a_introduction',
             '1b_existing_solutions'
           ]
         },{
@@ -82,7 +83,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         {
           text: 'Why ThingSet?',
           children: [
-            { text: 'Introduction', link: 'README.md' },
+            '1a_introduction',
             '1b_existing_solutions'
           ]
         },{
