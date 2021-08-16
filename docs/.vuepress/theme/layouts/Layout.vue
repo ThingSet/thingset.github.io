@@ -1,7 +1,8 @@
 <template>
   <Layout />
   <div class="footer">
-    <span style="padding: 5px;">Developed by Libre Solar Technologies GmbH</span>
+    <span style="padding: 5px;"><a href="https://github.com/ThingSet"><img src="/images/github-logo.svg" height="14" /> GitHub</a></span>
+    | <span style="padding: 5px;">Developed by Libre Solar Technologies GmbH</span>
     | <span style="padding: 5px;"><a href="/contact.html">Contact / Impressum</a></span>
   </div>
 </template>
