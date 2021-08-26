@@ -23,7 +23,23 @@ In order to reduce the complexity of the protocol, the features offered by HTTP 
 
 The response codes of ThingSet are aligned with CoAP and thus also allow a simple translation to HTTP. The main difference is that HTTP doesn't allow to indicate successful requests as fine-grained as CoAP, so the status will be mostly 200 OK or 204 No Content.
 
-## Data Processing
+## URL layout
+
+### Gateways (local access)
+
+Gateways provide local HTTP access to multiple devices connected to it via other lower layer protocols like CAN or serial.
+
+The ThingSet HTTP API is prefixed only with a `ts/`. In order to keep the URL short, no additional API version is included in the path. If the API should change in the future, a version can be added e.g. with `ts2`.
+
+    http(s)://{gateway-host-or-ip}/ts/{device-id}/{object-path}
+
+In contrast to MQTT topics, no user name is included in the URL because the gateway provides access to local devices of a single user only. Authentication and access control should be handled by the HTTP protocol.
+
+### Internet services
+
+Internet services that provide access to ThingSet devices may use the same API as above. However, changes of the URL schema to allow multiple users / tenants may be required in the future.
+
+## Data processing
 
 ### HTTP via CAN
 

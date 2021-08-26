@@ -14,23 +14,25 @@ A gateway has to be used to translate the messages between the device (connected
 
 ## General thoughts
 
-The first part of the MQTT topic contains a user or tenant name and the device ID, followed by `rx` or `tx` to indicate the direction of the message. `tx` means that a message is transmitted from the device to the cloud (uplink), `rx` means that the device receives a message from the cloud (downlink).
+MQTT topics used for ThingSet are namespaced with a `ts/` at the very beginning. This allows to use the same broker for multiple purposes and data formats. Topics are sent with every single MQTT message. In order to keep them as short as possible, no additional versioning prefix is added.
 
-Gateway subscribes to (downlink)
+The ThingSet-specific part of the topic starts a user or tenant name and the device ID, followed by `rx` or `tx` to indicate the direction of the message. `tx` means that a message is transmitted from the device to the cloud (uplink), `rx` means that the device receives a message from the cloud (downlink).
 
-    {user}/+/rx/#
+In environments without different users or during bootstrapping of devices, `null` shall be used instead of an actual user name.
 
-and publishes to (uplink)
+Gateway subscribes to downlink messages with using topic
 
-    {user}/{device-id}/tx/{path}
+    ts/{user}/+/rx/#
 
-**Remark:** For MQTT v3.1.1 it is not possible to use the same node for uplink and downlink messages, as a device would receive its own published message if it subscribed to the topic aswell. Only MQTT v5 has a "No Local" bit to prevent getting messages from same clientID.
+and publishes uplink messages to the topic
+
+    ts/{user}/{device-id}/tx/{path}
+
+**Remark:** For MQTT v3.1.1 it is not possible to use the same topic for uplink and downlink messages, as a device would receive its own published message if it subscribed to the topic aswell. Only MQTT v5 has a "No Local" bit to prevent getting messages from same clientID.
 
 This topic layout allows to easily grant access rights on user or device basis, e.g. with following wild card:
 
-    {user}/{device-id}/#
-
-Topics are sent with every single MQTT message. In order to keep them as short as possible, no additional versioning prefix is added.
+    ts/{user}/{device-id}/#
 
 ## Statements
 
@@ -40,7 +42,7 @@ Messages in text mode are published to the `tx` path and the payload format must
 
 **JSON name:value map, QoS 0/1**
 
-    {user}/{device-id}/tx/{group}
+    ts/{user}/{device-id}/tx/{group}
 
 Messages can also be published directly in the binary format to the `txb` topic if the device does not support the text mode.
 
@@ -48,23 +50,23 @@ Binary messages can either be published as a map or with IDs and values in a sep
 
 **CBOR id:value map, QoS 0/1**
 
-    {user}/{device-id}/txb/m/{group-id}
+    ts/{user}/{device-id}/txb/m/{group-id}
 
 **CBOR ids, retained flag, QoS 1**
 
-    {user}/{device-id}/txb/i/{group-id}
+    ts/{user}/{device-id}/txb/i/{group-id}
 
 **CBOR values, QoS 0**
 
-    {user}/{device-id}/txb/v/{group-id}
+    ts/{user}/{device-id}/txb/v/{group-id}
 
-The main topic is ../tx/{group-name}, which should be used by a device / gateway if supported. This topic is also subscribed to for writing into a database.
+The preferred topic is `tx/{group-name}`, which should always be used if the text mode is supported by the device or gateway. This topic is also subscribed to for writing into a database.
 
 A cloud service might subscribe to the CBOR topics and convert them into the JSON topic automatically.
 
-The device data specification link will be published to a special topic:
+The link to extended device data information will be published to a special topic:
 
-    {user}/{device-id}/tx/TsDataSpec
+    ts/{user}/{device-id}/tx/DataExtURL
 
 If the binary mode is used with separated IDs and values, the IDs should be published with QoS 1 and the retained flag in order to make sure they are always available and matching the values that are sent to the `/v/` topic.
 
@@ -74,19 +76,19 @@ In general, static data like firmware version from the `info` group should only 
 
 **JSON name:value map**
 
-    {user}/{device-id}/rx/{group-name}
+    ts/{user}/{device-id}/rx/{group-name}
 
 **CBOR id:value map**
 
-    {user}/{device-id}/rxb/m/{group-id}
+    ts/{user}/{device-id}/rxb/m/{group-id}
 
 **CBOR ids**
 
-    {user}/{device-id}/rxb/i/{group-id}
+    ts/{user}/{device-id}/rxb/i/{group-id}
 
 **CBOR values**
 
-    {user}/{device-id}/rxb/v/{group-id}
+    ts/{user}/{device-id}/rxb/v/{group-id}
 
 ## Request / response
 
@@ -94,11 +96,11 @@ For the request / response messaging mode the response has to be matched with th
 
 **Requests (JSON or CBOR)**
 
-    {user}/{device-id}/req/{req-id}
+    ts/{user}/{device-id}/req/{req-id}
 
 **Response (JSON or CBOR, same as request)**
 
-    {user}/{device-id}/res/{req-id}
+    ts/{user}/{device-id}/res/{req-id}
 
 The above topics contain the entire ThingSet request or response. Hence, both binary or text mode can be used with the same topic.
 
