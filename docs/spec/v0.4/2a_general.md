@@ -74,7 +74,8 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 |------|------------|-------------|
 | 0x10 | Time_s     | Unix timestamp in seconds since Jan 01, 1970 |
 | 0x17 | .name      | Endpoint used by binary protocol to determine names from IDs |
-| 0x18 | DataExtURL | URL to JSON file containing additional information about exposed data |
+| 0x18 | DataExtURL | URL to JSON file containing extended information about exposed data |
+| 0x1D | DeviceID   | Alphanumeric string (without spaces) to identify the device (should be unique per manufacturer, typical length 8 characters) |
 | >=0x8000 | ...    | Control data objects with fixed IDs |
 
 The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `DataExtURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
@@ -87,8 +88,8 @@ For explanation of the protocol, the following simplified data structure of an M
 {
     "info": {                                                       // 0x01
         "DataExtURL": "https://files.libre.solar/tsx/cc-v03.json",  // 0x18 (fixed)
-        "DeviceType": "MPPT 1210 HUS",                              // 0x30
-        "DeviceID": "ABC12345"                                      // 0x31
+        "DeviceID": "ABC12345",                                     // 0x1D (fixed)
+        "DeviceType": "MPPT 1210 HUS"                               // 0x30
     },
     "meas": {                                                       // 0x02
         "Bat_V": 14.2,                                              // 0x40
