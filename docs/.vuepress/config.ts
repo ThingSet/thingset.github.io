@@ -124,6 +124,8 @@ export default defineUserConfig<DefaultThemeOptions>({
           text: 'Application Layer',
           children: [
             'appl_general_concept',
+            'appl_data_structure',
+            'appl_access_functions',
             'appl_text_mode',
             'appl_binary_mode',
           ]
