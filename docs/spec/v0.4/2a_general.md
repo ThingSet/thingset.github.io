@@ -70,15 +70,15 @@ The IDs 0x10-0x1F are reserved for special data objects that need to be known in
 
 The following table shows the assigned IDs. Currently unassigned IDs might be defined in a future version of the protocol.
 
-| ID   | Name       | Description |
-|------|------------|-------------|
-| 0x10 | Time_s     | Unix timestamp in seconds since Jan 01, 1970 |
-| 0x17 | .name      | Endpoint used by binary protocol to determine names from IDs |
-| 0x18 | DataExtURL | URL to JSON file containing extended information about exposed data |
-| 0x1D | DeviceID   | Alphanumeric string (without spaces) to identify the device (should be unique per manufacturer, typical length 8 characters) |
-| >=0x8000 | ...    | Control data objects with fixed IDs |
+| ID   | Name        | Description |
+|------|-------------|-------------|
+| 0x10 | Time_s      | Unix timestamp in seconds since Jan 01, 1970 |
+| 0x17 | .name       | Endpoint used by binary protocol to determine names from IDs |
+| 0x18 | MetadataURL | URL to JSON file containing extended information about exposed data |
+| 0x1D | DeviceID    | Alphanumeric string (without spaces) to identify the device (should be unique per manufacturer, typical length 8 characters) |
+| >=0x8000 | ...     | Control data objects with fixed IDs |
 
-The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `DataExtURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
+The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `MetadataURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
 
 ### Example
 
@@ -87,7 +87,7 @@ For explanation of the protocol, the following simplified data structure of an M
 ``` json
 {
     "info": {                                                       // 0x01
-        "DataExtURL": "https://files.libre.solar/tsx/cc-v03.json",  // 0x18 (fixed)
+        "MetadataURL": "https://files.libre.solar/tsm/cc-v03.json", // 0x18 (fixed)
         "DeviceID": "ABC12345",                                     // 0x1D (fixed)
         "DeviceType": "MPPT 1210 HUS"                               // 0x30
     },
@@ -135,10 +135,11 @@ For explanation of the protocol, the following simplified data structure of an M
         }
     },
     ".name": {                                                      // 0x17 (fixed)
-        "1": ".spec",
-        "2": "info",
+        "0x01": "info",
+        "0x02": "meas",
         // ...
-        "70": "Bat_V"
+        "0x40": "Bat_V"
+        // ...
     }
 }
 ```

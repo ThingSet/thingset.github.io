@@ -66,7 +66,7 @@ A cloud service might subscribe to the CBOR topics and convert them into the JSO
 
 The link to extended device data information will be published to a special topic:
 
-    ts/{user}/{device-id}/tx/DataExtURL
+    ts/{user}/{device-id}/tx/MetadataURL
 
 If the binary mode is used with separated IDs and values, the IDs should be published with QoS 1 and the retained flag in order to make sure they are always available and matching the values that are sent to the `/v/` topic.
 
