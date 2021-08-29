@@ -5,7 +5,7 @@ heroText: null
 tagline: ThingSet - The Data Accessibility Framework
 actions:
   - text: Read the docs
-    link: /spec/v0.4/1a_introduction
+    link: /spec/v0.4/introduction
     type: secondary
 features:
   - title: Fast and Easy

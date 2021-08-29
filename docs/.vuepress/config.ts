@@ -41,7 +41,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'Specification',
         ariaLabel: 'Specification Menu',
         children: [
-          { text: 'v0.4 (current)', link: '/spec/v0.4/1a_introduction' },
+          { text: 'v0.4 (current)', link: '/spec/v0.4/introduction' },
           { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },
           { text: 'v0.2', link: '/spec/v0.2/1a_introduction' },
           { text: 'v0.1', link: '/spec/v0.1/' },
@@ -117,35 +117,35 @@ export default defineUserConfig<DefaultThemeOptions>({
         {
           text: 'Why ThingSet?',
           children: [
-            '1a_introduction',
-            '1b_existing_solutions'
+            'introduction',
+            'existing_solutions'
           ]
         },{
           text: 'Application Layer',
           children: [
-            '2a_general',
-            '2b_text_mode',
-            '2c_binary_mode',
+            'appl_general_concept',
+            'appl_text_mode',
+            'appl_binary_mode',
           ]
         },{
-          text: 'Lower Layers',
+          text: 'Transport Layers',
           children: [
-            '3a_serial',
-            '3b_can',
-            '3c_lorawan'
+            'transp_serial',
+            'transp_can',
+            'transp_lorawan'
           ]
         },{
           text: 'Protocol Mapping',
           children: [
-            '4a_http',
-            '4b_coap',
-            '4c_mqtt'
+            'mapping_http',
+            'mapping_coap',
+            'mapping_mqtt'
           ]
         },{
           text: 'Tools',
           children: [
-            '5a_serial',
-            '5b_can',
+            'tools_serial',
+            'tools_can',
           ]
         }
       ]
