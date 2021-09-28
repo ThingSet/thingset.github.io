@@ -19,12 +19,13 @@ The IDs are used to access data objects in the binary protocol mode for reduced 
 
 ### Reserved IDs
 
-The IDs 0x10-0x1F are reserved for special data objects that need to be known in advance. In addition to that, IDs starting from 0x8000 are reserved for control purposes and will be assigned in the future.
+The IDs 0x00 and 0x10-0x1F are reserved for special data objects that need to be known in advance. In addition to that, IDs starting from 0x8000 are reserved for control purposes and will be assigned in the future.
 
 The following table shows the assigned IDs. Currently unassigned IDs might be defined in a future version of the protocol.
 
 | ID   | Name        | Description |
 |------|-------------|-------------|
+| 0x00 |             | Root object of a device |
 | 0x10 | Time_s      | Unix timestamp in seconds since Jan 01, 1970 |
 | 0x17 | .name       | Endpoint used by binary protocol to determine names from IDs |
 | 0x18 | MetadataURL | URL to JSON file containing extended information about exposed data |
@@ -33,9 +34,26 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 
 The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `MetadataURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
 
-### Example
+## Example Data
 
-For explanation of the protocol, the following simplified data structure of an MPPT charge controller will be used:
+### Flat layout
+
+Most simple valid data layout consists of key/value pairs without any hierarchy.
+
+``` json
+{
+    "DeviceID": "ABCD1234",
+    "Ambient_degC": 22.3,
+    "HeaterEnable": true,
+    "x-reset": null
+}
+```
+
+A problem with this layout is that the semantics of the data is not entirely clear. For example it is not clear if `Ambient_degC` is a temperature setpoint that can be written to or if it is a read-only measurement value.
+
+### Grouped layout
+
+The following example data structure of an MPPT charge controller will be used for further explanation of the protocol.
 
 ``` json
 {
@@ -104,6 +122,29 @@ The `rpc` group provides functions that can be called. In order to distinguish f
 The `.pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal nodes are prefixed with a `.`, similar to hidden files or folders in computer file systems.
 
 The data node `report` in above example is a so-called **subset**, which contains an array pointing at existing data items. It can be used to configure the content of statements for publication if data objects of different groups should be combined in a single message.
+
+
+### Nested layout
+
+If there are multiple entities with similar data sets inside one device, the data can be further structured as shown below.
+
+``` json
+{
+    // ...
+    "meas": {
+        "bat1": {
+            "Bat_V": 14.2,
+            "Bat_A": 5.13
+        },
+        "bat2": {
+            "Bat_V": 14.2,
+            "Bat_A": 5.13
+        },
+    }
+}
+```
+
+In order to keep implementations simple, not all devices may implement multiple levels of hierarchies.
 
 ## Groups
 
