@@ -107,3 +107,76 @@ For protobouf you need to define a new message of type message2, which is hard-c
 Protobuf does not allow to use string identifiers instead of the numbers.
 
 -->
+
+
+## Open Connectivity Foundation
+
+https://openconnectivity.org/
+
+Clearly has not been written by engineers or natural scientists, but software people.
+
+Not useful for energy management tasks at all.
+
+https://oneiota.org/revisions/6174
+
+A circuit breaker detects *power* or *current* overload, but not energy!
+
+https://oneiota.org/revisions/6138
+
+Air flow speed without any unit.
+
+https://oneiota.org/revisions/6148
+
+Battery without current and voltage measurement
+
+Using C (Coulomb) as a unit for temperature.
+
+A timestamp is defined in every single resource, instead of making it part of the overall spec.
+
+Example for battery:
+
+```
+        "capacity": {
+          "description": "The total capacity in Amp-hours (Ah).",
+          "readOnly": true,
+          "type": "number"
+        },
+```
+
+Equivalent in ThingSet:
+
+```
+	"Bat_Ah":50
+```
+
+## LwM2M
+
+Also based on CoAP
+
+Registry:
+
+http://www.openmobilealliance.org/wp/OMNA/LwM2M/LwM2MRegistry.html
+
+https://raw.githubusercontent.com/OpenMobileAlliance/lwm2m-registry/prod/3411.xml
+
+No battery current (but at least battery voltage existing)
+
+https://raw.githubusercontent.com/OpenMobileAlliance/lwm2m-registry/prod/version_history/3303-1_0.xml
+
+Crazy amount of description just for a temperature value.
+
+## Conclusion
+
+It's not possible to think of any possible metrics of a device when writing a specification. Changing specifications is a too slow process.
+
+Every attempt to create a database of devices and all useful properties will fail!
+
+Solution: More flexible data model needed that can be discovered from the device instead of the specification.
+
+## GOOOSE
+
+IEC 61850
+
+## Zenoh
+
+## Golioth

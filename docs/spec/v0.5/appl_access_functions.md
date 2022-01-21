@@ -61,3 +61,5 @@ By convention, the object names below the `.pub` define which data object should
 If a `Period_s` data object exists, it can be set to `0` to disable publication of this message. For event-based publication, a data object `OnChange` can be specified, which publishes the message only if one of the data objects has changed.
 
 More details regarding the ThingSet protocol methods for data access will be explained in the next chapter.
+
+**Idea:** Publication of a statement can be triggered by sending the statement with empty payload to that device.

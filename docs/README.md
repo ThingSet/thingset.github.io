@@ -4,6 +4,9 @@ heroImage: /images/thingset-infinity.png
 heroText: null
 tagline: ThingSet - The Data Accessibility Framework
 actions:
+  - text: Learn more
+    link: /overview
+    type: primary
   - text: Read the docs
     link: /spec/v0.4/introduction
     type: secondary

@@ -38,6 +38,18 @@ export default defineUserConfig<DefaultThemeOptions>({
     logo: '/images/thingset-logo.png',
     navbar: [
       {
+        text: 'Overview',
+        link: '/overview'
+      },
+      {
+        text: 'Products',
+        link: '/products/',
+        children: [
+          { text: 'Cloud Services', link: '/products/cloud' },
+          { text: 'Node Hardware', link: '/products/node' }
+        ]
+      },
+      {
         text: 'Specification',
         ariaLabel: 'Specification Menu',
         children: [
@@ -180,7 +192,8 @@ export default defineUserConfig<DefaultThemeOptions>({
           children: [
             'mapping_http',
             'mapping_coap',
-            'mapping_mqtt'
+            'mapping_mqtt',
+            'mapping_databases'
           ]
         },{
           text: 'Tools',

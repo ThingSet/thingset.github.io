@@ -27,3 +27,11 @@ It should be possible to configure and monitor a device without a manual or a co
 ### Stateless
 
 The small devices should not need to handle sessions. Each request stands for its own.
+
+### Zero-overhead API
+
+No unnecessary data has to be transferred over low bandwidth connections.
+
+### Canonical data model
+
+https://en.wikipedia.org/wiki/Canonical_model

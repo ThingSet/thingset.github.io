@@ -23,6 +23,8 @@ In order to reduce the complexity of the protocol, the features offered by HTTP 
 
 The response codes of ThingSet are aligned with CoAP and thus also allow a simple translation to HTTP. The main difference is that HTTP doesn't allow to indicate successful requests as fine-grained as CoAP, so the status will be mostly 200 OK or 204 No Content.
 
+See also: https://www.rfc-editor.org/rfc/rfc7386
+
 ## URL layout
 
 ### Gateways (local access)
@@ -65,4 +67,19 @@ Dev    UART:txt     GW   HTTP:txt   Web App
  |   resp objects   |                  |
  | ---------------> |   resp objects   |
  |                  | ---------------> |
+```
+
+## Tools
+
+```
+curl -i -X PATCH http://192.168.178.56/api/v1/ts/tkj1m4y/conf -d '{"BalCellDiff_V":0.01}'
+
+curl -i -X POST http://<ESP-IP>/api/v1/ts/10ktftyx/pub/serial/IDs -d '"Mosfet_degC"'
+
+curl -i -X POST http://<ESP-IP>/api/v1/ts/10ktftyx/exec/reset
+
+curl -i -X GET http://192.168.178.56/api/v1/ts/tkj1m4y/conf
+
+curl -i -X POST http://192.168.178.56/api/v1/ts/tkj1m4y/pub/serial/IDs -d '"Cells_V"'
+
 ```

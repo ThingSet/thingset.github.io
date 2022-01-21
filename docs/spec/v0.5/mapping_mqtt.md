@@ -74,6 +74,8 @@ If the binary mode is used with separated IDs and values, the IDs should be publ
 
 In general, static data like firmware version from the `info` group should only be published once after startup and may use the retained flag aswell.
 
+Problem: A gateway does not know which messages should have the retained flag --> retained flags may only be suitable for cloud to device communication.
+
 ### Broker to device
 
 **JSON name:value map**
@@ -313,6 +315,16 @@ Dev   LoRaWAN:bin      GW       MQTT:bin     Agent       MQTT:txt     Broker
 ### Broker to Device (requests)
 
 ToDo
+
+## Provider Incompatibilities
+
+AWS is not MQTT compliant:
+
+https://www.hivemq.com/blog/hivemq-cloud-vs-aws-iot/
+
+Handling of retained messages is wrong. According to MQTT standard, subscribing to a retained topic via wild-cards would deliver the mesage. In AWS it doesn't.
+
+https://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html#mqtt-retain
 
 ## References
 

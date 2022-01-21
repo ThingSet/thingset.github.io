@@ -145,9 +145,9 @@ After successful authentication, the device exposes previously restricted data o
 
 Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
 
-**Example 1:** A statement containing the `report` subset, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `qReport` subset, sent out by the device every 10 seconds
 
-    #report {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
+    #qReport {"pTime_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
 
 The `.pub` node is used to configure the publication process itself.
 

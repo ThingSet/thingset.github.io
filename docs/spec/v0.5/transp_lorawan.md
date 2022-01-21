@@ -20,6 +20,8 @@ LoRaWAN supports to specify a so-called port for each message to differentiate b
 
 The ports are mapped to the ThingSet data object IDs and only IDs from 0x01..0x3F are used for communication via LoRaWAN.
 
+ToDo:
+
 Only the values are communicated regularly. The corresponding IDs for each statement are sent only once during startup to the port with ID + 0x40.
 
 The following table gives an overview of the LoRaWAN ports as they are planned to be used for ThingSet:
@@ -27,11 +29,15 @@ The following table gives an overview of the LoRaWAN ports as they are planned t
 | Port(s)    | Usage |
 |------------|-------|
 | 0x00       | Reserved for LoRaWAN MAC messages
-| 0x01..0x3F | ThingSet statement values (corresponding to ID of group or subset)
+| 0x01..0x3F | ThingSet statement key/value pairs (corresponding to ID of subset)
 | 0x40       | ThingSet request/response channel
-| 0x41..0x7F | ThingSet statement IDs (corresponding to ID + 0x40)
-| 0x80..0xDF | Reserved for future use in ThingSet
+| 0x41..0x7F | ThingSet statement values (corresponding to ID of group or subset)
+| 0x80       | Reserved for future use in ThingSet
+| 0x81..0xBF | ThingSet statement IDs (corresponding to ID + 0x40)
+| 0xC0..0xDF | Reserved for future use in ThingSet
 | 0xE0..0xFF | Reserved for LoRaWAN
+
+Remark: key/value ports are necessary so that event statements don't have to transfer also all values of that subset that didn't change.
 
 ## Open questions
 
