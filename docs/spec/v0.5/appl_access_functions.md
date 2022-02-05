@@ -54,9 +54,9 @@ Statements are neither requests nor response messages, as they are sent without 
 |------|---------|---------------------|
 | 0x1F | #       | Statement message   |
 
-The internal path `.pub` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
+The internal path `_pub` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
 
-By convention, the object names below the `.pub` define which data object should be published. This can be an entire group like `meas` or a subset data object that contains a list of references to other data items like `report` in the above example.
+By convention, the object names below the `_pub` define which data object should be published. This can be an entire group like `meas` or a subset data object that contains a list of references to other data items like `report` in the above example.
 
 If a `Period_s` data object exists, it can be set to `0` to disable publication of this message. For event-based publication, a data object `OnChange` can be specified, which publishes the message only if one of the data objects has changed.
 

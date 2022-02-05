@@ -48,13 +48,13 @@ The examples in this chapter are based on the same data structure as introduced 
 
 The firmware developer is free to choose the IDs.
 
-In contrast to the text mode, the binary mode has a special `".name"` endpoint (ID `0x17`) that allows to retrieve the name for a given ID using a `FETCH` request.
+In contrast to the text mode, the binary mode has a special `"_name"` endpoint (ID `0x17`) that allows to retrieve the name for a given ID using a `FETCH` request.
 
 **Example 1:** Request name of object IDs `0x40` and `0x41`
 
     Request:
     05                                      # FETCH request
-       17                                   # CBOR uint: 0x17 (.name endpoint)
+       17                                   # CBOR uint: 0x17 (_name endpoint)
        82                                   # CBOR array (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           18 41                             # CBOR uint: 0x41 (object ID)

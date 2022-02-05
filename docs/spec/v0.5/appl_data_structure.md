@@ -9,11 +9,11 @@ Actual data is stored in leaf nodes, called **data items**. The data items can c
 
 Each data object in the tree is identified by a numeric ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters, dots or underscores without any whitespace characters.
 
-The underscore is only used to specify the unit of a data item (also see below). No additional underscores are allowed in the name.
+An underscore as the first character is used to identify paths which are used internally by the implementation of the protocol itself (e.g. configuration of publication messages).
 
-A dot is used to identify paths which are used internally by the implementation of the protocol itself (e.g. configuration of publication messages). Other usages of a dot in the data object names is not allowed.
+If used in the middle of the name, an underscore is used to separate the actual name and the unit (also see below). No additional underscores are allowed in the name.
 
-The IDs must be unique per device. Except for internal data objects (behind in a path starting with a dot) also the name must be unique.
+The IDs must be unique per device. Except for internal data objects (behind in a path starting with an underscore) also the name must be unique.
 
 The IDs are used to access data objects in the binary protocol mode for reduced message size. They can also be used in the firmware to define the relations in the data structure. For all interactions with users and in the text-based mode, only the object names and paths are used.
 
@@ -27,7 +27,7 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 |------|-------------|-------------|
 | 0x00 |             | Root object of a device |
 | 0x10 | Time_s      | Unix timestamp in seconds since Jan 01, 1970 |
-| 0x17 | .name       | Endpoint used by binary protocol to determine names from IDs |
+| 0x17 | _name       | Endpoint used by binary protocol to determine names from IDs |
 | 0x18 | MetadataURL | URL to JSON file containing extended information about exposed data |
 | 0x1D | DeviceID    | Alphanumeric string (without spaces) to identify the device (should be unique per manufacturer, typical length 8 characters) |
 | >=0x8000 | ...     | Control data objects with fixed IDs |
@@ -97,7 +97,7 @@ The following example data structure of an MPPT charge controller will be used f
             "AbsMax_v": 30                                          // 0x7001
         }
     },
-    ".pub": {                                                       // 0x0F
+    "_pub": {                                                       // 0x0F
         "info": {                                                   // 0x100
             "OnChange": true                                        // 0x101
         },
@@ -105,7 +105,7 @@ The following example data structure of an MPPT charge controller will be used f
             "Period_s": 10                                          // 0x103
         }
     },
-    ".name": {                                                      // 0x17 (fixed)
+    "_name": {                                                      // 0x17 (fixed)
         "0x01": "info",
         "0x02": "meas",
         // ...
@@ -119,7 +119,7 @@ The data objects are structured in different groups like `info` and `conf` as de
 
 The `rpc` group provides functions that can be called. In order to distinguish functions from normal data objects, executable object names are lower case and prefixed with `x-`.
 
-The `.pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal nodes are prefixed with a `.`, similar to hidden files or folders in computer file systems.
+The `_pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal nodes are prefixed with a `_`, similar to private functions in some programming languages.
 
 The data node `report` in above example is a so-called **subset**, which contains an array pointing at existing data items. It can be used to configure the content of statements for publication if data objects of different groups should be combined in a single message.
 

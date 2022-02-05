@@ -64,9 +64,9 @@ Only those data objects are returned which are at least readable. Thus, the resu
 
     ?/
     :85 Content. ["info","meas","state","rec","input","conf","rpc","dfu","report",
-    "ctrl",".pub"]
+    "ctrl","_pub"]
 
-Note that `.name` is not contained in the list, as it is only available in the binary mode.
+Note that `_name` is not contained in the list, as it is only available in the binary mode.
 
 **Example 2:** Retrieve all content of `meas` path (names + values)
 
@@ -149,16 +149,16 @@ Published statements are broadcast to all connected devices and no response is s
 
     #report {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
 
-The `.pub` node is used to configure the publication process itself.
+The `_pub` node is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
-    ?.pub/
+    ?_pub/
     :85 Content. ["info","report"]
 
 **Example 3:** Disable publication of `report` subset
 
-    =.pub/report {"Period_s":0}
+    =_pub/report {"Period_s":0}
     :84 Changed.
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.
