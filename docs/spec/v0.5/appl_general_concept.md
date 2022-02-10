@@ -18,11 +18,19 @@ A **statement** is a message that is sent without expecting a response or confir
 
 If a device receives a statement, it is considered a proposal to update the values as stated in the message. If all or some of the requested changes are invalid, they are silently ignored, as it is not possible to respond to a statement.
 
+::: tip Idea for evaluation
+After each update of a value via request/response, the device sends out a statement with the updated values. This ensures that also other devices are notified (statements are broadcast on the bus) and it allows to double-check if the value was correctly received or if it was e.g. rounded to the next possible value.
+:::
+
 ### Request-response model
 
 The communication between two specific devices uses a request-response messaging pattern. A connection can be established either directly (e.g. serial interface, USB, Bluetooth) or via a network or bus with several devices attached (e.g. CAN, Ethernet, WiFi, LoRa). In case of a network, each device has to be uniquely addressable.
 
 ![Communication Channels](../images/communication_channels.png)
+
+::: warning ToDo
+Explain hierarchical topology of connected ThingSet nodes and define differences between Nodes, Devices and Gateways.
+:::
 
 The client would usually be a display, a mobile phone application or a gateway.
 

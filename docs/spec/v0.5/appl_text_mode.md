@@ -50,7 +50,7 @@ A statement starts with the hash sign and a path, followed by a whitespace and t
 
     txt-statement = "#" path " " json-object
 
-The path is either a group (e.g. `meas`) or a subset object containing references to other data items as an array (e.g. `report`).
+The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eChange`).
 
 ## Read data
 
@@ -60,44 +60,44 @@ The FETCH function allows to retrieve only subset of the child objects, defined 
 
 Only those data objects are returned which are at least readable. Thus, the result might differ after authentication.
 
-**Example 1:** Discover all child objects of the root node (i.e. categories)
+**Example 1:** Discover all child objects of the root object (i.e. categories)
 
     ?/
-    :85 Content. ["info","meas","state","rec","input","conf","rpc","dfu","report",
-    "ctrl","_pub"]
+    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot","eChange",
+    "m","_pub"]
 
-Note that `_name` is not contained in the list, as it is only available in the binary mode.
+Note that `_path` is not contained in the list, as it is only available in the binary mode.
 
-**Example 2:** Retrieve all content of `meas` path (names + values)
+**Example 2:** Retrieve all content of `Bat` path (names + values)
 
-    ?meas
-    :85 Content. {"Bat_V":14.2,"Bat_A":5.13,"Ambient_degC":22}
+    ?Bat
+    :85 Content. {"rMeas_V":12.9,"rMeas_A":-3.14,"sTarget_V":14.4}
 
-**Example 3:** List all sub-item names of `meas` path as an array
+**Example 3:** List all sub-item names of `Bat` path as an array
 
-    ?meas/
-    :85 Content. ["Bat_V","Bat_A","Ambient_degC"]
+    ?Bat/
+    :85 Content. ["rMeas_V","rMeas_A","sTarget_V"]
 
-**Example 4:** Retrieve value for single data item `Bat_V`
+**Example 4:** Retrieve value for single data item `Bat/rMeas_V`
 
-    ?meas ["Bat_V"]
-    :85 Content. [14.2]
+    ?Bat ["rMeas_V"]
+    :85 Content. [12.9]
 
 ## Update data
 
 The PATCH request attempts to overwrite the values of data items.
 
-Data of category `conf` will be stored in persistent memory, so it is not allowed to change settings periodically. Only data of category `input` can be changed regularly.
+Data items prefixed with `s` will be stored in persistent memory, so it is not allowed to change settings periodically. Only data of with `w` prefix can be changed regularly.
 
-**Example 1:** Disable charging `input` value
+**Example 1:** Disable load output
 
-    =input {"EnableCharging":false}
+    =Load {"wEnable":false}
     :84 Changed.
 
-**Example 2:** Attempt to write read-only measurement values (`meas` category)
+**Example 2:** Attempt to write read-only measurement value
 
-    =meas {"Bat_V":0}
-    :A3 Forbiden.
+    =Bat {"rMeas_A":0}
+    :A3 Forbidden.
 
 ## Create data
 
@@ -105,27 +105,27 @@ The equivalent of a POST request allows to append new data to an existing data i
 
 In current implementations it is not possible to add entirely new data objects, as this would be against the nature of statically allocated memory of constrained devices.
 
-**Example 1:** Add `Bat_A` to the `report` subset
+**Example 1:** Add battery current measurement to the generic metrics subset `m`
 
-    +report "Bat_A"
+    +m "Bat/rMeas_A"
     :81 Created.
 
 ## Delete data
 
 Deletes data from a data item of array type.
 
-**Example 1:** Delete `Bat_A` from `report` subset
+**Example 1:** Delete `cMetadataURL` from boot events subset
 
-    -report "Bat_A"
+    -eBoot "cMetadataURL"
     :82 Deleted.
 
 ## Execute function
 
-Calls an executable data object. Functions are usually part of the `rpc` group, but can also be contained in other sections of the data object tree (e.g. `dfu`).
+Calls an executable data object. Functions are prefixed with `x`.
 
 **Example 1:** Reset the device
 
-    !rpc/x-reset
+    !Device/xReset
     :83 Valid.
 
 ## Authentication
@@ -136,7 +136,7 @@ The password is transferred as a plain text string. Encryption has to be provide
 
 Internally, the authentication function is implemented as an executable data object.
 
-    !rpc/x-auth "mypass"
+    !Device/xAuth "mypass"
     :83 Valid.
 
 After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
@@ -145,20 +145,20 @@ After successful authentication, the device exposes previously restricted data o
 
 Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
 
-**Example 1:** A statement containing the `report` subset, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `m` subset, sent out by the device every 10 seconds
 
-    #report {"Time_s":460677600,"Bat_V":14.1,"Bat_A":5.13}
+    #m {"t_s":460677600,"Bat":{"rMeas_V":12.9,"rMeas_A":-3.14},"Load":{"r_W":96.5},"Load":{"r_W":137.0}}
 
-The `_pub` node is used to configure the publication process itself.
+The `_pub` path is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
     ?_pub/
-    :85 Content. ["info","report"]
+    :85 Content. ["eChange","m"]
 
-**Example 3:** Disable publication of `report` subset
+**Example 3:** Enable publication of `m` subset
 
-    =_pub/report {"Period_s":0}
+    =_pub/m {"sEnable":true}
     :84 Changed.
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.
