@@ -22,8 +22,12 @@ Implementation and binary data representations should be very compact to enable 
 
 ### Schema-less and self-explaining
 
-It should be possible to configure and monitor a device without a manual or a configuration file. This means that the protocol needs functions to discover the features and configurable settings of an unknown device. In contrast to other protocols like Modbus, you should not need to know the variable type and register address where a setting is stored.
+It should be possible to configure and monitor a device without a manual or a configuration file. This means that the protocol needs functions to discover the features and configurable settings of an unknown device. In contrast to other protocols like Modbus, you should not need to know the variable type and register address where a setting is stored. It can be used as a [canonical data model](https://en.wikipedia.org/wiki/Canonical_model).
 
 ### Stateless
 
 The small devices should not need to handle sessions. Each request stands for its own.
+
+### Zero-overhead API
+
+Strict naming conventions provide sufficient information like units and data types at a minimum of necessary bytes transferred over low bandwidth connections.
