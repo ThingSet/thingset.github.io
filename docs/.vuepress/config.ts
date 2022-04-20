@@ -157,7 +157,7 @@ export default defineUserConfig<DefaultThemeOptions>({
           text: 'Why ThingSet?',
           children: [
             'introduction',
-            'existing_solutions'
+            'existing_solutions',
           ]
         },{
           text: 'Application Layer',
@@ -172,15 +172,16 @@ export default defineUserConfig<DefaultThemeOptions>({
           text: 'Transport Layers',
           children: [
             'transp_serial',
+            'transp_websocket',
             'transp_can',
-            'transp_lorawan'
+            'transp_lorawan',
           ]
         },{
           text: 'Protocol Mapping',
           children: [
             'mapping_http',
             'mapping_coap',
-            'mapping_mqtt'
+            'mapping_mqtt',
           ]
         },{
           text: 'Tools',
