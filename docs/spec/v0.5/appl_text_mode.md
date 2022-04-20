@@ -50,7 +50,7 @@ A statement starts with the hash sign and a path, followed by a whitespace and t
 
     txt-statement = "#" path " " json-object
 
-The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eChange`).
+The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eState`).
 
 ## Read data
 
@@ -63,7 +63,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
 **Example 1:** Discover all child objects of the root object (i.e. categories)
 
     ?/
-    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot","eChange",
+    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot","eState",
     "m","_pub"]
 
 Note that `_path` is not contained in the list, as it is only available in the binary mode.
@@ -154,7 +154,7 @@ The `_pub` path is used to configure the publication process itself.
 **Example 2:** List all statements available for publication
 
     ?_pub/
-    :85 Content. ["eChange","m"]
+    :85 Content. ["eState","m"]
 
 **Example 3:** Enable publication of `m` subset
 

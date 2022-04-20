@@ -164,10 +164,10 @@ The following example data structure of an MPPT solar charge controller will be 
         "pTotal_kWh": 1789                                          // 0x62
     },
     "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x04
-    "eChange": ["t_s", "Device/rErrorFlags"],                       // 0x05
+    "eState": ["t_s", "Device/rErrorFlags"],                        // 0x05
     "m": ["t_s", "Bat/rMeas_V", "Solar/r_W", "Load/r_W"],           // 0x06
     "_pub": {                                                       // 0x0F
-        "eChange": {                                                // 0xF0
+        "eState": {                                                 // 0xF0
             "sEnable": true,                                        // 0xF1
             "cRateLimit_s": 1                                       // 0xF2
         },
@@ -233,7 +233,7 @@ Below structure gives an example of the processed user interface structure for a
            │     ├─ Metadata URL
            │     └─ Device Firmware Version
            │
-           ├─ Change Events
+           ├─ State Events
            │  ├─ Enable                                             [x]
            │  ├─ Rate Limit                                     | 1 | s
            │  └─ Items                               [ Add ] [ Delete ]
