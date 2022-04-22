@@ -63,8 +63,8 @@ Only those data objects are returned which are at least readable. Thus, the resu
 **Example 1:** Discover all child objects of the root object (i.e. categories)
 
     ?/
-    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot","eState",
-    "m","_pub"]
+    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot",
+    "eState","m","_pub"]
 
 Note that `_path` is not contained in the list, as it is only available in the binary mode.
 

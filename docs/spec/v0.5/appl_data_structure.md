@@ -163,9 +163,9 @@ The following example data structure of an MPPT solar charge controller will be 
         "r_W": 137.0,                                               // 0x61
         "pTotal_kWh": 1789                                          // 0x62
     },
-    "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x04
-    "eState": ["t_s", "Device/rErrorFlags"],                        // 0x05
-    "m": ["t_s", "Bat/rMeas_V", "Solar/r_W", "Load/r_W"],           // 0x06
+    "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
+    "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
+    "m": ["t_s", "Bat/rMeas_V", "Solar/r_W", "Load/r_W"],           // 0x07
     "_pub": {                                                       // 0x0F
         "eState": {                                                 // 0xF0
             "sEnable": true,                                        // 0xF1

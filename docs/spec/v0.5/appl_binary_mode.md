@@ -1,9 +1,5 @@
 # Binary Mode
 
-::: warning
-This chapter has not yet been updated for v0.5 protocol draft. Protocol examples may not match the example data from previous chapter.
-:::
-
 In the binary mode, the data is encoded using the CBOR format. The data structure is the same as in text mode, but numeric object IDs are used as identifiers by default instead of the object names.
 
 The length of the entire request or response is not encoded in the ThingSet protocol, but can be determined from the CBOR format. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
@@ -48,17 +44,17 @@ Binary publication messages follow the same concept as in text mode.
 
 ## Name and ID mapping
 
-The examples in this chapter are based on the same data structure as introduced in the [General Concept chapter](2a_general.md#data-structure), but each object is identified by the ID stated in the comment.
+The examples in this chapter are based on the same data structure as introduced in the [Data Structure chapter](appl_data_structure.md#grouped-layout), but each object is identified by the ID stated in the comment.
 
 The firmware developer is free to choose the IDs.
 
-In contrast to the text mode, the binary mode has a special `"_name"` endpoint (ID `0x17`) that allows to retrieve the name for a given ID using a `FETCH` request.
+In contrast to the text mode, the binary mode has a special `"_path"` endpoint (ID `0x17`) that allows to retrieve the path for a given ID using a `FETCH` request.
 
-**Example 1:** Request name of object IDs `0x40` and `0x41`
+**Example 1:** Request path of object IDs `0x40` and `0x41`
 
     Request:
     05                                      # FETCH request
-       17                                   # CBOR uint: 0x17 (_name endpoint)
+       17                                   # CBOR uint: 0x17 (_path endpoint)
        82                                   # CBOR array (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           18 41                             # CBOR uint: 0x41 (object ID)
@@ -66,8 +62,8 @@ In contrast to the text mode, the binary mode has a special `"_name"` endpoint (
     Response:
     85                                      # Content.
        82                                   # CBOR array (2 elements)
-          65 4261745F56                     # CBOR string: "Bat_V"
-          65 4261745F41                     # CBOR string: "Bat_A"
+          6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V"
+          6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A"
 
 ## Read data
 
@@ -81,21 +77,21 @@ The FETCH function can retrieve a specified subset of child item values. In addi
 
 If a path (string containing names) is used to specify an endpoint, also names are used instead of IDs in the returned results.
 
-**Example 1:** Retrieve all data of meas path (names + values)
+**Example 1:** Retrieve all data of `Bat` path (names + values)
 
     Request:
     01                                      # GET
-       66 6D656173                          # CBOR string: "meas"
+       63 426174                            # CBOR string: "Bat"
 
     Response:
     85                                      # Content.
        A3                                   # CBOR map (3 elements)
-          65 4261745F56                     # CBOR string: "Bat_V"
-          FA 41633333                       # CBOR float: 14.2
-          65 4261745F41                     # CBOR string: "Bat_A"
-          FA 40A428F6                       # CBOR float: 5.13
-          6C 416D6269656E745F64656743       # CBOR string: "Ambient_degC"
-          16                                # CBOR uint: 22
+          67 724D6561735F56                 # CBOR string: "rMeas_V"
+          FA 414E6666                       # CBOR float: 12.9
+          67 724D6561735F41                 # CBOR string: "rMeas_A"
+          FA C048F5C3                       # CBOR float: -3.14
+          69 735461726765745F56             # CBOR string: "sTarget_V"
+          FA 41666666                       # CBOR float: 14.4
 
 **Example 2:** Discover all child object names of the root object
 
@@ -106,21 +102,21 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
-       89                                   # CBOR array (9 elements)
-          64 696E666F                       # CBOR string: "info"
-          64 6D656173                       # CBOR string: "meas"
+       8B                                   # CBOR array (11 elements)
+          63 745F73                         # CBOR string: "t_s"
+          67 634E6F64654944                 # CBOR string: "cNodeID"
            ...
 
-**Example 3:** Retrieve value for single data item `Bat_V`
+**Example 3:** Retrieve value for single data item `Bat/rMeas_V`
 
     Request:
     05                                      # FETCH
-       64 6D656173                          # CBOR string: "meas" (path)
-       65 4261745F56                        # CBOR string: "Bat_V" (object name)
+       63 426174                            # CBOR string: "Bat" (path)
+       67 724D6561735F56                    # CBOR string: "rMeas_V" (object name)
 
     Response:
     85                                      # Content.
-       FA 41633333                          # CBOR float: 14.2
+       FA 414E6666                          # CBOR float: 12.9
 
 ### Using data object IDs
 
@@ -134,11 +130,11 @@ If a path (string containing names) is used to specify an endpoint, also names a
     85                                      # Content.
        A3                                   # CBOR map (3 elements)
           18 40                             # CBOR uint: 0x40
-          FA 41633333                       # CBOR float: 14.2
+          FA 414E6666                       # CBOR float: 12.9
           18 41                             # CBOR uint: 0x41
-          FA 40A428F6                       # CBOR float: 5.13
+          FA C048F5C3                       # CBOR float: -3.14
           18 42                             # CBOR uint: 0x42
-          16                                # CBOR uint: 22
+          FA 41666666                       # CBOR float: 14.4
 
 **Example 5:** Discover all child object IDs of the root object
 
@@ -149,9 +145,9 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
-       89                                   # CBOR array (9 elements)
-          01                                # CBOR uint: 0x01
-          02                                # CBOR uint: 0x02
+       8B                                   # CBOR array (11 elements)
+          01                                # CBOR uint: 0x10
+          18 1D                             # CBOR uint: 0x1D
            ...
 
 **Example 6:** Retrieve value for single data item `Bat_V` with ID `0x40`
@@ -162,7 +158,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
-       FA 41633333                          # CBOR float: 14.2
+       FA 414E6666                          # CBOR float: 12.9
 
 **Example 7:** Retrieve multiple data items:
 
@@ -176,8 +172,8 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Response:
     85                                      # Content.
        82                                   # CBOR array (2 elements)
-          FA 41633333                       # CBOR float: 14.2
-          16                                # CBOR uint: 22
+          FA 414E6666                       # CBOR float: 12.9
+          FA C048F5C3                       # CBOR float: -3.14
 
 ## Update data
 
@@ -187,13 +183,13 @@ The device must support a patch request using the same CBOR data type as used in
 
 If the data type is not supported, an error status code (`0xAF`) is responded.
 
-**Example 1:** Disable charging
+**Example 1:** Disable load output
 
     Request:
     07                                      # PATCH
-       05                                   # CBOR uint: 0x05
+       04                                   # CBOR uint: 0x04 (parent ID)
        A1                                   # CBOR map (1 element)
-          18 90                             # CBOR uint: 0x90
+          18 60                             # CBOR uint: 0x60 (object ID)
           F4                                # CBOR data: false
 
     Response:
@@ -215,11 +211,11 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
 
 Appends new data to a data object in a similar way as in the text mode.
 
-**Example 1:** Add item with ID `0x41` (`Bat_A`) to the `report` subset
+**Example 1:** Add item with ID `0x41` (`Bat/rMeas_A`) to the generic metrics subset `m`
 
     Request:
     02                                      # POST
-       18 20                                # CBOR uint: 0x20 (object ID)
+       07                                   # CBOR uint: 0x07 (subset object ID)
        18 41                                # CBOR uint: 0x41
 
     Response:
@@ -229,12 +225,12 @@ Appends new data to a data object in a similar way as in the text mode.
 
 Removes data from an object of array type.
 
-**Example 1:** Remove item with ID `0x41` (`Bat_A`) from `report` subset
+**Example 1:** Delete item with ID `0x18` (`cMetadataURL`) from boot events subset
 
     Request:
     04                                      # DELETE
-       18 20                                # CBOR uint: 0x20 (object ID)
-       18 41                                # CBOR uint: 0x41
+       05                                   # CBOR uint: 0x05 (subset object ID)
+       18 18                                # CBOR uint: 0x18
 
     Response:
     82                                      # Deleted.
@@ -247,26 +243,28 @@ For execution of a function, the same POST request is used as when creating data
 
     Request:
     02                                      # POST
-       18 E0                                # CBOR uint: 0xE0 (object ID)
+       18 34                                # CBOR uint: 0x34 (object ID)
        80                                   # CBOR empty array
 
     Response:
     83                                      # Valid.
 
-Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the `x-reset` function does not require any parameters, so it receives an empty array.
+Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the `Device/xReset` function does not require any parameters, so it receives an empty array.
 
 ## Published statements
 
 In contrast to text mode, published statements in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
-**Example 1:** A statement containing the `report` subset, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `m` subset, sent out by the device every 10 seconds
 
     1F
-       18 20                                # CBOR uint: 0x20 (object ID)
-       83                                   # CBOR array (3 elements)
+       07                                   # CBOR uint: 0x07 (subset object ID)
+       85                                   # CBOR array (5 elements)
           1A 1B7561E0                       # CBOR uint: 460677600
-          FA 41633333                       # CBOR float: 14.2
-          16                                # CBOR uint: 22
+          FA 414E6666                       # CBOR float: 12.9
+          FA C048F5C3                       # CBOR float: -3.14
+          FA 42C10000                       # CBOR float: 96.5
+          FA 43090000                       # CBOR float: 137.0
 
 The corresponding IDs can be retrieved with a fetch request.
 
@@ -274,40 +272,44 @@ The corresponding IDs can be retrieved with a fetch request.
 
     Request:
     05                                      # FETCH
-       18 20                                # CBOR uint: 0x20 (object ID)
+       07                                   # CBOR uint: 0x07 (object ID)
        F7                                   # CBOR undefined
 
     Response:
     85                                      # Content.
-       83                                   # CBOR array (3 elements)
+       85                                   # CBOR array (5 elements)
           10                                # CBOR uint: 0x10 (object ID)
           18 40                             # CBOR uint: 0x40 (object ID)
-          18 42                             # CBOR uint: 0x42 (object ID)
+          18 41                             # CBOR uint: 0x41 (object ID)
+          18 51                             # CBOR uint: 0x51 (object ID)
+          18 61                             # CBOR uint: 0x61 (object ID)
 
-If the name of the object is supplied instead of the ID, also names are returned in the response.
+If the name of the object is supplied instead of the ID, paths are returned in the response.
 
 **Example 3:** Retrieve corresponding names for a received statement.
 
     Request:
     05                                      # FETCH
-       66 7265706F7274                      # CBOR string: "report" (object name)
+       61 6D                                # CBOR string: "m" (object path)
        F7                                   # CBOR undefined
 
     Response:
     85                                      # Content.
-       83                                   # CBOR array (3 elements)
-          66 54696D655F73                   # CBOR string: "Time_s" (object name)
-          65 4261745F56                     # CBOR string: "Bat_V" (object name)
-          6C 416D6269656E745F64656743       # CBOR string: "Ambient_degC" (object name)
+       84                                   # CBOR array (4 elements)
+          63 745F73                         # CBOR string: "t_s" (object path)
+          6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V" (object path)
+          6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A" (object path)
+          69 536F6C61722F725F57             # CBOR string: "Solar/r_W" (object path)
+          68 4C6F61642F725F57               # CBOR string: "Load/r_W" (object path)
 
 If not all child nodes of one path fit into a single publication message (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) the statement can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore.
 
-**Example 4:** A statement containing a part of the `report` subset.
+**Example 4:** A statement containing a part of the `m` subset.
 
     1F
-       18 20                                # CBOR uint: 0x20 (object ID)
+       07                                   # CBOR uint: 0x07 (object ID)
        A2                                   # CBOR map (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
-          FA 41633333                       # CBOR float: 14.2
-          18 42                             # CBOR uint: 0x42 (object ID)
-          16                                # CBOR uint: 22
+          FA 414E6666                       # CBOR float: 12.9
+          18 41                             # CBOR uint: 0x41 (object ID)
+          FA C048F5C3                       # CBOR float: -3.14
