@@ -29,7 +29,7 @@ export default defineUserConfig<DefaultThemeOptions>({
       '@vuepress/plugin-search',
       {
         // exclude older versions from search
-        isSearchable: (page) => !/^\/spec\/v0\.[1-3]+/.test(page.path),
+        isSearchable: (page) => !/^\/spec\/v0\.[1-4]+/.test(page.path),
       },
     ],
   ],
@@ -41,8 +41,8 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'Specification',
         ariaLabel: 'Specification Menu',
         children: [
-          { text: 'v0.5 (draft)', link: '/spec/v0.5/introduction' },
-          { text: 'v0.4 (current)', link: '/spec/v0.4/introduction' },
+          { text: 'v0.5 (current)', link: '/spec/v0.5/introduction' },
+          { text: 'v0.4', link: '/spec/v0.4/introduction' },
           { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },
           { text: 'v0.2', link: '/spec/v0.2/1a_introduction' },
           { text: 'v0.1', link: '/spec/v0.1/' },
