@@ -66,7 +66,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
     :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot",
     "eState","m","_pub"]
 
-Note that `_path` is not contained in the list, as it is only available in the binary mode.
+Note that `_ids` and `_paths` are not contained in the list, as they are only available in the binary mode.
 
 **Example 2:** Retrieve all content of `Bat` path (names + values)
 
