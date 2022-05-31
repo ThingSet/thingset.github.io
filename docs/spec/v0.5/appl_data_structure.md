@@ -107,7 +107,8 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 |------|--------------|------------------------------------------------------------------------|
 | 0x00 |              | Root object of a device                                                |
 | 0x10 | t_s          | Unix timestamp in seconds since Jan 01, 1970                           |
-| 0x17 | _path        | Endpoint used by binary protocol to determine paths from IDs           |
+| 0x16 | _ids         | Endpoint used by binary protocol to determine IDs from paths           |
+| 0x17 | _paths       | Endpoint used by binary protocol to determine paths from IDs           |
 | 0x18 | cMetadataURL | URL to JSON file containing extended information about exposed data    |
 | 0x1D | cNodeID      | Alphanumeric string (without spaces) to identify the device/node (should be unique per manufacturer, typical length 8 characters) |
 | >=0x8000 | ...      | Control data objects with fixed IDs                                    |
@@ -176,7 +177,14 @@ The following example data structure of an MPPT solar charge controller will be 
             "sPeriod_s": 10                                         // 0xF5
         }
     },
-    "_path": {                                                      // 0x17 (fixed)
+    "_ids": {                                                       // 0x16 (fixed)
+        "Device": 0,
+        "Bat": 2,
+        // ...
+        "Bat/rMeas_V": 64
+        // ...
+    },
+    "_paths": {                                                     // 0x17 (fixed)
         "0x01": "Device",
         "0x02": "Bat",
         // ...
