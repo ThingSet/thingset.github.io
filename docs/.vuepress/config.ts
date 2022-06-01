@@ -175,6 +175,7 @@ export default defineUserConfig<DefaultThemeOptions>({
             'transp_websocket',
             'transp_can',
             'transp_lorawan',
+            'transp_ble',
           ]
         },{
           text: 'Protocol Mapping',
