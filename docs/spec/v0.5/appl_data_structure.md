@@ -80,6 +80,20 @@ The data types of function parameters for executable items cannot be determined,
 | b      | binary data (base-64 encoded)                 |
 | u      | utf8-string                                   |
 
+#### Records
+
+It is not always feasible to statically assign IDs for data items at compile-time.
+
+Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. Only the array has an associated data object ID, where as the individual records can be accessed using their index in the array (starting at 0).
+
+This type of data structure can be used e.g. to log events, which may all have the same data structure, but you can have an unknown amount of events.
+
+Only entire records can be addressed. It is not possible to read or change individual items which are part of a record.
+
+It is not required that all records of one data object have the same data structure. However, using the same `struct` for all records would be most easy to implement for lower-level languages like C.
+
+Data objects to store records don't have a prefix. Their name is similar to a group. The difference is that records are wrapped in an array of arbitrary length and not directly stored as key/value pairs in a JSON object.
+
 ### Units
 
 Only [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and derived units (e.g. kWh for energy instead of Ws) are allowed.
@@ -164,6 +178,15 @@ The following example data structure of an MPPT solar charge controller will be 
         "r_W": 137.0,                                               // 0x61
         "pTotal_kWh": 1789                                          // 0x62
     },
+    "Log": [                                                        // 0x08
+        {                                                           // #0
+            "t_s": 460677000,
+            "rErrorFlags": 4
+        },{                                                         // #1
+            "t_s": 460671000,
+            "rErrorFlags": 256
+        }
+    ],
     "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
     "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
     "m": ["t_s", "Bat/rMeas_V", "Solar/r_W", "Load/r_W"],           // 0x07
