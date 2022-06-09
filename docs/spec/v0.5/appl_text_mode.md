@@ -83,6 +83,16 @@ Note that `_ids` and `_paths` are not contained in the list, as they are only av
     ?Bat ["rMeas_V"]
     :85 Content. [12.9]
 
+**Example 5:** Retrieve number of records in `Log`
+
+    ?Log/
+    :85 Content. 2
+
+**Example 6:** Retrieve first record in `Log`
+
+    ?Log/0
+    :85 Content. {"t_s":460677000,"rErrorFlags":4}
+
 ## Update data
 
 The PATCH request attempts to overwrite the values of data items.
