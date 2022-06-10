@@ -82,13 +82,14 @@ The data types of function parameters for executable items cannot be determined,
 
 #### Records
 
-It is not always feasible to statically assign IDs for data items at compile-time.
+It is not always feasible to statically assign IDs for all data items at compile-time:
 
-Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. Only the array has an associated data object ID, where as the individual records can be accessed using their index in the array (starting at 0).
+- Where the data follows a pattern but the size of the pattern is not known in advance, e.g. log events, a modular system of N modules, or a multi-channel sensor/ADC input where each channel has the same configuration structure.
+- If a device is trying to expose data from one or more connected devices (i.e. a protocol bridge)
 
-This type of data structure can be used e.g. to log events, which may all have the same data structure, but you can have an unknown amount of events.
+Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0). Only entire records can be addressed. It is not possible to read or change individual items which are part of a record.
 
-Only entire records can be addressed. It is not possible to read or change individual items which are part of a record.
+The same items in different records share their IDs. This allows to use IDs instead of names in the binary protocol, but only the class/type of items has to be known in advance, not the number of items.
 
 It is not required that all records of one data object have the same data structure. However, using the same `struct` for all records would be most easy to implement for lower-level languages like C.
 
@@ -180,11 +181,11 @@ The following example data structure of an MPPT solar charge controller will be 
     },
     "Log": [                                                        // 0x08
         {                                                           // #0
-            "t_s": 460677000,
-            "rErrorFlags": 4
+            "t_s": 460677000,                                       // 0x70 (shared)
+            "rErrorFlags": 4                                        // 0x71 (shared)
         },{                                                         // #1
-            "t_s": 460671000,
-            "rErrorFlags": 256
+            "t_s": 460671000,                                       // 0x70 (shared)
+            "rErrorFlags": 256                                      // 0x71 (shared)
         }
     ],
     "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
@@ -204,14 +205,20 @@ The following example data structure of an MPPT solar charge controller will be 
         "Device": 0,
         "Bat": 2,
         // ...
-        "Bat/rMeas_V": 64
+        "Bat/rMeas_V": 64,
+        // ...
+        "Log/t_s": 112,
+        "Log/ErrorFlags": 113
         // ...
     },
     "_paths": {                                                     // 0x17 (fixed)
         "0x01": "Device",
         "0x02": "Bat",
         // ...
-        "0x40": "Bat/rMeas_V"
+        "0x40": "Bat/rMeas_V",
+        // ...
+        "0x70": "Log/t_s",
+        "0x71": "Log/ErrorFlags",
         // ...
     }
 }

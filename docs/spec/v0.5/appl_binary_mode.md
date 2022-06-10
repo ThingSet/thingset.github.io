@@ -80,6 +80,19 @@ In contrast to the text mode, the binary mode has the special endpoints `"_ids"`
           6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V"
           6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A"
 
+**Example 3:** Request paths of object ID `0x70` (part of a record)
+
+    Request:
+    05                                      # FETCH request
+       17                                   # CBOR uint: 0x17 (_paths endpoint)
+       81                                   # CBOR array (1 element)
+          18 70                             # CBOR uint: 0x40 (object ID)
+
+    Response:
+    85                                      # Content.
+       81                                   # CBOR array (1 element)
+          67 4C6F672F745F73                 # CBOR string: "Log/t_s"
+
 ## Read data
 
 Similar to the text mode, the binary variants of the GET and FETCH functions also allow to read one or more data objects. The objects are identified by their parent object (endpoint of a path) and their IDs or their names.
@@ -177,9 +190,11 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
 **Example 7:** Retrieve multiple data items:
 
+For fetching multiple data items, the IDs are provided in the array as the second argument. The endpoint (first argument) is redundant, as the ID already provides an unambiguous link to the data item, so it should be set to `0x00`.
+
     Request:
     05                                      # FETCH
-       02                                   # CBOR uint: 0x02 (parent ID)
+       00                                   # CBOR uint: 0x00 (root ID)
        82                                   # CBOR array (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           18 41                             # CBOR uint: 0x41 (object ID)
@@ -189,6 +204,49 @@ If a path (string containing names) is used to specify an endpoint, also names a
        82                                   # CBOR array (2 elements)
           FA 414E6666                       # CBOR float: 12.9
           FA C048F5C3                       # CBOR float: -3.14
+
+**Example 7:** Retrieve number of records in `Log`
+
+If the endpoint is an array of records, fetching `undefined` for discovery returns the number of elements in the array (i.e. number of records) instead of the names or IDs as in case of groups as endpoint.
+
+    Request:
+    05                                      # FETCH
+       08                                   # CBOR uint: 0x08 (parent ID)
+       F7                                   # CBOR undefined as a wildcard
+
+    Response:
+    85                                      # Content.
+       02                                   # CBOR uint: 0x02 (2 elements)
+
+**Example 8:** Retrieve first record in `Log`
+
+Records are always returned as key/value maps, similar to GET requests for groups.
+
+    Request:
+    05                                      # FETCH
+       08                                   # CBOR uint: 0x08 (parent ID)
+       00                                   # CBOR uint: 0x00 (index)
+
+    Response:
+    85                                      # Content.
+       A2                                   # CBOR map (2 elements)
+          18 70                             # CBOR uint: 0x70 (object ID)
+          1A 1B7561E0                       # CBOR uint: 460677600
+          18 71                             # CBOR uint: 0x71 (object ID)
+          19 0100                           # CBOR uint: 256
+
+**Example 9:** Attempt to retrieve a single item from a record in `Log`
+
+As there can be multiple instances of the same record sharing the same IDs for their items, it's not possible to query a record item by ID.
+
+    Request:
+    05                                      # FETCH
+       00                                   # CBOR uint: 0x00 (root ID)
+       82                                   # CBOR array (2 elements)
+          18 70                             # CBOR uint: 0x70 (object ID)
+
+    Response:
+    A4                                      # Not Found.
 
 ## Update data
 
