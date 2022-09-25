@@ -56,6 +56,8 @@ The path is either a group (e.g. `Device`) or a subset object containing referen
 
 The GET function allows to read all child objects of the specified path. If a forward slash is appended at the end of the path, only an array with the child object names is returned to allow discovering a device data structure layer by layer. Otherwise all content below that path (names and values) is returned.
 
+If a device is not able to provide the entire content of a group or subset (e.g. because the buffer is too small), the value must be set to `null` and a new request for smaller data set should be sent. In case of records, the value must be set to the number of records instead of `null` if the content of the records cannot be returned directly. This allows to determine whether the path starting with an upper-case letter is a group or contains records.
+
 The FETCH function allows to retrieve only subset of the child objects, defined by an array with the object names passed to the function.
 
 Only those data objects are returned which are at least readable. Thus, the result might differ after authentication.
@@ -63,32 +65,51 @@ Only those data objects are returned which are at least readable. Thus, the resu
 **Example 1:** Discover all child objects of the root object (i.e. categories)
 
     ?/
-    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","eBoot",
-    "eState","m","_pub"]
+    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","Log",
+    "eBoot","eState","m","_pub"]
 
 Note that `_ids` and `_paths` are not contained in the list, as they are only available in the binary mode.
 
-**Example 2:** Retrieve all content of `Bat` path (names + values)
+**Example 2:** Attempt to get all data of the device
+
+    ?
+    :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
+    libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
+    "Log":2,"eBoot":null,"eState":null,"m":null,"_pub":null}
+
+The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
+
+**Example 3:** Retrieve all content of `Bat` path (names + values)
 
     ?Bat
     :85 Content. {"rMeas_V":12.9,"rMeas_A":-3.14,"sTarget_V":14.4}
 
-**Example 3:** List all sub-item names of `Bat` path as an array
+**Example 4:** List all sub-item names of `Bat` path as an array
 
     ?Bat/
     :85 Content. ["rMeas_V","rMeas_A","sTarget_V"]
 
-**Example 4:** Retrieve value for single data item `Bat/rMeas_V`
+**Example 5:** Retrieve value for single data item `Bat/rMeas_V`
 
     ?Bat ["rMeas_V"]
     :85 Content. [12.9]
 
-**Example 5:** Retrieve number of records in `Log`
+A more simple way is to provide the entire path (GET instead of FETCH request):
 
-    ?Log/
+    ?Bat/rMeas_V
+    :85 Content. 12.9
+
+**Example 6:** Retrieve all records in `Log`
+
+    ?Log
+    :85 Content. [{"t_s":460677000,"rErrorFlags":4},{"t_s":460671000,"rErrorFlags":256}]
+
+If a device is not able to return the content of all records directly, it must return the number of stored records. This number can be used to retrieve each record individually (see below).
+
+    ?Log
     :85 Content. 2
 
-**Example 6:** Retrieve first record in `Log`
+**Example 7:** Retrieve first record in `Log`
 
     ?Log/0
     :85 Content. {"t_s":460677000,"rErrorFlags":4}

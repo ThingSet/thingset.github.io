@@ -161,7 +161,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "cType": "MPPT 4820 HC v1.1",                               // 0x31
         "cFirmwareVersion": "v21.0-g923d536",                       // 0x32
         "rErrorFlags": 0,                                           // 0x33
-        "xReset": null,                                             // 0x34
+        "xReset": [],                                               // 0x34
         "xAuth": ["uPassword"]                                      // 0x35
     },
     "Bat": {                                                        // 0x02
