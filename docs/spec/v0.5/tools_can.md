@@ -31,30 +31,37 @@ Now, `candump` can be used to read all data available on the bus:
 candump can0
 ```
 
+Instead of an actual CAN device, also a virtual CAN device can be used on the Linux host:
+
+```
+sudo ip link add dev vcan0 type vcan
+sudo ip link set up vcan0
+```
+
 ### ISO-TP tools
 
 The Linux kernel [supports CAN ISO-TP](https://github.com/hartkopp/can-isotp), which is used as the transport protocol for ThingSet.
 
-Assuming a device with CAN address 10 is connected to the bus, the following command sets up an ISO-TP channel for messages from the device to the host computer (CAN address 0):
+Assuming a device with CAN address 1 is connected to the bus, the following command sets up an ISO-TP channel for messages from the device to the host computer (CAN address 0):
 
 ```
-isotprecv -l -s 0x1ada0a00 -d 0x1ada000a can0
+isotprecv -l -s 0x18000100 -d 0x18000001 can0
 ```
 
-In order to send a binary command to device with address 10, run the following command:
+In order to request the node ID in binary mode from the device with address 1, run the following command:
 
 ```
-echo "01 18 70 A0" | isotpsend -s 0x1ada0a00 -d 0x1ada000a can0
+echo "01 18 1D" | isotpsend -s 0x18000100 -d 0x18000001 can0
 ```
 
 The same for text mode:
 
 ```
-echo -n "?output" | hexdump -v -e '/1 "%02X "' | isotpsend -s 0x1ada0a00 -d 0x1ada000a can0
+echo -n "?cNodeId" | hexdump -v -e '/1 "%02X "' | isotpsend -s 0x18000100 -d 0x18000001 can0
 ```
 
 `isotprecv` only prints the hex values of the received data. The ASCII payload can be monitored using:
 
 ```
-isotpsniffer -tA -f 2 -d 0x1ada0a00 -s 0x1ada000a can0
+isotpsniffer -tA -f 2 -d 0x18000100 -s 0x18000001 can0
 ```
