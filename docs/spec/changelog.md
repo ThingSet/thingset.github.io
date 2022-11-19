@@ -15,3 +15,9 @@ The protocol is still evolving. Until release of v1.0 even breaking changes may 
 - Executable data objects are prefixed with `x-`
 - Internal data objects (prefixed with `.`) are used to configure publication period, etc.
 - Draft MQTT topic mapping is now part of the spec
+
+## v0.4 to v0.5
+
+- Data is not structured into categories like `info`, `conf` or `meas` anymore. Instead, prefixes for data items are used which define if an item is write-able, read-only, executable, stored in RAM or flash, etc. This makes the previous categories obsolete and data can be structured more logically based on features of the device.
+- As data item names don't have to be globally unique anymore (e.g. there can be a measured current for the battery `Bat/rMeas_A` and the load `Load/rMeas_A`) the JSON in the statement messages needs to be nested.
+- Internal data objects are now prefixed with `_` instead of `.` so that the names can still be used directly in programming languages like JavaScript.
