@@ -12,12 +12,11 @@ The **main challenge** is to still be fully discoverable via the binary mode wit
 
 Each request message consists of a first byte as the request method identifier, a path or ID specifying the endpoint of the request and CBOR data as payload (if applicable).
 
-    bin-request = bin-get / bin-post / bin-delete / bin-fetch / bin-ipatch
+    bin-request = bin-get / bin-exec / bin-delete / bin-fetch / bin-create / bin-update
 
     bin-get    = %x01 endpoint
 
-    bin-post   = %x02 endpoint cbor-data      ; exec or create is determined
-                                              ; based on data object type
+    bin-exec   = %x02 endpoint cbor-data
 
     bin-delete = %x04 endpoint cbor-data
 
@@ -25,7 +24,9 @@ Each request message consists of a first byte as the request method identifier, 
                                / %xF7 )       ; CBOR undefined: request array of
                                               ; all IDs or names behind endpoint
 
-    bin-ipatch = %x07 endpoint cbor-map
+    bin-create = %x06 endpoint cbor-data
+
+    bin-update = %x07 endpoint cbor-map
 
     endpoint   = path         ; CBOR string: path same as text mode
                / parent-id    ; CBOR uint: parent object ID instead of path
@@ -252,14 +253,14 @@ As there can be multiple instances of the same record sharing the same IDs for t
 
 Requests to overwrite the values of data items.
 
-The device must support a patch request using the same CBOR data type as used in the response of a GET or FETCH request for the given objects. Optionally, the device may also accept different data types (e.g. float32 instead of int) and convert the data internally.
+The device must support an update request using the same CBOR data type as used in the response of a GET or FETCH request for the given objects. Optionally, the device may also accept different data types (e.g. float32 instead of int) and convert the data internally.
 
 If the data type is not supported, an error status code (`0xAF`) is responded.
 
 **Example 1:** Disable load output
 
     Request:
-    07                                      # PATCH
+    07                                      # UPDATE
        04                                   # CBOR uint: 0x04 (parent ID)
        A1                                   # CBOR map (1 element)
           18 60                             # CBOR uint: 0x60 (object ID)
@@ -271,7 +272,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
 **Example 2:** Attempt to write read-only measurement values
 
     Request:
-    07                                      # PATCH
+    07                                      # UPDATE
        02                                   # CBOR uint: 0x02
        A1                                   # CBOR map (1 element)
           18 40                             # CBOR uint: 0x40
@@ -287,7 +288,7 @@ Appends new data to a data object in a similar way as in the text mode.
 **Example 1:** Add item with ID `0x41` (`Bat/rMeas_A`) to the generic metrics subset `m`
 
     Request:
-    02                                      # POST
+    06                                      # CREATE
        07                                   # CBOR uint: 0x07 (subset object ID)
        18 41                                # CBOR uint: 0x41
 
@@ -310,12 +311,12 @@ Removes data from an object of array type.
 
 ## Execute function
 
-For execution of a function, the same POST request is used as when creating data. The device decides based on the type of the endpoint whether the request is a function call or a request to create data.
+For execution of a function, the EXEC request is used.
 
 **Example 1:** Reset the device
 
     Request:
-    02                                      # POST
+    02                                      # EXEC
        18 34                                # CBOR uint: 0x34 (object ID)
        80                                   # CBOR empty array
 
@@ -323,6 +324,8 @@ For execution of a function, the same POST request is used as when creating data
     83                                      # Valid.
 
 Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the `Device/xReset` function does not require any parameters, so it receives an empty array.
+
+Functions may return payload data, in which case the response is `0x85` followed by the content.
 
 ## Published statements
 

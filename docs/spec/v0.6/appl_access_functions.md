@@ -7,15 +7,16 @@ The first byte of a ThingSet message is either a text-mode identifier (`?`, `=`,
 
 The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent mapping between ThingSet and HTTP APIs or CoAP devices.
 
-| Code | Text ID | Method | Description                                    |
-|------|---------|--------|------------------------------------------------|
-| 0x01 | ?       | GET    | Retrieve all data from a path                  |
-| 0x02 | + or !  | POST   | Append data to an object or execute a function |
-| 0x04 | -       | DELETE | Delete data from an object                     |
-| 0x05 | ?       | FETCH  | Retrieve a subset of data from a path          |
-| 0x07 | =       | iPATCH | Update (overwrite) data of a path              |
+| Code | Text ID | Function | CoAP equivalent | Description                    |
+|------|---------|----------|--------|-----------------------------------------|
+| 0x01 | ?       | GET      | GET    | Retrieve all data from a path           |
+| 0x02 | !       | EXEC     | POST   | Execute a function                      |
+| 0x04 | -       | DELETE   | DELETE | Delete data from an object              |
+| 0x05 | ?       | FETCH    | FETCH  | Retrieve a part of the data from a path |
+| 0x06 | +       | CREATE   | PATCH  | Append data to an object                |
+| 0x07 | =       | UPDATE   | iPATCH | Update (overwrite) data of a path       |
 
-The CoAP PUT and PATCH methods are not explicitly implemented. PUT is equivalent to an update of all sub-objects of a resource using a PATCH request. PATCH requests for ThingSet are always idempotent, so only the iPATCH request code is supported. The two different text IDs for POST requests are synonyms. It is decided based on the type of the data object if the request is understood as a function call or a request to create a resource.
+The CoAP PUT method is not explicitly implemented. PUT is equivalent to an update of all sub-objects of a resource using a PATCH request. UPDATE requests for ThingSet are always idempotent, so only the iPATCH request code is used. The PATCH method is used to create new data.
 
 Additional request codes may be introduced in the future. Codes `0x0A`, `0x0D` and `0x20`-`0x7F` are reserved, as they represent the ASCII characters for readable text including `LF` and `CR`.
 

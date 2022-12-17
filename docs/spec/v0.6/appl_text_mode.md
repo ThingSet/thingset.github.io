@@ -8,15 +8,15 @@ For rule names prefixed with `json-` consider the JSON specification in [RFC 825
 
 Each request message consists of a first character as the request method identifier, a path specifying the endpoint of the request and a JSON string for the payload data (if applicable).
 
-    txt-request = txt-get / txt-fetch / txt-patch / txt-create / txt-delete / txt-exec
+    txt-request = txt-get / txt-fetch / txt-update / txt-create / txt-delete / txt-exec
 
     txt-get    = "?" path [ "/" ]                   ; CoAP equivalent: GET request
 
     txt-fetch  = "?" path " " json-array            ; CoAP equivalent: FETCH request
 
-    txt-patch  = "=" path " " json-object           ; CoAP equivalent: iPATCH request
+    txt-update = "=" path " " json-object           ; CoAP equivalent: iPATCH request
 
-    txt-create = "+" path " " json-value            ; CoAP equivalent: POST request
+    txt-create = "+" path " " json-value            ; CoAP equivalent: PATCH request
 
     txt-delete = "-" path " " json-value            ; CoAP equivalent: DELETE request
 
@@ -116,7 +116,7 @@ If a device is not able to return the content of all records directly, it must r
 
 ## Update data
 
-The PATCH request attempts to overwrite the values of data items.
+The UPDATE request attempts to overwrite the values of data items.
 
 Data items prefixed with `s` will be stored in persistent memory, so it is not allowed to change settings periodically. Only data of with `w` prefix can be changed regularly.
 
