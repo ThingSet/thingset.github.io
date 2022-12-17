@@ -378,12 +378,12 @@ If the name of the object is supplied instead of the ID, paths are returned in t
           69 536F6C61722F725F57             # CBOR string: "Solar/r_W" (object path)
           68 4C6F61642F725F57               # CBOR string: "Load/r_W" (object path)
 
-If not all child nodes of one path fit into a single publication message (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) the statement can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore.
+If not all child nodes of one path fit into a single publication message (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) the statement can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
 
 **Example 4:** A statement containing a part of the `m` subset.
 
     1F
-       07                                   # CBOR uint: 0x07 (object ID)
+       00                                   # CBOR uint: 0x00 (root ID)
        A2                                   # CBOR map (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           FA 414E6666                       # CBOR float: 12.9
