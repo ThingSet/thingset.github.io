@@ -44,6 +44,7 @@ The status codes are again aligned with CoAP response codes, but contain an offs
 | 0xAF | 4.15 | 415  | Unsupported Content-Format | If trying to assign a string to an int |
 | 0xC0 | 5.00 | 500  | Internal Server Error      | |
 | 0xC1 | 5.01 | 501  | Not Implemented            | |
+| 0xC3 | 5.03 | 503  | Service Unavailable        | If a device cannot be reached |
 
 The text mode converts the the hexadecimal response code into a string without the `0x` prefix. The binary mode uses the code directly as the first byte.
 
