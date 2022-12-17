@@ -18,6 +18,7 @@ The website is built with [VuePress](https://vuepress.vuejs.org/).
 
 For local deployment run the following commands in the root directory of this repository:
 
+    export NODE_OPTIONS=--openssl-legacy-provider
     npm install
     npm run dev
 

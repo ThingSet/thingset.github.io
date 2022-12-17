@@ -41,6 +41,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'Specification',
         ariaLabel: 'Specification Menu',
         children: [
+          { text: 'v0.6', link: '/spec/v0.6/introduction' },
           { text: 'v0.5 (current)', link: '/spec/v0.5/introduction' },
           { text: 'v0.4', link: '/spec/v0.4/introduction' },
           { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },
@@ -153,6 +154,46 @@ export default defineUserConfig<DefaultThemeOptions>({
         }
       ],
       '/spec/v0.5/': [
+        {
+          text: 'Why ThingSet?',
+          children: [
+            'introduction',
+            'existing_solutions',
+          ]
+        },{
+          text: 'Application Layer',
+          children: [
+            'appl_general_concept',
+            'appl_data_structure',
+            'appl_access_functions',
+            'appl_text_mode',
+            'appl_binary_mode',
+          ]
+        },{
+          text: 'Transport Layers',
+          children: [
+            'transp_serial',
+            'transp_websocket',
+            'transp_can',
+            'transp_lorawan',
+            'transp_ble',
+          ]
+        },{
+          text: 'Protocol Mapping',
+          children: [
+            'mapping_http',
+            'mapping_coap',
+            'mapping_mqtt',
+          ]
+        },{
+          text: 'Tools',
+          children: [
+            'tools_serial',
+            'tools_can',
+          ]
+        }
+      ],
+      '/spec/v0.6/': [
         {
           text: 'Why ThingSet?',
           children: [
