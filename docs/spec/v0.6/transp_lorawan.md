@@ -31,7 +31,8 @@ The following table gives an overview of the LoRaWAN ports as they are planned t
 | 0x40       | Reserved for future use in ThingSet
 | 0x41..0x7F | ThingSet statement IDs (corresponding to ID + 0x40)
 | 0x80..0xBF | ThingSet statement key/value pairs (corresponding to ID + 0x80)
-| 0xC0..0xDF | ThingSet request/response channels
+| 0xC0..0xC7 | ThingSet request/response channels
+| 0xC8..0xDF | Recommended for LoRaWAN FUOTA services
 | 0xE0..0xFF | Reserved for LoRaWAN
 
 Remark: key/value ports are necessary so that event statements don't have to transfer also the values of the subset that didn't change.
