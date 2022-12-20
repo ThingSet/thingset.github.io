@@ -10,23 +10,29 @@ Each request message consists of a first character as the request method identif
 
     txt-request = txt-get / txt-fetch / txt-update / txt-create / txt-delete / txt-exec
 
-    txt-get    = "?" path [ "/" ]                   ; CoAP equivalent: GET request
+    txt-get    = "?" [ path ] [ "/" ]               ; CoAP equivalent: GET request
 
-    txt-fetch  = "?" path " " json-array            ; CoAP equivalent: FETCH request
+    txt-fetch  = "?" [ path ] " " json-array        ; CoAP equivalent: FETCH request
 
-    txt-update = "=" path " " json-object           ; CoAP equivalent: iPATCH request
+    txt-update = "=" [ path ] " " json-object       ; CoAP equivalent: iPATCH request
 
-    txt-create = "+" path " " json-value            ; CoAP equivalent: PATCH request
+    txt-create = "+" [ path ] " " json-value        ; CoAP equivalent: PATCH request
 
-    txt-delete = "-" path " " json-value            ; CoAP equivalent: DELETE request
+    txt-delete = "-" [ path ] [ " " json-value ]    ; CoAP equivalent: DELETE request
 
-    txt-exec   = "!" path [ " " json-value ]        ; CoAP equivalent: POST request
+    txt-exec   = "!" [ path ] [ " " json-value ]    ; CoAP equivalent: POST request
 
-    path = object-name [ "/" object-name ]
+    path = relative-path / absolute-path
+
+    relative-path = object-name *( "/" object-name )
+
+    absolute-path = "/" ( node-id [ "/" relative-path ] / "/" )
+
+    node-id = 1*( ALPHA / DIGIT )                   ; alphanumeric string
 
     object-name = ALPHA / DIGIT / "." / "_" / "-"   ; compatible to URIs (RFC 3986)
 
-The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)) without the forward slash at the beginning. The useable characters for object names are further restricted to allow un-escaped usage in URLs.
+The path to access a specific data object is a JSON pointer ([RFC 6901](https://tools.ietf.org/html/rfc6901)). For relative paths the forward slash at the beginning is omitted. The useable characters for object names are further restricted to allow un-escaped usage in URLs.
 
 ### Response
 
@@ -34,23 +40,23 @@ The response starts with a colon `:` followed by the the status code and a plain
 
 The bytes after the dot contain the requested data.
 
-    txt-response = ":" status [ " " json-value ]    ; response code and data
+    txt-response = ":" status-code status-msg [ " " json-value ]
 
-    status = status-code [ " " status-msg ] "."
+    status-code = 2( DIGIT / %x41-46 )              ; two upper-case HEXDIGs
 
-    status-code = 2( hex )
-
-    status-msg  = *( ALPHA / SP )
-
-    hex = DIGIT / %x41-46                           ; upper-case HEXDIG
+    status-msg  = [ " " *( ALPHA / SP ) ] "."       ; optional human-readable text
 
 ### Statement
 
 A statement starts with the hash sign and a path, followed by a whitespace and the map of actual payload data as name/value pairs.
 
-    txt-statement = "#" path " " json-object
+    txt-statement = "#" [ path ] " " json-object
 
 The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eState`).
+
+### Absolute vs. relative paths
+
+If the path in requests and statements starts with a `/`, the path is absolute, which means that the first element in the path identifies the node ID. This is used by gateways or in general by services which can communicate with multiple ThingSet nodes.
 
 ## Read data
 
@@ -113,6 +119,18 @@ If a device is not able to return the content of all records directly, it must r
 
     ?Log/0
     :85 Content. {"t_s":460677000,"rErrorFlags":4}
+
+**Example 8:** Get all data of node `XYZ12345` through a gateway
+
+    ?/XYZ12345
+    :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
+    libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
+    "Log":2,"eBoot":null,"eState":null,"m":null,"_pub":null}
+
+**Example 9:** List all nodes behind the gateway we are communicating with
+
+    ?//
+    :85 Content. ["ABCD1234","XYZ12345"]
 
 ## Update data
 
