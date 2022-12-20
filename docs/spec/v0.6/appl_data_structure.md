@@ -122,8 +122,8 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 |------|--------------|------------------------------------------------------------------------|
 | 0x00 |              | Root object of a device                                                |
 | 0x10 | t_s          | Unix timestamp in seconds since Jan 01, 1970                           |
-| 0x16 | _ids         | Endpoint used by binary protocol to determine IDs from paths           |
-| 0x17 | _paths       | Endpoint used by binary protocol to determine paths from IDs           |
+| 0x16 | _Ids         | Endpoint used by binary protocol to determine IDs from paths           |
+| 0x17 | _Paths       | Endpoint used by binary protocol to determine paths from IDs           |
 | 0x18 | cMetadataURL | URL to JSON file containing extended information about exposed data    |
 | 0x1D | cNodeID      | Alphanumeric string (without spaces) to identify the device/node (should be unique per manufacturer, typical length 8 characters) |
 | >=0x8000 | ...      | Control data objects with fixed IDs                                    |
@@ -191,7 +191,7 @@ The following example data structure of an MPPT solar charge controller will be 
     "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
     "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
     "m": ["t_s", "Bat/rMeas_V", "Solar/r_W", "Load/r_W"],           // 0x07
-    "_pub": {                                                       // 0x0F
+    "_Pub": {                                                       // 0x0F
         "eState": {                                                 // 0xF0
             "sEnable": true,                                        // 0xF1
             "cRateLimit_s": 1                                       // 0xF2
@@ -201,7 +201,7 @@ The following example data structure of an MPPT solar charge controller will be 
             "sPeriod_s": 10                                         // 0xF5
         }
     },
-    "_ids": {                                                       // 0x16 (fixed)
+    "_Ids": {                                                       // 0x16 (fixed)
         "Device": 0,
         "Bat": 2,
         // ...
@@ -211,7 +211,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "Log/ErrorFlags": 113
         // ...
     },
-    "_paths": {                                                     // 0x17 (fixed)
+    "_Paths": {                                                     // 0x17 (fixed)
         "0x01": "Device",
         "0x02": "Bat",
         // ...
@@ -224,7 +224,7 @@ The following example data structure of an MPPT solar charge controller will be 
 }
 ```
 
-The `_pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
+The `_Pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
 
 ### User interface processing
 

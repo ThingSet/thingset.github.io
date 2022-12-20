@@ -72,16 +72,16 @@ Only those data objects are returned which are at least readable. Thus, the resu
 
     ?/
     :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","Log",
-    "eBoot","eState","m","_pub"]
+    "eBoot","eState","m","_Pub"]
 
-Note that `_ids` and `_paths` are not contained in the list, as they are only available in the binary mode.
+Note that `_Ids` and `_Paths` are not contained in the list, as they are only available in the binary mode.
 
 **Example 2:** Attempt to get all data of the device
 
     ?
     :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "Log":2,"eBoot":null,"eState":null,"m":null,"_pub":null}
+    "Log":2,"eBoot":null,"eState":null,"m":null,"_Pub":null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
@@ -125,7 +125,7 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "Log":2,"eBoot":null,"eState":null,"m":null,"_pub":null}
+    "Log":2,"eBoot":null,"eState":null,"m":null,"_Pub":null}
 
 **Example 9:** List all nodes behind the gateway we are communicating with
 
@@ -198,16 +198,16 @@ Published statements are broadcast to all connected devices and no response is s
 
     #m {"t_s":460677600,"Bat":{"rMeas_V":12.9,"rMeas_A":-3.14},"Load":{"r_W":96.5},"Load":{"r_W":137.0}}
 
-The `_pub` path is used to configure the publication process itself.
+The `_Pub` path is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
-    ?_pub/
+    ?_Pub/
     :85 Content. ["eState","m"]
 
 **Example 3:** Enable publication of `m` subset
 
-    =_pub/m {"sEnable":true}
+    =_Pub/m {"sEnable":true}
     :84 Changed.
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.

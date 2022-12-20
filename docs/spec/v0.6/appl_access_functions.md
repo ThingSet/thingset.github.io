@@ -56,9 +56,9 @@ Statements are neither requests nor response messages, as they are sent without 
 |------|---------|---------------------|
 | 0x1F | #       | Statement message   |
 
-The internal path `_pub` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
+The internal path `_Pub` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
 
-By convention, the object names below the `_pub` define which data object should be published. This can be an entire group like `Bat` or a subset data object that contains a list of references to other data items like `eChange` in the above example.
+By convention, the object names below the `_Pub` define which data object should be published. This can be an entire group like `Bat` or a subset data object that contains a list of references to other data items like `eChange` in the above example.
 
 More details regarding the ThingSet protocol methods for data access will be explained in the next chapter.
 

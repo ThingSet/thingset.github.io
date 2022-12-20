@@ -49,13 +49,13 @@ The examples in this chapter are based on the same data structure as introduced 
 
 The firmware developer is free to choose the IDs.
 
-In contrast to the text mode, the binary mode has the special endpoints `"_ids"` (ID `0x16`) and `"_paths"` (ID `0x17`) that allow to retrieve the path for a given ID or vice versa using a `FETCH` request.
+In contrast to the text mode, the binary mode has the special endpoints `"_Ids"` (ID `0x16`) and `"_Paths"` (ID `0x17`) that allow to retrieve the path for a given ID or vice versa using a `FETCH` request.
 
 **Example 1:** Request IDs of object paths `"Bat/rMeas_V"` and `"Bat/rMeas_A"`
 
     Request:
     05                                      # FETCH request
-       16                                   # CBOR uint: 0x17 (_ids endpoint)
+       16                                   # CBOR uint: 0x17 (_Ids endpoint)
        82                                   # CBOR array (2 elements)
           6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V"
           6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A"
@@ -70,7 +70,7 @@ In contrast to the text mode, the binary mode has the special endpoints `"_ids"`
 
     Request:
     05                                      # FETCH request
-       17                                   # CBOR uint: 0x17 (_paths endpoint)
+       17                                   # CBOR uint: 0x17 (_Paths endpoint)
        82                                   # CBOR array (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           18 41                             # CBOR uint: 0x41 (object ID)
@@ -85,7 +85,7 @@ In contrast to the text mode, the binary mode has the special endpoints `"_ids"`
 
     Request:
     05                                      # FETCH request
-       17                                   # CBOR uint: 0x17 (_paths endpoint)
+       17                                   # CBOR uint: 0x17 (_Paths endpoint)
        81                                   # CBOR array (1 element)
           18 70                             # CBOR uint: 0x40 (object ID)
 
