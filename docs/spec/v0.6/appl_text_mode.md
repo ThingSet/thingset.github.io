@@ -72,7 +72,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
 
     ?/
     :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","Log",
-    "eBoot","eState","m","_Pub"]
+    "eBoot","eState","mLive","_Pub"]
 
 Note that `_Ids` and `_Paths` are not contained in the list, as they are only available in the binary mode.
 
@@ -81,28 +81,28 @@ Note that `_Ids` and `_Paths` are not contained in the list, as they are only av
     ?
     :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "Log":2,"eBoot":null,"eState":null,"m":null,"_Pub":null}
+    "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
 **Example 3:** Retrieve all content of `Bat` path (names + values)
 
     ?Bat
-    :85 Content. {"rMeas_V":12.9,"rMeas_A":-3.14,"sTarget_V":14.4}
+    :85 Content. {"rVoltage_V":12.9,"rCurrent_A":-3.14,"sTargetVoltage_V":14.4}
 
 **Example 4:** List all sub-item names of `Bat` path as an array
 
     ?Bat/
-    :85 Content. ["rMeas_V","rMeas_A","sTarget_V"]
+    :85 Content. ["rVoltage_V","rCurrent_A","sTargetVoltage_V"]
 
-**Example 5:** Retrieve value for single data item `Bat/rMeas_V`
+**Example 5:** Retrieve value for single data item `Bat/rVoltage_V`
 
-    ?Bat ["rMeas_V"]
+    ?Bat ["rVoltage_V"]
     :85 Content. [12.9]
 
 A more simple way is to provide the entire path (GET instead of FETCH request):
 
-    ?Bat/rMeas_V
+    ?Bat/rVoltage_V
     :85 Content. 12.9
 
 **Example 6:** Retrieve all records in `Log`
@@ -125,7 +125,7 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "Log":2,"eBoot":null,"eState":null,"m":null,"_Pub":null}
+    "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 **Example 9:** List all nodes behind the gateway we are communicating with
 
@@ -145,7 +145,7 @@ Data items prefixed with `s` will be stored in persistent memory, so it is not a
 
 **Example 2:** Attempt to write read-only measurement value
 
-    =Bat {"rMeas_A":0}
+    =Bat {"rCurrent_A":0}
     :A3 Forbidden.
 
 ## Create data
@@ -154,9 +154,9 @@ The equivalent of a POST request allows to append new data to an existing data i
 
 In current implementations it is not possible to add entirely new data objects, as this would be against the nature of statically allocated memory of constrained devices.
 
-**Example 1:** Add battery current measurement to the generic metrics subset `m`
+**Example 1:** Add battery current measurement to the generic metrics subset `mLive`
 
-    +m "Bat/rMeas_A"
+    +mLive "Bat/rCurrent_A"
     :81 Created.
 
 ## Delete data
@@ -194,20 +194,20 @@ After successful authentication, the device exposes previously restricted data o
 
 Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
 
-**Example 1:** A statement containing the `m` subset, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `mLive` subset, sent out by the device every 10 seconds
 
-    #m {"t_s":460677600,"Bat":{"rMeas_V":12.9,"rMeas_A":-3.14},"Load":{"r_W":96.5},"Load":{"r_W":137.0}}
+    #mLive {"t_s":460677600,"Bat":{"rVoltage_V":12.9,"rCurrent_A":-3.14},"Solar":{"rPower_W":96.5},"Load":{"rPower_W":137.0}}
 
 The `_Pub` path is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
     ?_Pub/
-    :85 Content. ["eState","m"]
+    :85 Content. ["eState","mLive"]
 
-**Example 3:** Enable publication of `m` subset
+**Example 3:** Enable publication of `mLive` subset
 
-    =_Pub/m {"sEnable":true}
+    =_Pub/mLive {"sEnable":true}
     :84 Changed.
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.

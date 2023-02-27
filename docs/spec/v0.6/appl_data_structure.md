@@ -97,9 +97,9 @@ Data objects to store records don't have a prefix. Their name is similar to a gr
 
 ### Units
 
-Only [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and derived units (e.g. kWh for energy instead of Ws) are allowed.
+The unit is appended to the data item name using an underscore.
 
-The unit is appended to the data item name using an underscore. In order to keep the name very compact, the unit is also used to identify the physical quantity of the value. So instead of "rBatteryEnergy_kWh" a short name like "rBat_kWh" is preferred.
+Only [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and derived units (e.g. kWh for energy instead of Ws) should be used.
 
 Some special characters have to be replaced according to the following table in order to be compatible with URIs (see [RFC 3986, section 2.3](https://tools.ietf.org/html/rfc3986#section-2.3)):
 
@@ -136,14 +136,14 @@ The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimi
 
 Most simple valid data layout consists of key/value pairs without any hierarchy.
 
-The following data layout could be used for a smart heating thermostat that can be configured for a target temperature. The measured temperature and whether the heater is currently on or off can be read from the device.
+The following data layout could be used for a smart heating thermostat that can be configured for a target temperature. The measured room temperature and whether the heater is currently on or off can be read from the device.
 
 ``` json
 {
     "cNodeID": "ABCD1234",
-    "rMeas_degC": 18.3,
+    "rRoomTemp_degC": 18.3,
+    "sTargetTemp_degC": 22.0,
     "rHeaterOn": true,
-    "sTarget_degC": 22.0,
 }
 ```
 
@@ -165,19 +165,19 @@ The following example data structure of an MPPT solar charge controller will be 
         "xAuth": ["uPassword"]                                      // 0x35
     },
     "Bat": {                                                        // 0x02
-        "rMeas_V": 12.9,                                            // 0x40
-        "rMeas_A": -3.14,                                           // 0x41
-        "sTarget_V": 14.4                                           // 0x42
+        "rVoltage_V": 12.9,                                         // 0x40
+        "rCurrent_A": -3.14,                                        // 0x41
+        "sTargetVoltage_V": 14.4                                    // 0x42
     },
     "Solar": {                                                      // 0x03
         "rState": 1,                                                // 0x50
-        "r_W": 96.5,                                                // 0x51
-        "pTotal_kWh": 1984                                          // 0x52
+        "rPower_W": 96.5,                                           // 0x51
+        "pThroughput_kWh": 1984                                     // 0x52
     },
     "Load": {                                                       // 0x04
         "wEnable": true,                                            // 0x60
-        "r_W": 137.0,                                               // 0x61
-        "pTotal_kWh": 1789                                          // 0x62
+        "rPower_W": 137.0,                                          // 0x61
+        "pThroughput_kWh": 1789                                     // 0x62
     },
     "Log": [                                                        // 0x08
         {                                                           // #0
@@ -190,13 +190,15 @@ The following example data structure of an MPPT solar charge controller will be 
     ],
     "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
     "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
-    "m": ["t_s", "Bat/rMeas_V", "Solar/r_W", "Load/r_W"],           // 0x07
+    "mLive": [                                                      // 0x07
+        "t_s", "Bat/rVoltage_V", "Solar/rPower_W", "Load/rPower_W"
+    ],
     "_Pub": {                                                       // 0x0F
         "eState": {                                                 // 0xF0
             "sEnable": true,                                        // 0xF1
             "cRateLimit_s": 1                                       // 0xF2
         },
-        "m": {                                                      // 0xF3
+        "mLive": {                                                  // 0xF3
             "sEnable": false,                                       // 0xF4
             "sPeriod_s": 10                                         // 0xF5
         }
@@ -205,7 +207,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "Device": 0,
         "Bat": 2,
         // ...
-        "Bat/rMeas_V": 64,
+        "Bat/rVoltage_V": 64,
         // ...
         "Log/t_s": 112,
         "Log/ErrorFlags": 113
@@ -215,7 +217,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "0x01": "Device",
         "0x02": "Bat",
         // ...
-        "0x40": "Bat/rMeas_V",
+        "0x40": "Bat/rVoltage_V",
         // ...
         "0x70": "Log/t_s",
         "0x71": "Log/ErrorFlags",
@@ -250,18 +252,18 @@ Below structure gives an example of the processed user interface structure for a
         │  └─ Auth                                  | Password | [ OK ]
         │
         ├─ Bat
-        │  ├─ Meas Voltage                                       12.9 V
-        │  ├─ Meas Current                                      -3.14 A
+        │  ├─ Voltage                                            12.9 V
+        │  ├─ Current                                           -3.14 A
         │  └─ Target Voltage                                 | 14.4 | V
         │
         ├─ Solar
         │  ├─ State                                                   1
         │  ├─ Power                                              96.4 W
-        │  └─ Total Energy                                     1984 kWh
+        │  └─ Throughput                                       1984 kWh
         │
         ├─ Load
         │  ├─ Power                                             137.0 W
-        │  ├─ Total Energy                                     1789 kWh
+        │  ├─ Throughput                                       1789 kWh
         │  └─ Enable                                                [x]
         │
         └─ Publications / Notificatons
@@ -278,12 +280,12 @@ Below structure gives an example of the processed user interface structure for a
            │     ├─ Time (s)
            │     └─ Device Error Flags
            │
-           └─ Metrics
+           └─ Live Metrics
               ├─ Enable                                             [ ]
               ├─ Period                                        | 10 | s
               └─ Items                               [ Add ] [ Delete ]
                  ├─ Time (s)
-                 ├─ Bat Meas Voltage (V)
+                 ├─ Bat Voltage (V)
                  ├─ Solar Power (W)
                  └─ Load Power (W)
 ```

@@ -51,14 +51,14 @@ The firmware developer is free to choose the IDs.
 
 In contrast to the text mode, the binary mode has the special endpoints `"_Ids"` (ID `0x16`) and `"_Paths"` (ID `0x17`) that allow to retrieve the path for a given ID or vice versa using a `FETCH` request.
 
-**Example 1:** Request IDs of object paths `"Bat/rMeas_V"` and `"Bat/rMeas_A"`
+**Example 1:** Request IDs of object paths `"Bat/rVoltage_V"` and `"Bat/rCurrent_A"`
 
     Request:
     05                                      # FETCH request
        16                                   # CBOR uint: 0x17 (_Ids endpoint)
        82                                   # CBOR array (2 elements)
-          6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V"
-          6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A"
+          6E 4261742F72566F6C746167655F56   # CBOR string: "Bat/rVoltage_V"
+          6E 4261742F7243757272656E745F41   # CBOR string: "Bat/rCurrent_A"
 
     Response:
     85                                      # Content.
@@ -78,8 +78,8 @@ In contrast to the text mode, the binary mode has the special endpoints `"_Ids"`
     Response:
     85                                      # Content.
        82                                   # CBOR array (2 elements)
-          6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V"
-          6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A"
+          6E 4261742F72566F6C746167655F56   # CBOR string: "Bat/rVoltage_V"
+          6E 4261742F7243757272656E745F41   # CBOR string: "Bat/rCurrent_A"
 
 **Example 3:** Request paths of object ID `0x70` (part of a record)
 
@@ -109,18 +109,18 @@ If a path (string containing names) is used to specify an endpoint, also names a
 **Example 1:** Retrieve all data of `Bat` path (names + values)
 
     Request:
-    01                                      # GET
-       63 426174                            # CBOR string: "Bat"
+    01                                          # GET
+       63 426174                                # CBOR string: "Bat"
 
     Response:
-    85                                      # Content.
-       A3                                   # CBOR map (3 elements)
-          67 724D6561735F56                 # CBOR string: "rMeas_V"
-          FA 414E6666                       # CBOR float: 12.9
-          67 724D6561735F41                 # CBOR string: "rMeas_A"
-          FA C048F5C3                       # CBOR float: -3.14
-          69 735461726765745F56             # CBOR string: "sTarget_V"
-          FA 41666666                       # CBOR float: 14.4
+    85                                          # Content.
+       A3                                       # CBOR map (3 elements)
+          6A 72566F6C746167655F56               # CBOR string: "rVoltage_V"
+          FA 414E6666                           # CBOR float: 12.9
+          6A 7243757272656E745F41               # CBOR string: "rCurrent_A"
+          FA C048F5C3                           # CBOR float: -3.14
+          70 73546172676574566F6C746167655F56   # CBOR string: "sTargetVoltage_V"
+          FA 41666666                           # CBOR float: 14.4
 
 **Example 2:** Discover all child object names of the root object
 
@@ -136,12 +136,12 @@ If a path (string containing names) is used to specify an endpoint, also names a
           67 634E6F64654944                 # CBOR string: "cNodeID"
            ...
 
-**Example 3:** Retrieve value for single data item `Bat/rMeas_V`
+**Example 3:** Retrieve value for single data item `Bat/rVoltage_V`
 
     Request:
     05                                      # FETCH
        63 426174                            # CBOR string: "Bat" (path)
-       67 724D6561735F56                    # CBOR string: "rMeas_V" (object name)
+       6A 72566F6C746167655F56              # CBOR string: "rVoltage_V" (object name)
 
     Response:
     85                                      # Content.
@@ -179,7 +179,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
           18 1D                             # CBOR uint: 0x1D
            ...
 
-**Example 6:** Retrieve value for single data item `Bat_V` with ID `0x40`
+**Example 6:** Retrieve value for single data item `Bat/rVoltage_V` with ID `0x40`
 
     Request:
     01                                      # GET
@@ -285,7 +285,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
 
 Appends new data to a data object in a similar way as in the text mode.
 
-**Example 1:** Add item with ID `0x41` (`Bat/rMeas_A`) to the generic metrics subset `m`
+**Example 1:** Add item with ID `0x41` (`Bat/rCurrent_A`) to the generic metrics subset `mLive`
 
     Request:
     06                                      # CREATE
@@ -331,7 +331,7 @@ Functions may return payload data, in which case the response is `0x85` followed
 
 In contrast to text mode, published statements in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
-**Example 1:** A statement containing the `m` subset, sent out by the device every 10 seconds
+**Example 1:** A statement containing the `mLive` subset, sent out by the device every 10 seconds
 
     1F
        07                                   # CBOR uint: 0x07 (subset object ID)
@@ -373,14 +373,14 @@ If the name of the object is supplied instead of the ID, paths are returned in t
     85                                      # Content.
        84                                   # CBOR array (4 elements)
           63 745F73                         # CBOR string: "t_s" (object path)
-          6B 4261742F724D6561735F56         # CBOR string: "Bat/rMeas_V" (object path)
-          6B 4261742F724D6561735F41         # CBOR string: "Bat/rMeas_A" (object path)
-          69 536F6C61722F725F57             # CBOR string: "Solar/r_W" (object path)
-          68 4C6F61642F725F57               # CBOR string: "Load/r_W" (object path)
+          6E 4261742F72566F6C746167655F56   # CBOR string: "Bat/rVoltage_V" (object path)
+          6E 4261742F7243757272656E745F41   # CBOR string: "Bat/rCurrent_A" (object path)
+          6E 536F6C61722F72506F7765725F57   # CBOR string: "Solar/rPower_W" (object path)
+          6D 4C6F61642F72506F7765725F57     # CBOR string: "Load/rPower_W" (object path)
 
 If not all child nodes of one path fit into a single publication message (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) the statement can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
 
-**Example 4:** A statement containing a part of the `m` subset.
+**Example 4:** A statement containing a part of the `mLive` subset.
 
     1F
        00                                   # CBOR uint: 0x00 (root ID)
