@@ -41,7 +41,8 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'Software',
         children: [
           { text: 'Device Library', link: '/software/device_library' },
-          { text: 'SDK for Zephyr', link: '/software/sdk' }
+          { text: 'SDK for Zephyr', link: '/software/sdk' },
+          { text: 'Mobile App', link: '/software/app' }
         ]
       }, {
         text: 'Specification',
