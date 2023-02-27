@@ -4,7 +4,10 @@ heroImage: /images/thingset-infinity.png
 heroText: null
 tagline: ThingSet - The Data Accessibility Framework
 actions:
-  - text: Read the docs
+  - text: SDK for Zephyr
+    link: /software/sdk
+    type: secondary
+  - text: Specification
     link: /spec/v0.5/introduction
     type: secondary
 features:

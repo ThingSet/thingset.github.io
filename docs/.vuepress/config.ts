@@ -38,6 +38,12 @@ export default defineUserConfig<DefaultThemeOptions>({
     logo: '/images/thingset-logo.png',
     navbar: [
       {
+        text: 'Software',
+        children: [
+          { text: 'Device Library', link: '/software/device_library' },
+          { text: 'SDK for Zephyr', link: '/software/sdk' }
+        ]
+      }, {
         text: 'Specification',
         ariaLabel: 'Specification Menu',
         children: [
