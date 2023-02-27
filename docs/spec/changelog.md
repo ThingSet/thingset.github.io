@@ -21,3 +21,11 @@ The protocol is still evolving. Until release of v1.0 even breaking changes may 
 - Data is not structured into categories like `info`, `conf` or `meas` anymore. Instead, prefixes for data items are used which define if an item is write-able, read-only, executable, stored in RAM or flash, etc. This makes the previous categories obsolete and data can be structured more logically based on features of the device.
 - As data item names don't have to be globally unique anymore (e.g. there can be a measured current for the battery `Bat/rMeas_A` and the load `Load/rMeas_A`) the JSON in the statement messages needs to be nested.
 - Internal data objects are now prefixed with `_` instead of `.` so that the names can still be used directly in programming languages like JavaScript.
+
+## v0.5 to v0.6
+
+- Paths can be absolute (starting with `/` and including the node ID) to support accessing a node behind a ThingSet gateway.
+- The function code for the CREATE function in binary mode is now `0x06` (mapped to CoAP PATCH) to make it clearly distinguishable from a POST request and allow unambiguous mapping to the text mode.
+- A new response code C3 for "Service Unavailable" was added.
+- Physical quantities (e.g. `Voltage`) must now be part of data item names and are not derived from the unit. This was necessary because a unit cannot be unambiguously mapped to a physical quantity (e.g. `Pa` can be used for a pressure as well as mechanical stress).
+- Internal groups like `_Paths` (prefixed with `_`) now start with uppercase letters like all other groups.
