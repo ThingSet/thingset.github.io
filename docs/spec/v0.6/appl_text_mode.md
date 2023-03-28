@@ -10,23 +10,23 @@ Each request message consists of a first character as the request method identif
 
     txt-request = txt-get / txt-fetch / txt-update / txt-create / txt-delete / txt-exec
 
-    txt-get    = "?" [ path ] [ "/" ]               ; CoAP equivalent: GET request
+    txt-get    = "?" [ path ]
 
-    txt-fetch  = "?" [ path ] " " json-array        ; CoAP equivalent: FETCH request
+    txt-fetch  = "?" [ path ] " " ( json-array / json-null )
 
-    txt-update = "=" [ path ] " " json-object       ; CoAP equivalent: iPATCH request
+    txt-update = "=" [ path ] " " json-object
 
-    txt-create = "+" [ path ] " " json-value        ; CoAP equivalent: PATCH request
+    txt-create = "+" [ path ] " " json-value
 
-    txt-delete = "-" [ path ] [ " " json-value ]    ; CoAP equivalent: DELETE request
+    txt-delete = "-" [ path ] [ " " json-value ]
 
-    txt-exec   = "!" [ path ] [ " " json-value ]    ; CoAP equivalent: POST request
+    txt-exec   = "!" [ path ] [ " " json-value ]
 
     path = relative-path / absolute-path
 
     relative-path = object-name *( "/" object-name )
 
-    absolute-path = "/" ( node-id [ "/" relative-path ] / "/" )
+    absolute-path = "/" ( node-id [ "/" relative-path ] )
 
     node-id = 1*( ALPHA / DIGIT )                   ; alphanumeric string
 
@@ -60,23 +60,15 @@ If the path in requests and statements starts with a `/`, the path is absolute, 
 
 ## Read data
 
-The GET function allows to read all child objects of the specified path. If a forward slash is appended at the end of the path, only an array with the child object names is returned to allow discovering a device data structure layer by layer. Otherwise all content below that path (names and values) is returned.
+The GET function allows to read all child objects below the specified path.
 
 If a device is not able to provide the entire content of a group or subset (e.g. because the buffer is too small), the value must be set to `null` and a new request for smaller data set should be sent. In case of records, the value must be set to the number of records instead of `null` if the content of the records cannot be returned directly. This allows to determine whether the path starting with an upper-case letter is a group or contains records.
 
-The FETCH function allows to retrieve only subset of the child objects, defined by an array with the object names passed to the function.
+The FETCH function allows to retrieve only subset of the child objects, defined by an array with the object names passed to the function. If `null` is passed instead of the array of desired child objects, an array with the child object names is returned to allow discovering a device data structure layer by layer.
 
 Only those data objects are returned which are at least readable. Thus, the result might differ after authentication.
 
-**Example 1:** Discover all child objects of the root object (i.e. categories)
-
-    ?/
-    :85 Content. ["t_s","cNodeID","cMetadataURL","Device","Bat","Solar","Load","Log",
-    "eBoot","eState","mLive","_Pub"]
-
-Note that `_Ids` and `_Paths` are not contained in the list, as they are only available in the binary mode.
-
-**Example 2:** Attempt to get all data of the device
+**Example 1:** Attempt to get all data of the device
 
     ?
     :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
@@ -85,17 +77,19 @@ Note that `_Ids` and `_Paths` are not contained in the list, as they are only av
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
-**Example 3:** Retrieve all content of `Bat` path (names + values)
+Note that `_Ids` and `_Paths` are not contained in the data, as they are only available in the binary mode.
+
+**Example 2:** Retrieve all content of `Bat` path (names + values)
 
     ?Bat
     :85 Content. {"rVoltage_V":12.9,"rCurrent_A":-3.14,"sTargetVoltage_V":14.4}
 
-**Example 4:** List all sub-item names of `Bat` path as an array
+**Example 3:** List all sub-item names of `Bat` path as an array
 
-    ?Bat/
+    ?Bat null
     :85 Content. ["rVoltage_V","rCurrent_A","sTargetVoltage_V"]
 
-**Example 5:** Retrieve value for single data item `Bat/rVoltage_V`
+**Example 4:** Retrieve value for single data item `Bat/rVoltage_V`
 
     ?Bat ["rVoltage_V"]
     :85 Content. [12.9]
@@ -105,7 +99,7 @@ A more simple way is to provide the entire path (GET instead of FETCH request):
     ?Bat/rVoltage_V
     :85 Content. 12.9
 
-**Example 6:** Retrieve all records in `Log`
+**Example 5:** Retrieve all records in `Log`
 
     ?Log
     :85 Content. [{"t_s":460677000,"rErrorFlags":4},{"t_s":460671000,"rErrorFlags":256}]
@@ -115,21 +109,21 @@ If a device is not able to return the content of all records directly, it must r
     ?Log
     :85 Content. 2
 
-**Example 7:** Retrieve first record in `Log`
+**Example 6:** Retrieve first record in `Log`
 
     ?Log/0
     :85 Content. {"t_s":460677000,"rErrorFlags":4}
 
-**Example 8:** Get all data of node `XYZ12345` through a gateway
+**Example 7:** Get all data of node `XYZ12345` through a gateway
 
     ?/XYZ12345
     :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
     "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
-**Example 9:** List all nodes behind the gateway we are communicating with
+**Example 8:** List all nodes behind the gateway we are communicating with
 
-    ?//
+    ?/ null
     :85 Content. ["ABCD1234","XYZ12345"]
 
 ## Update data
@@ -202,7 +196,7 @@ The `_Pub` path is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
-    ?_Pub/
+    ?_Pub null
     :85 Content. ["eState","mLive"]
 
 **Example 3:** Enable publication of `mLive` subset
