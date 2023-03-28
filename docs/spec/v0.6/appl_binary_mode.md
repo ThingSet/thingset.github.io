@@ -206,7 +206,7 @@ For fetching multiple data items, the IDs are provided in the array as the secon
           FA 414E6666                       # CBOR float: 12.9
           FA C048F5C3                       # CBOR float: -3.14
 
-**Example 7:** Retrieve number of records in `Log`
+**Example 8:** Retrieve number of records in `Log`
 
 If the endpoint is an array of records, fetching `undefined` for discovery returns the number of elements in the array (i.e. number of records) instead of the names or IDs as in case of groups as endpoint.
 
@@ -219,7 +219,7 @@ If the endpoint is an array of records, fetching `undefined` for discovery retur
     85                                      # Content.
        02                                   # CBOR uint: 0x02 (2 elements)
 
-**Example 8:** Retrieve first record in `Log`
+**Example 9:** Retrieve first record in `Log`
 
 Records are always returned as key/value maps, similar to GET requests for groups.
 
@@ -236,7 +236,7 @@ Records are always returned as key/value maps, similar to GET requests for group
           18 71                             # CBOR uint: 0x71 (object ID)
           19 0100                           # CBOR uint: 256
 
-**Example 9:** Attempt to retrieve a single item from a record in `Log`
+**Example 10:** Attempt to retrieve a single item from a record in `Log`
 
 As there can be multiple instances of the same record sharing the same IDs for their items, it's not possible to query a record item by ID.
 
@@ -366,7 +366,7 @@ If the name of the object is supplied instead of the ID, paths are returned in t
 
     Request:
     05                                      # FETCH
-       61 6D                                # CBOR string: "m" (object path)
+       65 6D4C697665                        # CBOR string: "mLive" (object path)
        F7                                   # CBOR undefined
 
     Response:
