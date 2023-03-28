@@ -21,8 +21,8 @@ Each request message consists of a first byte as the request method identifier, 
     bin-delete = %x04 endpoint cbor-data
 
     bin-fetch  = %x05 endpoint ( cbor-array   ; IDs or names of requested data
-                               / %xF7 )       ; CBOR undefined: request array of
-                                              ; all IDs or names behind endpoint
+                               / %xF6 )       ; CBOR null: request array of all
+                                              ; IDs or names behind endpoint
 
     bin-create = %x06 endpoint cbor-data
 
@@ -127,7 +127,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Request:
     05                                      # FETCH
        60                                   # CBOR empty string (root object)
-       F7                                   # CBOR undefined as a wildcard
+       F6                                   # CBOR null for discovery
 
     Response:
     85                                      # Content.
@@ -170,7 +170,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Request:
     05                                      # FETCH
        00                                   # CBOR uint: 0x00 (root object)
-       F7                                   # CBOR undefined as a wildcard
+       F6                                   # CBOR null for discovery
 
     Response:
     85                                      # Content.
@@ -213,7 +213,7 @@ If the endpoint is an array of records, fetching `undefined` for discovery retur
     Request:
     05                                      # FETCH
        08                                   # CBOR uint: 0x08 (parent ID)
-       F7                                   # CBOR undefined as a wildcard
+       F6                                   # CBOR null for discovery
 
     Response:
     85                                      # Content.
@@ -349,7 +349,7 @@ The corresponding IDs can be retrieved with a fetch request.
     Request:
     05                                      # FETCH
        07                                   # CBOR uint: 0x07 (object ID)
-       F7                                   # CBOR undefined
+       F6                                   # CBOR null for discovery
 
     Response:
     85                                      # Content.
@@ -367,7 +367,7 @@ If the name of the object is supplied instead of the ID, paths are returned in t
     Request:
     05                                      # FETCH
        65 6D4C697665                        # CBOR string: "mLive" (object path)
-       F7                                   # CBOR undefined
+       F6                                   # CBOR null for discovery
 
     Response:
     85                                      # Content.
