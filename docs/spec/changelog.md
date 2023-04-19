@@ -25,6 +25,7 @@ The protocol is still evolving. Until release of v1.0 even breaking changes may 
 ## v0.5 to v0.6
 
 - Paths can be absolute (starting with `/` and including the node ID) to support accessing a node behind a ThingSet gateway.
+- **BREAKING change:** The node ID can now also be added to the response and the redundant status message is replaced with an optional diagnostic payload.
 - Discovery in the text mode now uses a fetch request with JSON `null` as the argument instead of a trailing `/`. This is more consistent with the binary mode and allows better mapping between the two. In addition to that it avoids confusion for `?/` requests, where it is not obvious if it's a discovery request for the root path of a node or an absolute path.
 - Discovery in the binary mode now uses CBOR `null` (`0xF6`) instead of `undefined` (`0xF7`) in order to be directly compatible with the text mode. JSON has no equivalent of an `undefined` value.
 - The function code for the CREATE function in binary mode is now `0x06` (mapped to CoAP PATCH) to make it clearly distinguishable from a POST request and allow unambiguous mapping to the text mode.

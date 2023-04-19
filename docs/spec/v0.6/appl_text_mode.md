@@ -26,7 +26,7 @@ Each request message consists of a first character as the request method identif
 
     relative-path = object-name *( "/" object-name )
 
-    absolute-path = "/" ( node-id [ "/" relative-path ] )
+    absolute-path = "/" [ node-id [ "/" relative-path ] ]
 
     node-id = 1*( ALPHA / DIGIT )                   ; alphanumeric string
 
@@ -36,15 +36,13 @@ The path to access a specific data object is a JSON pointer ([RFC 6901](https://
 
 ### Response
 
-The response starts with a colon `:` followed by the the status code and a plain text description of the status finished with a `.`. The description is not strictly specified and can be according to the table in the [General Concept chapter](2a_general.md) or a more verbose message. However, it must contain only one dot at the end of the description, signifying the end of the description.
+The response starts with a colon `:` followed by the the status code. If communicating through a gateway, the node ID can be added immediately after the status code and a `/`. This is required for gateways to map responses from different nodes to the correct request.
 
-The bytes after the dot contain the requested data.
+The `json-value` contains the requested data (if any). For error responses, it can be a string with a detailed explanation of the error to help debugging the problem, similar to [CoAP diagnostic payload](https://www.rfc-editor.org/rfc/rfc7252#section-5.5.2).
 
-    txt-response = ":" status-code status-msg [ " " json-value ]
+    txt-response = ":" status-code [ "/" [ node-id ] ] [ " " json-value ]
 
     status-code = 2( DIGIT / %x41-46 )              ; two upper-case HEXDIGs
-
-    status-msg  = [ " " *( ALPHA / SP ) ] "."       ; optional human-readable text
 
 ### Statement
 
@@ -71,7 +69,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
 **Example 1:** Attempt to get all data of the device
 
     ?
-    :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
+    :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
     "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
@@ -82,49 +80,49 @@ Note that `_Ids` and `_Paths` are not contained in the data, as they are only av
 **Example 2:** Retrieve all content of `Bat` path (names + values)
 
     ?Bat
-    :85 Content. {"rVoltage_V":12.9,"rCurrent_A":-3.14,"sTargetVoltage_V":14.4}
+    :85 {"rVoltage_V":12.9,"rCurrent_A":-3.14,"sTargetVoltage_V":14.4}
 
 **Example 3:** List all sub-item names of `Bat` path as an array
 
     ?Bat null
-    :85 Content. ["rVoltage_V","rCurrent_A","sTargetVoltage_V"]
+    :85 ["rVoltage_V","rCurrent_A","sTargetVoltage_V"]
 
 **Example 4:** Retrieve value for single data item `Bat/rVoltage_V`
 
     ?Bat ["rVoltage_V"]
-    :85 Content. [12.9]
+    :85 [12.9]
 
 A more simple way is to provide the entire path (GET instead of FETCH request):
 
     ?Bat/rVoltage_V
-    :85 Content. 12.9
+    :85 12.9
 
 **Example 5:** Retrieve all records in `Log`
 
     ?Log
-    :85 Content. [{"t_s":460677000,"rErrorFlags":4},{"t_s":460671000,"rErrorFlags":256}]
+    :85 [{"t_s":460677000,"rErrorFlags":4},{"t_s":460671000,"rErrorFlags":256}]
 
 If a device is not able to return the content of all records directly, it must return the number of stored records. This number can be used to retrieve each record individually (see below).
 
     ?Log
-    :85 Content. 2
+    :85 2
 
 **Example 6:** Retrieve first record in `Log`
 
     ?Log/0
-    :85 Content. {"t_s":460677000,"rErrorFlags":4}
+    :85 {"t_s":460677000,"rErrorFlags":4}
 
 **Example 7:** Get all data of node `XYZ12345` through a gateway
 
     ?/XYZ12345
-    :85 Content. {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
+    :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
     "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 
     ?/ null
-    :85 Content. ["ABCD1234","XYZ12345"]
+    :85/ ["ABCD1234","XYZ12345"]
 
 ## Update data
 
@@ -135,12 +133,12 @@ Data items prefixed with `s` will be stored in persistent memory, so it is not a
 **Example 1:** Disable load output
 
     =Load {"wEnable":false}
-    :84 Changed.
+    :84
 
-**Example 2:** Attempt to write read-only measurement value
+**Example 2:** Attempt to write read-only measurement value with optional diagnostic payload
 
     =Bat {"rCurrent_A":0}
-    :A3 Forbidden.
+    :A3 "Item is read-only"
 
 ## Create data
 
@@ -151,7 +149,7 @@ In current implementations it is not possible to add entirely new data objects, 
 **Example 1:** Add battery current measurement to the generic metrics subset `mLive`
 
     +mLive "Bat/rCurrent_A"
-    :81 Created.
+    :81
 
 ## Delete data
 
@@ -160,7 +158,7 @@ Deletes data from a data item of array type.
 **Example 1:** Delete `cMetadataURL` from boot events subset
 
     -eBoot "cMetadataURL"
-    :82 Deleted.
+    :82
 
 ## Execute function
 
@@ -169,7 +167,7 @@ Calls an executable data object. Functions are prefixed with `x`.
 **Example 1:** Reset the device
 
     !Device/xReset
-    :83 Valid.
+    :83
 
 ## Authentication
 
@@ -180,7 +178,7 @@ The password is transferred as a plain text string. Encryption has to be provide
 Internally, the authentication function is implemented as an executable data object.
 
     !Device/xAuth "mypass"
-    :83 Valid.
+    :83
 
 After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
@@ -197,11 +195,11 @@ The `_Pub` path is used to configure the publication process itself.
 **Example 2:** List all statements available for publication
 
     ?_Pub null
-    :85 Content. ["eState","mLive"]
+    :85 ["eState","mLive"]
 
 **Example 3:** Enable publication of `mLive` subset
 
     =_Pub/mLive {"sEnable":true}
-    :84 Changed.
+    :84
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.
