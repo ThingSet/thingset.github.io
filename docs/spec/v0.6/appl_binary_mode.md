@@ -342,7 +342,7 @@ For execution of a function, the EXEC request is used.
        80                                   # CBOR empty array
 
     Response:
-    83                                      # Valid.
+    84                                      # Changed.
        F6                                   # CBOR null (direct connection)
 
 Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the `Device/xReset` function does not require any parameters, so it receives an empty array.

@@ -167,7 +167,7 @@ Calls an executable data object. Functions are prefixed with `x`.
 **Example 1:** Reset the device
 
     !Device/xReset
-    :83
+    :84
 
 ## Authentication
 
@@ -178,7 +178,7 @@ The password is transferred as a plain text string. Encryption has to be provide
 Internally, the authentication function is implemented as an executable data object.
 
     !Device/xAuth "mypass"
-    :83
+    :84
 
 After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 

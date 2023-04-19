@@ -26,13 +26,12 @@ Response messages in binary format are identified by a first byte greater than o
 
 The status codes are again aligned with CoAP response codes, but contain an offset so that there is no interference with ASCII characters (less than 0x80).
 
-| Code | CoAP | HTTP | Description   | Comment                    |
-|------|------|------|---------------|----------------------------|
-| 0x81 | 2.01 | 201  | Created       | Answer to POST requests appending data |
-| 0x82 | 2.02 | 204  | Deleted       | Answer to DELETE request   |
-| 0x83 | 2.03 | 200  | Valid         | Answer to POST requests to exec objects |
-| 0x84 | 2.04 | 204  | Changed       | Answer to PATCH requests   |
-| 0x85 | 2.05 | 200  | Content       | Answer to GET / FETCH requests |
+| Code | CoAP | HTTP | Description   | Comment                                |
+|------|------|------|---------------|----------------------------------------|
+| 0x81 | 2.01 | 201  | Created       | Answer to CREATE requests              |
+| 0x82 | 2.02 | 204  | Deleted       | Answer to DELETE request               |
+| 0x84 | 2.04 | 200/204 | Changed    | Answer to EXEC and UPDATE requests     |
+| 0x85 | 2.05 | 200  | Content       | Answer to GET and FETCH requests       |
 | 0xA0 | 4.00 | 400  | Bad Request   | |
 | 0xA1 | 4.01 | 401  | Unauthorized  | Authentication needed       |
 | 0xA3 | 4.03 | 403  | Forbidden     | Trying to write read-only value |
