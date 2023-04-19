@@ -4,9 +4,11 @@ In the binary mode, the data is encoded using the CBOR format. The data structur
 
 The length of the entire request or response is not encoded in the ThingSet protocol, but can be determined from the CBOR format. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
 
-The **target** of the binary mod is to work with as little payload data as possible. Hence, published statements only contain values and the corresponding IDs or names are only sent once at startup or can be requested manually later.
+The **target** of the binary mode is to work with as little payload data as possible. Hence, published statements only contain values and the corresponding IDs or names are only sent once at startup or can be requested manually later.
 
 The **main challenge** is to still be fully discoverable via the binary mode without requiring previous knowledge of the data exposed by the device.
+
+Requests in binary mode can either use data object IDs or names / paths. IDs offer the most compact form with least wire payload, but require some processing on the application side. For requests through gateways (using absolute paths) endpoints must be specified as strings, as numeric IDs are only unique per node.
 
 ### Requests
 
@@ -35,7 +37,9 @@ Each request message consists of a first byte as the request method identifier, 
 
 Responses in binary mode start with the error/status code as specified before, followed by the data if applicable.
 
-    bin-response = %x80-FF [ cbor-data ]      ; response code and data
+    bin-response = %x80-FF                ; response code
+                   ( node-id / %xF6 )     ; CBOR string with node ID or null
+                   [ cbor-data ]
 
 ### Statement
 
@@ -62,6 +66,7 @@ In contrast to the text mode, the binary mode has the special endpoints `"_Ids"`
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        82                                   # CBOR array (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           18 41                             # CBOR uint: 0x41 (object ID)
@@ -77,6 +82,7 @@ In contrast to the text mode, the binary mode has the special endpoints `"_Ids"`
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        82                                   # CBOR array (2 elements)
           6E 4261742F72566F6C746167655F56   # CBOR string: "Bat/rVoltage_V"
           6E 4261742F7243757272656E745F41   # CBOR string: "Bat/rCurrent_A"
@@ -91,6 +97,7 @@ In contrast to the text mode, the binary mode has the special endpoints `"_Ids"`
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        81                                   # CBOR array (1 element)
           67 4C6F672F745F73                 # CBOR string: "Log/t_s"
 
@@ -114,6 +121,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                          # Content.
+       F6                                       # CBOR null (direct connection)
        A3                                       # CBOR map (3 elements)
           6A 72566F6C746167655F56               # CBOR string: "rVoltage_V"
           FA 414E6666                           # CBOR float: 12.9
@@ -131,6 +139,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        8B                                   # CBOR array (11 elements)
           63 745F73                         # CBOR string: "t_s"
           67 634E6F64654944                 # CBOR string: "cNodeID"
@@ -145,6 +154,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        FA 414E6666                          # CBOR float: 12.9
 
 ### Using data object IDs
@@ -157,6 +167,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        A3                                   # CBOR map (3 elements)
           18 40                             # CBOR uint: 0x40
           FA 414E6666                       # CBOR float: 12.9
@@ -174,6 +185,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        8B                                   # CBOR array (11 elements)
           01                                # CBOR uint: 0x10
           18 1D                             # CBOR uint: 0x1D
@@ -187,6 +199,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        FA 414E6666                          # CBOR float: 12.9
 
 **Example 7:** Retrieve multiple data items:
@@ -202,6 +215,7 @@ For fetching multiple data items, the IDs are provided in the array as the secon
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        82                                   # CBOR array (2 elements)
           FA 414E6666                       # CBOR float: 12.9
           FA C048F5C3                       # CBOR float: -3.14
@@ -217,6 +231,7 @@ If the endpoint is an array of records, fetching `undefined` for discovery retur
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        02                                   # CBOR uint: 0x02 (2 elements)
 
 **Example 9:** Retrieve first record in `Log`
@@ -230,6 +245,7 @@ Records are always returned as key/value maps, similar to GET requests for group
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        A2                                   # CBOR map (2 elements)
           18 70                             # CBOR uint: 0x70 (object ID)
           1A 1B7561E0                       # CBOR uint: 460677600
@@ -248,6 +264,7 @@ As there can be multiple instances of the same record sharing the same IDs for t
 
     Response:
     A4                                      # Not Found.
+       F6                                   # CBOR null (direct connection)
 
 ## Update data
 
@@ -268,6 +285,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
 
     Response:
     84                                      # Changed.
+       F6                                   # CBOR null (direct connection)
 
 **Example 2:** Attempt to write read-only measurement values
 
@@ -280,6 +298,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
 
     Response:
     A3                                      # Forbidden.
+       F6                                   # CBOR null (direct connection)
 
 ## Create data
 
@@ -294,6 +313,7 @@ Appends new data to a data object in a similar way as in the text mode.
 
     Response:
     81                                      # Created.
+       F6                                   # CBOR null (direct connection)
 
 ## Delete data
 
@@ -308,6 +328,7 @@ Removes data from an object of array type.
 
     Response:
     82                                      # Deleted.
+       F6                                   # CBOR null (direct connection)
 
 ## Execute function
 
@@ -322,6 +343,7 @@ For execution of a function, the EXEC request is used.
 
     Response:
     83                                      # Valid.
+       F6                                   # CBOR null (direct connection)
 
 Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the `Device/xReset` function does not require any parameters, so it receives an empty array.
 
@@ -353,6 +375,7 @@ The corresponding IDs can be retrieved with a fetch request.
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        85                                   # CBOR array (5 elements)
           10                                # CBOR uint: 0x10 (object ID)
           18 40                             # CBOR uint: 0x40 (object ID)
@@ -371,6 +394,7 @@ If the name of the object is supplied instead of the ID, paths are returned in t
 
     Response:
     85                                      # Content.
+       F6                                   # CBOR null (direct connection)
        84                                   # CBOR array (4 elements)
           63 745F73                         # CBOR string: "t_s" (object path)
           6E 4261742F72566F6C746167655F56   # CBOR string: "Bat/rVoltage_V" (object path)
