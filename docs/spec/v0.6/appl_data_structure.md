@@ -37,6 +37,7 @@ Each data item is prefixed with a single character to identify its type accordin
 | p      | yes   | yes   | yes   | protected value (reset-able, normally only read)            |
 | s      | yes   | yes   | no    | stored value (in non-volatile memory, typically config)     |
 | t      | yes   | maybe | yes   | timestamp (dedicated prefix to reduce processing effort)    |
+| o      | yes   | no    | yes   | orthogonal data (tags / labels for datasets)                |
 | z      | yes   | yes   | yes   | control values (reserved for future use)                    |
 
 The TSDB column marks types which are suitable for storage in a time-series database (TSDB) because they may change dynamically over time (typically measurements or states). The other types are used for more static data like configuration values.
@@ -46,6 +47,8 @@ The functions to read, write and execute a data item will be explained in the ne
 Changes to write-able data items (prefix `w`) are only stored in RAM, so they get lost after a reset of the device. In contrast to that, stored data (prefix `s`) is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
 
 Factory calibration data items are only accessible for the manufacturer after authentication. If the user should be able to reset a value (e.g. a min/max counter), the value would be prefixed with `p` for protected. It is up to the firmware developer how the value should be protected. It may also only be marked differently to a normal input value (`w`) in a user interface.
+
+Data prefixed with `o` can be thought of as tags for the other data in a statement. Most time-series databases allow filtering of datasets based on tags (also called labels). Be aware that the orthogonal data should be limited to a small set of different values to avoid [high-cardinality data](https://en.wikipedia.org/wiki/Cardinality_(SQL_statements)).
 
 #### Subsets
 
@@ -188,6 +191,11 @@ The following example data structure of an MPPT solar charge controller will be 
             "rErrorFlags": 256                                      // 0x71 (shared)
         }
     ],
+    "Log": {                                                        // 0x09
+        "oLevel": 2,                                                // 0x90
+        "oModule": "charge_controller",                             // 0x91
+        "rMessage": "Load overcurrent: 23 A",                       // 0x92
+    },
     "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
     "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
     "mLive": [                                                      // 0x07
@@ -201,6 +209,10 @@ The following example data structure of an MPPT solar charge controller will be 
         "mLive": {                                                  // 0xF3
             "sEnable": false,                                       // 0xF4
             "sPeriod_s": 10                                         // 0xF5
+        },
+        "Log": {                                                    // 0xF6
+            "sMaxLevel": 3,                                         // 0xF7
+            "sRateLimit_Hz": 1                                      // 0xF8
         }
     },
     "_Ids": {                                                       // 0x16 (fixed)

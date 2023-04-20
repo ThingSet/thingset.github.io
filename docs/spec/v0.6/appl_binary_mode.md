@@ -140,7 +140,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Response:
     85                                      # Content.
        F6                                   # CBOR null (direct connection)
-       8B                                   # CBOR array (11 elements)
+       8D                                   # CBOR array (13 elements)
           63 745F73                         # CBOR string: "t_s"
           67 634E6F64654944                 # CBOR string: "cNodeID"
            ...
@@ -186,7 +186,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Response:
     85                                      # Content.
        F6                                   # CBOR null (direct connection)
-       8B                                   # CBOR array (11 elements)
+       8D                                   # CBOR array (13 elements)
           01                                # CBOR uint: 0x10
           18 1D                             # CBOR uint: 0x1D
            ...

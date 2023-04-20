@@ -71,7 +71,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
     ?
     :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
+    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
@@ -117,7 +117,7 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
+    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 
