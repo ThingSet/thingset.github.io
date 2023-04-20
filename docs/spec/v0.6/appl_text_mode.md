@@ -71,7 +71,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
     ?
     :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
+    "ErrorMemory":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
@@ -97,19 +97,19 @@ A more simple way is to provide the entire path (GET instead of FETCH request):
     ?Bat/rVoltage_V
     :85 12.9
 
-**Example 5:** Retrieve all records in `Log`
+**Example 5:** Retrieve all records in `ErrorMemory`
 
-    ?Log
+    ?ErrorMemory
     :85 [{"t_s":460677000,"rErrorFlags":4},{"t_s":460671000,"rErrorFlags":256}]
 
 If a device is not able to return the content of all records directly, it must return the number of stored records. This number can be used to retrieve each record individually (see below).
 
-    ?Log
+    ?ErrorMemory
     :85 2
 
-**Example 6:** Retrieve first record in `Log`
+**Example 6:** Retrieve first record in `ErrorMemory`
 
-    ?Log/0
+    ?ErrorMemory/0
     :85 {"t_s":460677000,"rErrorFlags":4}
 
 **Example 7:** Get all data of node `XYZ12345` through a gateway
@@ -117,7 +117,7 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "Log":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
+    "ErrorMemory":2,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 

@@ -84,7 +84,7 @@ The data types of function parameters for executable items cannot be determined,
 
 It is not always feasible to statically assign IDs for all data items at compile-time:
 
-- Where the data follows a pattern but the size of the pattern is not known in advance, e.g. log events, a modular system of N modules, or a multi-channel sensor/ADC input where each channel has the same configuration structure.
+- Where the data follows a pattern but the size of the pattern is not known in advance, e.g. logged error events, a modular system of N modules, or a multi-channel sensor/ADC input where each channel has the same configuration structure.
 - If a device is trying to expose data from one or more connected devices (i.e. a protocol bridge)
 
 Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0). Only entire records can be addressed. It is not possible to read or change individual items which are part of a record.
@@ -179,7 +179,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "rPower_W": 137.0,                                          // 0x61
         "pThroughput_kWh": 1789                                     // 0x62
     },
-    "Log": [                                                        // 0x08
+    "ErrorMemory": [                                                // 0x08
         {                                                           // #0
             "t_s": 460677000,                                       // 0x70 (shared)
             "rErrorFlags": 4                                        // 0x71 (shared)
@@ -209,8 +209,8 @@ The following example data structure of an MPPT solar charge controller will be 
         // ...
         "Bat/rVoltage_V": 64,
         // ...
-        "Log/t_s": 112,
-        "Log/ErrorFlags": 113
+        "ErrorMemory/t_s": 112,
+        "ErrorMemory/ErrorFlags": 113
         // ...
     },
     "_Paths": {                                                     // 0x17 (fixed)
@@ -219,8 +219,8 @@ The following example data structure of an MPPT solar charge controller will be 
         // ...
         "0x40": "Bat/rVoltage_V",
         // ...
-        "0x70": "Log/t_s",
-        "0x71": "Log/ErrorFlags",
+        "0x70": "ErrorMemory/t_s",
+        "0x71": "ErrorMemory/ErrorFlags",
         // ...
     }
 }
