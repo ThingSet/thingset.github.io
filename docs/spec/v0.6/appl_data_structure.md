@@ -246,9 +246,7 @@ One major goal of ThingSet is that the data model provides sufficient semantic i
 
 For the user interface, item prefixes can be used to display the data in a different way depending on its type, e.g. write-able values can be rendered as a text input or executable items as a button.
 
-The prefixes themselves and should be omitted in the user interface and single words of object names can be split. Also, units should be parsed such that the actual unit is displayed and not an equivalent like `degC` for `°C`.
-
-Physical quantities can be added based on the unit, e.g. `Power` for `W`.
+The prefixes themselves should be omitted in the user interface and single words of object names can be split. Also, units should be parsed such that the actual unit is displayed and not an equivalent like `degC` for `°C`.
 
 Below structure gives an example of the processed user interface structure for above data. Instead of pure text, this structure could be easily rendered in a web page or phone app.
 
