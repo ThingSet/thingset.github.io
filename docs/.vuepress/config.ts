@@ -222,15 +222,15 @@ export default defineUserConfig<DefaultThemeOptions>({
             'transp_serial',
             'transp_websocket',
             'transp_can',
-            'transp_lorawan',
             'transp_ble',
           ]
         },{
           text: 'Protocol Mapping',
           children: [
-            'mapping_http',
-            'mapping_coap',
             'mapping_mqtt',
+            'mapping_coap',
+            'mapping_http',
+            'mapping_lorawan',
           ]
         },{
           text: 'Tools',
