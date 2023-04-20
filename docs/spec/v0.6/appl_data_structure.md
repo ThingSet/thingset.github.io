@@ -52,7 +52,7 @@ Data prefixed with `o` can be thought of as tags for the other data in a stateme
 
 #### Subsets
 
-Subset items contain an array pointing at existing data items. They can be used to configure the content of statements for publication if data objects of different groups should be combined in a single message.
+Subset items contain an array pointing at existing data items. They can be used to configure the content of notifications if data objects of different groups should be combined in a single message.
 
 Three different types of subsets can be defined depending on their prefix.
 
@@ -201,7 +201,7 @@ The following example data structure of an MPPT solar charge controller will be 
     "mLive": [                                                      // 0x07
         "t_s", "Bat/rVoltage_V", "Solar/rPower_W", "Load/rPower_W"
     ],
-    "_Pub": {                                                       // 0x0F
+    "_Notifications": {                                             // 0x0F
         "eState": {                                                 // 0xF0
             "sEnable": true,                                        // 0xF1
             "cRateLimit_s": 1                                       // 0xF2
@@ -238,7 +238,7 @@ The following example data structure of an MPPT solar charge controller will be 
 }
 ```
 
-The `_Pub` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
+The `_Notifications` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
 
 ### User interface processing
 
@@ -276,7 +276,7 @@ Below structure gives an example of the processed user interface structure for a
         │  ├─ Throughput                                       1789 kWh
         │  └─ Enable                                                [x]
         │
-        └─ Publications / Notificatons
+        └─ Notificatons
            │
            ├─ Boot Events
            │  └─ Items                               [ Add ] [ Delete ]

@@ -71,7 +71,8 @@ Only those data objects are returned which are at least readable. Thus, the resu
     ?
     :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
+    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Notifications":
+    null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
@@ -117,7 +118,8 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Pub":null}
+    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Notifications":
+    null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 
@@ -182,24 +184,24 @@ Internally, the authentication function is implemented as an executable data obj
 
 After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
-## Published statements
+## Notifications
 
-Published statements are broadcast to all connected devices and no response is sent from devices receiving the message.
+Notifications are statements broadcast to all connected devices and no response is sent from devices receiving the message.
 
 **Example 1:** A statement containing the `mLive` subset, sent out by the device every 10 seconds
 
     #mLive {"t_s":460677600,"Bat":{"rVoltage_V":12.9,"rCurrent_A":-3.14},"Solar":{"rPower_W":96.5},"Load":{"rPower_W":137.0}}
 
-The `_Pub` path is used to configure the publication process itself.
+The `_Notifications` path is used to configure the publication process itself.
 
 **Example 2:** List all statements available for publication
 
-    ?_Pub null
+    ?_Notifications null
     :85 ["eState","mLive"]
 
 **Example 3:** Enable publication of `mLive` subset
 
-    =_Pub/mLive {"sEnable":true}
+    =_Notifications/mLive {"sEnable":true}
     :84
 
-If the published object is a subset object (and not a group), the data items contained in the messages can be configured using POST and DELETE requests to the data object as shown in the examples above.
+If the published object is a subset object (and not a group), the data items contained in the messages can be configured using CREATE and DELETE requests to the data object as shown in the examples above.

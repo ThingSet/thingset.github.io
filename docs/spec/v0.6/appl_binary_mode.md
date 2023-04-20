@@ -43,7 +43,7 @@ Responses in binary mode start with the error/status code as specified before, f
 
 ### Statement
 
-Binary publication messages follow the same concept as in text mode.
+Binary notifications follow the same concept as in text mode.
 
     bin-statement = %x1F endpoint cbor-map    ; map containing object IDs and values
 
@@ -349,9 +349,9 @@ Note that the endpoint is the object of the executable function itself. Data can
 
 Functions may return payload data, in which case the response is `0x85` followed by the content.
 
-## Published statements
+## Notifications
 
-In contrast to text mode, published statements in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
+In contrast to text mode, notifications in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
 **Example 1:** A statement containing the `mLive` subset, sent out by the device every 10 seconds
 
@@ -402,7 +402,7 @@ If the name of the object is supplied instead of the ID, paths are returned in t
           6E 536F6C61722F72506F7765725F57   # CBOR string: "Solar/rPower_W" (object path)
           6D 4C6F61642F72506F7765725F57     # CBOR string: "Load/rPower_W" (object path)
 
-If not all child nodes of one path fit into a single publication message (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) the statement can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
+If not all child nodes of one path fit into a single statement (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) it can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
 
 **Example 4:** A statement containing a part of the `mLive` subset.
 
