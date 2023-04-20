@@ -206,6 +206,7 @@ export default defineUserConfig<DefaultThemeOptions>({
           children: [
             'introduction',
             'existing_solutions',
+            'glossary',
           ]
         },{
           text: 'Application Layer',
