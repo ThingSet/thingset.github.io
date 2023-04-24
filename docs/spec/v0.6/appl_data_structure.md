@@ -48,11 +48,11 @@ Changes to write-able data items (prefix `w`) are only stored in RAM, so they ge
 
 Factory calibration data items are only accessible for the manufacturer after authentication. If the user should be able to reset a value (e.g. a min/max counter), the value would be prefixed with `p` for protected. It is up to the firmware developer how the value should be protected. It may also only be marked differently to a normal input value (`w`) in a user interface.
 
-Data prefixed with `o` can be thought of as tags for the other data in a statement. Most time-series databases allow filtering of datasets based on tags (also called labels). Be aware that the orthogonal data should be limited to a small set of different values to avoid [high-cardinality data](https://en.wikipedia.org/wiki/Cardinality_(SQL_statements)).
+Data prefixed with `o` can be thought of as tags for the other data in a report. Most time-series databases allow filtering of datasets based on tags (also called labels). Be aware that the orthogonal data should be limited to a small set of different values to avoid [high-cardinality data](https://en.wikipedia.org/wiki/Cardinality_(SQL_reports)).
 
 #### Subsets
 
-Subset items contain an array pointing at existing data items. They can be used to configure the content of notifications if data objects of different groups should be combined in a single message.
+Subset items contain an array pointing at existing data items. They can be used to configure the content of reporting if data objects of different groups should be combined in a single message.
 
 Three different types of subsets can be defined depending on their prefix.
 
@@ -201,7 +201,7 @@ The following example data structure of an MPPT solar charge controller will be 
     "mLive": [                                                      // 0x07
         "t_s", "Bat/rVoltage_V", "Solar/rPower_W", "Load/rPower_W"
     ],
-    "_Notifications": {                                             // 0x0F
+    "_Reporting": {                                             // 0x0F
         "eState": {                                                 // 0xF0
             "sEnable": true,                                        // 0xF1
             "cRateLimit_s": 1                                       // 0xF2
@@ -238,7 +238,7 @@ The following example data structure of an MPPT solar charge controller will be 
 }
 ```
 
-The `_Notifications` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
+The `_Reporting` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
 
 ### User interface processing
 

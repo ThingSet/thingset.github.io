@@ -34,7 +34,7 @@ const UUID_THINGSET_RESPONSE = "00000003-5a19-4887-9c6a-14ad27bfc06d";
 
 The request characteristic is used to send ThingSet requests from the central device to the peripheral. The peripheral uses the response characteristic to send notifications back to the central device.
 
-The response characteristic is also used to send send ThingSet statements autonomously from peripheral to central.
+The response characteristic is also used to send send ThingSet reports autonomously from peripheral to central.
 
 ## Example
 

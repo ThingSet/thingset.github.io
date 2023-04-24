@@ -4,7 +4,7 @@ In the binary mode, the data is encoded using the CBOR format. The data structur
 
 The length of the entire request or response is not encoded in the ThingSet protocol, but can be determined from the CBOR format. Packet length as well as checksums should be encoded in lower layer protocols. It is assumed that the parser always receives a complete request.
 
-The **target** of the binary mode is to work with as little payload data as possible. Hence, published statements only contain values and the corresponding IDs or names are only sent once at startup or can be requested manually later.
+The **target** of the binary mode is to work with as little payload data as possible. Hence, published reports only contain values and the corresponding IDs or names are only sent once at startup or can be requested manually later.
 
 The **main challenge** is to still be fully discoverable via the binary mode without requiring previous knowledge of the data exposed by the device.
 
@@ -41,11 +41,11 @@ Responses in binary mode start with the error/status code as specified before, f
                    ( node-id / %xF6 )     ; CBOR string with node ID or null
                    [ cbor-data ]
 
-### Statement
+### Report
 
-Binary notifications follow the same concept as in text mode.
+Binary reports follow the same concept as in text mode.
 
-    bin-statement = %x1F endpoint cbor-map    ; map containing object IDs and values
+    bin-report = %x1F endpoint cbor-map    ; map containing object IDs and values
 
 ## Name and ID mapping
 
@@ -349,11 +349,11 @@ Note that the endpoint is the object of the executable function itself. Data can
 
 Functions may return payload data, in which case the response is `0x85` followed by the content.
 
-## Notifications
+## Reporting
 
-In contrast to text mode, notifications in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
+In contrast to text mode, reporting in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
-**Example 1:** A statement containing the `mLive` subset, sent out by the device every 10 seconds
+**Example 1:** A report containing the `mLive` subset, sent out by the device every 10 seconds
 
     1F
        07                                   # CBOR uint: 0x07 (subset object ID)
@@ -366,7 +366,7 @@ In contrast to text mode, notifications in binary mode only contain the values a
 
 The corresponding IDs can be retrieved with a fetch request.
 
-**Example 2:** Retrieve corresponding IDs for a received statement.
+**Example 2:** Retrieve corresponding IDs for a received report.
 
     Request:
     05                                      # FETCH
@@ -385,7 +385,7 @@ The corresponding IDs can be retrieved with a fetch request.
 
 If the name of the object is supplied instead of the ID, paths are returned in the response.
 
-**Example 3:** Retrieve corresponding names for a received statement.
+**Example 3:** Retrieve corresponding names for a received report.
 
     Request:
     05                                      # FETCH
@@ -402,9 +402,9 @@ If the name of the object is supplied instead of the ID, paths are returned in t
           6E 536F6C61722F72506F7765725F57   # CBOR string: "Solar/rPower_W" (object path)
           6D 4C6F61642F72506F7765725F57     # CBOR string: "Load/rPower_W" (object path)
 
-If not all child nodes of one path fit into a single statement (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) it can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
+If not all child nodes of one path fit into a single report (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) it can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
 
-**Example 4:** A statement containing a part of the `mLive` subset.
+**Example 4:** A report containing a part of the `mLive` subset.
 
     1F
        00                                   # CBOR uint: 0x00 (root ID)

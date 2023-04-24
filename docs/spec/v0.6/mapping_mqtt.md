@@ -18,7 +18,7 @@ The basic MQTT topic layout for ThingSet follows the below structure:
 
     {message-type}/{node-id}/{details}
 
-The first part of the topic indicates the message type (request, response or statement) and mode (text or binary).
+The first part of the topic indicates the message type (request, response, desire or report) and mode (text or binary).
 
 The second part contains the node ID, followed by further details depending on the message type.
 
@@ -38,11 +38,11 @@ A user name is not part of the topic, as device claiming is usually part of the 
 
 :::
 
-## Statements
+## Reports and desires
 
-### Device to application
+### Reports
 
-Messages in text mode are published to the `report` path and the payload format must be the valid JSON data extracted from a ThingSet statement.
+Messages in text mode are published to the `report` path and the payload format must be the valid JSON data extracted from a ThingSet report.
 
 **JSON name:value map, QoS 0/1**
 
@@ -78,7 +78,7 @@ If possible, static data like firmware version should only be published once aft
 
 A gateway does not know which messages should have the retained flag, so the retained flags may only be suitable for cloud to device communication.
 
-### Application to device
+### Desires
 
 **JSON name:value map**
 
@@ -264,7 +264,7 @@ Dev    UART:txt     GW   MQTT:txt    Broker
 
 #### CAN (direct)
 
-- No mapping of IDs needed, as incoming statements are sent via ISO-TP and can have almost arbitrary length.
+- No mapping of IDs needed, as incoming reports are sent via ISO-TP and can have almost arbitrary length.
 
 ```
 Dev     CAN:txt      GW       MQTT:txt       Broker

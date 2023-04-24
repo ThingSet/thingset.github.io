@@ -44,17 +44,25 @@ The `json-value` contains the requested data (if any). For error responses, it c
 
     status-code = 2( DIGIT / %x41-46 )              ; two upper-case HEXDIGs
 
-### Statement
+### Report
 
-A statement starts with the hash sign and a path, followed by a whitespace and the map of actual payload data as name/value pairs.
+A report starts with the hash sign and a path, followed by a whitespace and the map of actual payload data as name/value pairs.
 
-    txt-statement = "#" [ path ] " " json-object
+    txt-report = "#" [ path ] " " json-object
 
 The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eState`).
 
+### Desire
+
+A desire starts with the at sign and a path, followed by a whitespace and the map of desired changes as name/value pairs.
+
+    txt-desire = "@" [ path ] " " json-object
+
+A desire is the same as an update request, just that no response is expected and data items not found are silently ignored.
+
 ### Absolute vs. relative paths
 
-If the path in requests and statements starts with a `/`, the path is absolute, which means that the first element in the path identifies the node ID. This is used by gateways or in general by services which can communicate with multiple ThingSet nodes.
+If the path in requests and reports starts with a `/`, the path is absolute, which means that the first element in the path identifies the node ID. This is used by gateways or in general by services which can communicate with multiple ThingSet nodes.
 
 ## Read data
 
@@ -71,7 +79,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
     ?
     :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Notifications":
+    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Reporting":
     null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
@@ -118,7 +126,7 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Notifications":
+    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Reporting":
     null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
@@ -184,24 +192,24 @@ Internally, the authentication function is implemented as an executable data obj
 
 After successful authentication, the device exposes previously restricted data objects via the normal data access requests. The authentication stays valid until another auth command is received, either without password or with a password that doesn't match.
 
-## Notifications
+## Reporting
 
-Notifications are statements broadcast to all connected devices and no response is sent from devices receiving the message.
+Reports broadcast to all connected nodes and no response is sent from nodes receiving the message.
 
-**Example 1:** A statement containing the `mLive` subset, sent out by the device every 10 seconds
+**Example 1:** A report containing the `mLive` subset, sent out by the node every 10 seconds
 
     #mLive {"t_s":460677600,"Bat":{"rVoltage_V":12.9,"rCurrent_A":-3.14},"Solar":{"rPower_W":96.5},"Load":{"rPower_W":137.0}}
 
-The `_Notifications` path is used to configure the publication process itself.
+The `_Reporting` path is used to configure the publication process itself.
 
-**Example 2:** List all statements available for publication
+**Example 2:** List all reports available for publication
 
-    ?_Notifications null
+    ?_Reporting null
     :85 ["eState","mLive"]
 
 **Example 3:** Enable publication of `mLive` subset
 
-    =_Notifications/mLive {"sEnable":true}
+    =_Reporting/mLive {"sEnable":true}
     :84
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using CREATE and DELETE requests to the data object as shown in the examples above.

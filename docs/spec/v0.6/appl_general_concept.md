@@ -10,16 +10,16 @@ A major feature of the ThingSet protocol is a seamless integration with other ap
 
 ## Message Types
 
-ThingSet defines three types of messages: Requests, responses and statements.
+ThingSet defines four types of messages: Requests, responses, desires and reports.
 
 A **request** is sent from one device (client) to a single other device (server). The server is expected to answer with a **response** containing a status code and optional payload.
 
-A **statement** is a message that is sent without expecting a response or confirmation. It may be sent to a particular device or broadcast through the network to be received by any interested device (publish-subscribe model). A published statement is called **notification**.
+A **report** is a message that is sent out by a node without expecting a response or confirmation. It may be sent to a particular device or broadcast through the network to be received by any interested device (publish-subscribe model).
 
-If a device receives a statement, it is considered a proposal to update the values as stated in the message. If all or some of the requested changes are invalid, they are silently ignored, as it is not possible to respond to a statement.
+A **desire** is a message that is sent to a node without expecting a response or confirmation. It is considered a proposal to update the values as stated in the message. If all or some of the requested changes are invalid, they are silently ignored, as it is not possible to respond to a desire.
 
 ::: tip Idea for evaluation
-After each update of a value via request/response, the device sends out a statement with the updated values. This ensures that also other devices are notified (statements are broadcast on the bus) and it allows to double-check if the value was correctly received or if it was e.g. rounded to the next possible value.
+After each update of a value via request/response, the device sends out a report with the updated values. This ensures that also other devices are notified (reports may be broadcast on the bus) and it allows to double-check if the value was correctly received or if it was e.g. rounded to the next possible value.
 :::
 
 ### Request-response model
@@ -38,9 +38,9 @@ The data transfer is always synchronous: The client sends a request and waits un
 
 ### Publish-subscribe model
 
-Monitoring data is not intended for only a single device, but could be interesting for several devices (e.g. data logger and display). Thus, the monitoring data can be exchanged via a publish-subscribe messaging pattern to increase efficiency and avoid polling.
+Monitoring data is not intended for only a single device, but could be interesting for several devices (e.g. data logger and display). Thus, the monitoring data can be exchanged via a publish-subscribe messaging pattern to increase efficiency and avoid polling. Reports are used for this purpose.
 
-In contrast to MQTT, published messages are directly broadcast and there is no intermediate broker to store the messages. Published messages are not confirmed by recipients, so there is no guarantee if the message was received.
+In contrast to MQTT, reports are directly broadcast and there is no intermediate broker to store the messages. Reports are not confirmed by recipients, so there is no guarantee if the message was received.
 
 This model is mainly used for machine-to-machine (M2M) communication, e.g. to store measurements in a database. One dedicated application is the plug-and-play control of multiple energy sources and sinks in a renewable energy system. The details of the implementation are currently still work-in-progress.
 

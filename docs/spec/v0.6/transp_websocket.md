@@ -26,7 +26,7 @@ Used by an application to establish a direct 1:1 connection to a node.
 
 Authentication can be achieved with HTTP basic auth.
 
-Multiple clients should be able to connect to the same node. They will all receive statements. In addition to that, statements are stored in the state DB.
+Multiple clients should be able to connect to the same node. They will all receive reports. In addition to that, reports are stored in the state DB.
 
 Requests and responses have to be multiplexed. After a request the node is locked by a mutex which is only released after the response has been received (or after a timeout).
 

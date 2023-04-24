@@ -1,7 +1,7 @@
 
 # Access Functions
 
-The first byte of a ThingSet message is either a text-mode identifier (`?`, `=`, `!`, `+`, `-`, `:` and `#`), a binary request code or a binary status code. Received data with unknown first byte is ignored, so that other text output (e.g. debug print information) can be used in parallel to the ThingSet protocol on the same serial interface.
+The first byte of a ThingSet message is either a text-mode identifier (`?`, `=`, `!`, `+`, `-`, `:`, `@` and `#`), a binary request code or a binary status code. Received data with unknown first byte is ignored, so that other text output (e.g. debug print information) can be used in parallel to the ThingSet protocol on the same serial interface.
 
 ### Requests
 
@@ -48,20 +48,21 @@ The status codes are again aligned with [CoAP response codes](https://www.iana.o
 
 Responses text mode use the colon `:` as the first byte identifier, followed by the hexadecimal response code converted into a string without the `0x` prefix. The binary mode uses the code directly as the first byte.
 
-### Statements
+### Desires and Reports
 
-Statements are neither requests nor response messages, as they are sent without expecting a confirmation. Below table lists the message specifier in text and binary mode.
+Desires and reports are neither requests nor response messages, as they are sent without expecting a confirmation. Below table lists the message specifiers in text and binary mode.
 
-| Code | Text ID | Description         |
-|------|---------|---------------------|
-| 0x1F | #       | Statement message   |
+| Code | Text ID | Description |
+|------|---------|-------------|
+| 0x1D | @       | Desire      |
+| 0x1F | #       | Report      |
 
-The internal path `_Notifications` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
+The internal path `_Reporting` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
 
-By convention, the object names below the `_Notifications` define which data object should be published. This can be an entire group like `Bat` or a subset data object that contains a list of references to other data items like `eChange` in the above example.
+By convention, the object names below the `_Reporting` define which data object should be published. This can be an entire group like `Bat` or a subset data object that contains a list of references to other data items like `eChange` in the above example.
 
 More details regarding the ThingSet protocol methods for data access will be explained in the next chapter.
 
 ::: tip Idea for evaluation
-Publication of a statement can be manually triggered by sending the statement with empty payload to that device.
+Publication of a report can be manually triggered by sending a desire with empty payload to the same path of that node.
 :::

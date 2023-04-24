@@ -8,10 +8,6 @@ A node in a tree-like data structure identified by a name and a unique ID (compa
 
 A data object where the value contains actual data and no further layers of objects. It is a leaf node of the data object tree.
 
-### Statement
-
-A message containing data items as key/value pairs. The key can be the name or the data object ID.
-
 ### Group
 
 A category of data objects belonging together, forming the data hierarchy.
@@ -20,7 +16,7 @@ A category of data objects belonging together, forming the data hierarchy.
 
 A collection of pointers to actual data items. The data items may be in different groups.
 
-Subsets can be used for flexibe configuration of notifications.
+Subsets can be used for flexibe configuration of reporting.
 
 ### Request
 
@@ -30,13 +26,17 @@ A ThingSet message sent from a client to a ThingSet node.
 
 The message sent back from the node to the client that sent the request.
 
-### Statement
+### Desire
 
-A message sent out by the client in a regular interval or upon occurence of an event.
+A message sent to the node with desired changes for data items. In contrast to a patch request, the node does not answer with a response.
+
+### Report
+
+A message sent out by the node in a regular interval or upon occurence of an event.
 
 ### Native Transports
 
-Protocol that directly transports ThingSet requests, responses and statements.
+Protocol that directly transports ThingSet requests, responses and reports.
 
 Protocol must support all features of ThingSet and can be used for gateways.
 
