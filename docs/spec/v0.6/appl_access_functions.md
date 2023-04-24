@@ -24,7 +24,7 @@ Additional request codes may be introduced in the future. Codes `0x0A`, `0x0D` a
 
 Response messages in binary format are identified by a first byte greater than or equal to 128 (`0x80`) containing a status code which shows if the request could be handled successfully. For status codes between `0x80` and `0x9F`, the response was successful. If the status code is greater than or equal to `0xA0`, an error occured.
 
-The status codes are again aligned with CoAP response codes, but contain an offset so that there is no interference with ASCII characters (less than 0x80).
+The status codes are again aligned with [CoAP response codes](https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#codes), but contain an offset so that there is no interference with ASCII characters (less than 0x80).
 
 | Code | CoAP | HTTP | Description   | Comment                                |
 |------|------|------|---------------|----------------------------------------|
@@ -41,11 +41,12 @@ The status codes are again aligned with CoAP response codes, but contain an offs
 | 0xA9 | 4.09 | 409  | Conflict                   | Configuration conflicts with other settings |
 | 0xAD | 4.13 | 413  | Request Entity Too Large   | |
 | 0xAF | 4.15 | 415  | Unsupported Content-Format | If trying to assign a string to an int |
-| 0xC0 | 5.00 | 500  | Internal Server Error      | |
-| 0xC1 | 5.01 | 501  | Not Implemented            | |
-| 0xC3 | 5.03 | 503  | Service Unavailable        | If a device cannot be reached |
+| 0xC0 | 5.00 | 500  | Internal Server Error      | Generic catch-all response |
+| 0xC1 | 5.01 | 501  | Not Implemented            | Request method is not supported |
+| 0xC4 | 5.04 | 504  | Gateway Timeout            | Node cannot be reached through gateway |
+| 0xC5 | 5.05 | 505  | Not a Gateway              | Node is not a gateway and does not support absolute paths |
 
-The text mode converts the the hexadecimal response code into a string without the `0x` prefix. The binary mode uses the code directly as the first byte.
+Responses text mode use the colon `:` as the first byte identifier, followed by the hexadecimal response code converted into a string without the `0x` prefix. The binary mode uses the code directly as the first byte.
 
 ### Statements
 
