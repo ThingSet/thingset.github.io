@@ -10,19 +10,19 @@ Each request message consists of a first character as the request method identif
 
     txt-request = txt-get / txt-fetch / txt-update / txt-create / txt-delete / txt-exec
 
-    txt-get    = "?" [ path ]
+    txt-get    = "?" path
 
-    txt-fetch  = "?" [ path ] " " ( json-array / json-null )
+    txt-fetch  = "?" path " " ( json-array / json-null )
 
-    txt-update = "=" [ path ] " " json-object
+    txt-update = "=" path " " json-object
 
-    txt-create = "+" [ path ] " " json-value
+    txt-create = "+" path " " json-value
 
-    txt-delete = "-" [ path ] [ " " json-value ]
+    txt-delete = "-" path [ " " json-value ]
 
-    txt-exec   = "!" [ path ] [ " " json-value ]
+    txt-exec   = "!" path [ " " json-value ]
 
-    path = relative-path / absolute-path
+    path = relative-path / absolute-path / ""
 
     relative-path = object-name *( "/" object-name )
 
@@ -48,7 +48,7 @@ The `json-value` contains the requested data (if any). For error responses, it c
 
 A report starts with the hash sign and a path, followed by a whitespace and the map of actual payload data as name/value pairs.
 
-    txt-report = "#" [ path ] " " json-object
+    txt-report = "#" path " " json-object
 
 The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eState`).
 
@@ -56,7 +56,7 @@ The path is either a group (e.g. `Device`) or a subset object containing referen
 
 A desire starts with the at sign and a path, followed by a whitespace and the map of desired changes as name/value pairs.
 
-    txt-desire = "@" [ path ] " " json-object
+    txt-desire = "@" path " " json-object
 
 A desire is the same as an update request, just that no response is expected and data items not found are silently ignored.
 
