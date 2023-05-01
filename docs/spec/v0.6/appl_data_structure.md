@@ -11,7 +11,7 @@ Actual data is stored in leaf nodes, called **data items**. The data items can c
 
 Each data object in the tree is identified by a numeric ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters and underscores without any whitespace characters.
 
-An underscore as the first character is used to identify paths which are used internally by the protocol itself (e.g. configuration of publication messages).
+An underscore as the first character is used to identify so-called **overlays** which are used to store additional information for original data objects, e.g. metadata, min/max values or configuration of notifications.
 
 If used in the middle of the name, an underscore separates the description of the item and the unit (also see below). No additional underscores are allowed in the name.
 
@@ -56,11 +56,11 @@ Subset items contain an array pointing at existing data items. They can be used 
 
 Three different types of subsets can be defined depending on their prefix.
 
-| Prefix | TSDB  | Description                                                 |
-|--------|-------|-------------------------------------------------------------|
-| a      | no    | attribute subset (only published on request)                |
-| e      | maybe | event subset (only published if changed/updated)            |
-| m      | yes   | metrics subset (published in regular time intervals)        |
+| Prefix | TSDB  | Description                                                         |
+|--------|-------|---------------------------------------------------------------------|
+| a      | no    | attribute subset (only published on request or once during startup) |
+| e      | maybe | event subset (only published if changed/updated)                    |
+| m      | yes   | metrics subset (published in regular time intervals)                |
 
 The subset names can consist only of the prefix. If only one subset for metrics is required, the name can be `m`.
 
@@ -200,47 +200,11 @@ The following example data structure of an MPPT solar charge controller will be 
     "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
     "mLive": [                                                      // 0x07
         "t_s", "Bat/rVoltage_V", "Solar/rPower_W", "Load/rPower_W"
-    ],
-    "_Reporting": {                                             // 0x0F
-        "eState": {                                                 // 0xF0
-            "sEnable": true,                                        // 0xF1
-            "cRateLimit_s": 1                                       // 0xF2
-        },
-        "mLive": {                                                  // 0xF3
-            "sEnable": false,                                       // 0xF4
-            "sPeriod_s": 10                                         // 0xF5
-        },
-        "Log": {                                                    // 0xF6
-            "sMaxLevel": 3,                                         // 0xF7
-            "sRateLimit_Hz": 1                                      // 0xF8
-        }
-    },
-    "_Ids": {                                                       // 0x16 (fixed)
-        "Device": 0,
-        "Bat": 2,
-        // ...
-        "Bat/rVoltage_V": 64,
-        // ...
-        "ErrorMemory/t_s": 112,
-        "ErrorMemory/ErrorFlags": 113
-        // ...
-    },
-    "_Paths": {                                                     // 0x17 (fixed)
-        "0x01": "Device",
-        "0x02": "Bat",
-        // ...
-        "0x40": "Bat/rVoltage_V",
-        // ...
-        "0x70": "ErrorMemory/t_s",
-        "0x71": "ErrorMemory/ErrorFlags",
-        // ...
-    }
+    ]
 }
 ```
 
-The `_Reporting` path is used to configure the automatic publication of messages, so it doesn't hold normal data objects. Such internal objects are prefixed with a `_`, similar to private functions in some programming languages.
-
-### User interface processing
+## User interface processing
 
 One major goal of ThingSet is that the data model provides sufficient semantic information to build simple user interfaces to interact with the device and read/update the data.
 
@@ -248,7 +212,7 @@ For the user interface, item prefixes can be used to display the data in a diffe
 
 The prefixes themselves should be omitted in the user interface and single words of object names can be split. Also, units should be parsed such that the actual unit is displayed and not an equivalent like `degC` for `°C`.
 
-Below structure gives an example of the processed user interface structure for above data. Instead of pure text, this structure could be easily rendered in a web page or phone app.
+Below structure gives an example of the processed user interface structure for most parts of above data. Instead of pure text, this structure could be easily rendered in a web page or phone app.
 
 ```
                        ThingSet Node XYZ12345 Data Objecs
@@ -276,26 +240,17 @@ Below structure gives an example of the processed user interface structure for a
         │  ├─ Throughput                                       1789 kWh
         │  └─ Enable                                                [x]
         │
-        └─ Notificatons
-           │
-           ├─ Boot Events
-           │  └─ Items                               [ Add ] [ Delete ]
-           │     ├─ Metadata URL
-           │     └─ Device Firmware Version
-           │
-           ├─ State Events
-           │  ├─ Enable                                             [x]
-           │  ├─ Rate Limit                                     | 1 | s
-           │  └─ Items                               [ Add ] [ Delete ]
-           │     ├─ Time (s)
-           │     └─ Device Error Flags
-           │
-           └─ Live Metrics
-              ├─ Enable                                             [ ]
-              ├─ Period                                        | 10 | s
-              └─ Items                               [ Add ] [ Delete ]
-                 ├─ Time (s)
-                 ├─ Bat Voltage (V)
-                 ├─ Solar Power (W)
-                 └─ Load Power (W)
+        ├─ Boot Events
+        │  ├─ Metadata URL
+        │  └─ Device Firmware Version
+        │
+        ├─ State Events                              [ Add ] [ Delete ]
+        │  ├─ Time (s)
+        │  └─ Device Error Flags
+        │
+        └─ Live Metrics                              [ Add ] [ Delete ]
+           ├─ Time (s)
+           ├─ Bat Voltage (V)
+           ├─ Solar Power (W)
+           └─ Load Power (W)
 ```

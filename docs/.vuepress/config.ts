@@ -213,6 +213,7 @@ export default defineUserConfig<DefaultThemeOptions>({
           children: [
             'appl_general_concept',
             'appl_data_structure',
+            'appl_data_overlays',
             'appl_access_functions',
             'appl_text_mode',
             'appl_binary_mode',
