@@ -10,21 +10,28 @@ The serial interface can be a hardware UART interface directly with a microcontr
 
 As serial communication to a microcontroller via UART does not provide any error checking, a CRC checksum is appended to each message in the text mode.
 
-The following extensions for the grammar as described in [Text Mode chapter](2b_text_mode.md) are used:
+The following extensions for the grammar as described in [Text Mode chapter](appl_text_mode.md) are used:
 
-    thingset-msg  = ( request / response / pub-msg )
+    thingset-msg  = ( txt-request / txt-response / txt-report / txt-desire )
 
     thingset-uart = thingset-msg end
 
     end = [ " " checksum ] [ CR ] LF
 
-    checksum = 8( hex )                         ; CRC-32, hex always upper case
+    checksum = 8( DIGIT / %x41-46 )      ; CRC-32 as HEXDIGs (always upper case)
 
 The CRC checksum is calculated over the entire thingset-msg as defined above. The same CRC-32 polynom 0x04C11DB7 as for [Ethernet and many other protocols](https://en.wikipedia.org/wiki/Cyclic_redundancy_check) is used.
 
 The CRC is optional so that it is still possible to interact with the device by humans using a terminal. However, the device should always calculate the CRC and in case of M2M communication, the client should check the CRC and also provide a CRC for requests to increase reliability.
 
-The baudrate of the serial interface is fixed to 115200 bps.
+The following UART settings must be used:
+
+- Baudrate: `115200 bps`
+- Data bits: `8`
+- Parity: `None`
+- Stop bits: `1`
+
+No parity bit is used, as parity bits don't help to detect missed characters, which is a common failure mode in embedded systems with small buffers. The CRC detects missed and wrong characters.
 
 ::: warning
 The binary protocol mode is curently not supported via simple serial interfaces, as it would require some way to determine the end of a message.
