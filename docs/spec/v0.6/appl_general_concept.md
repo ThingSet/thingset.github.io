@@ -50,7 +50,7 @@ Similar to Modbus, the ThingSet protocol supports two different modes: A human-r
 
 In the text mode, payload data is encoded in JSON format ([RFC 8259](https://tools.ietf.org/html/rfc8259)). This mode is recommended when using serial communication interfaces as the low layer protocol, as it can be easily used directly on a terminal.
 
-The binary mode uses CBOR ([RFC 7049](https://tools.ietf.org/html/rfc7049)) instead of JSON for payload data encoding in order to reduce the protocol overhead for ressource-constrained devices or low bandwith communication via CAN or LoRa.
+The binary mode uses CBOR ([RFC 8949](https://tools.ietf.org/html/rfc8949)) instead of JSON for payload data encoding in order to reduce the protocol overhead for ressource-constrained devices or low bandwith communication via CAN or LoRa.
 
 A device may implement both variants of the protocol, but it is also allowed to support only the mode most suitable for the application.
 
