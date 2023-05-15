@@ -1,33 +1,34 @@
+---
+title: "Structure"
+---
 
 # Data Structure
 
-All accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The nodes in the tree structure are called **data objects** and correspond to the JSON object definition.
+The accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The data can be accessed using the protocol functions described in [separate chapter](../protocol/functions.md). This chapter will only explain the device data structure itself.
 
-Inner nodes in the structure are used to define the hierarchical structure of the data.
+## Hierarchy
 
-Actual data is stored in leaf nodes, called **data items**. The data items can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information.
+All nodes in the tree structure are called **data objects** and correspond to the JSON object definition.
 
-## Names and IDs
+Inner nodes in the structure, called **groups**, are used to define the hierarchy of the data.
 
-Each data object in the tree is identified by a numeric ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters and underscores without any whitespace characters.
+Actual data is stored in leaf nodes, called **data items**. The data items can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information. Data items can contain simple values (numbers, strings and booleans) or arrays of simple values.
 
-An underscore as the first character is used to identify so-called **overlays** which are sections of data used to store additional information for original data objects, e.g. metadata, min/max values or configuration of report intervals.
+**Subsets** and **records** are special kinds of arrays arrays explained further down below.
+
+## Naming Conventions
+
+The name of a data object is a short case-sensitive ASCII string containing only alphanumeric characters and underscores without any whitespace characters.
+
+An underscore as the first character is used to identify [overlays](overlays.md), which are sections of data used to store additional information for original data objects, e.g. metadata, min/max values or configuration of report intervals.
 
 If used in the middle of an item name, an underscore separates the description of the item and the unit (also see below). No additional underscores are allowed in the name.
 
-By convention, data items (leaf nodes) use [lower camel case](https://en.wikipedia.org/wiki/Camel_case) for their names where the first character is a prefix as defined below. Inner objects to define the hierachy of the data as well as records (see below) use upper camel case names.
+By convention, data items (leaf nodes) use [lower camel case](https://en.wikipedia.org/wiki/Camel_case) for their names where the first character is a prefix as defined below. Groups as well as records use upper camel case names.
 
-The IDs must be unique per device. However, there may be multiple data items with the same name if they are located in different paths in the data hierarchy.
-
-The IDs are used to access data objects in the binary protocol mode for reduced message size. They can also be used in the firmware to define the relations in the data structure. For all interactions with users and in the text-based mode, only the object names and paths are used.
-
-Data object IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
-
-### Item type prefixes
+### Data Items
 
 Each data item is prefixed with a single character to identify its type according to below tables.
-
-#### Normal items
 
 | Prefix | Read  | Write | TSDB  | Description                                                 |
 |--------|-------|-------|-------|-------------------------------------------------------------|
@@ -42,27 +43,11 @@ Each data item is prefixed with a single character to identify its type accordin
 
 The TSDB column marks types which are suitable for storage in a time-series database (TSDB) because they may change dynamically over time (typically measurements or states). The other types are used for more static data like configuration values.
 
-The functions to read, write and execute a data item will be explained in the next chapter.
-
 Changes to write-able data items (prefix `w`) are only stored in RAM, so they get lost after a reset of the device. In contrast to that, stored data (prefix `s`) is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
 
-Factory calibration data items are only accessible for the manufacturer after authentication. If the user should be able to reset a value (e.g. a min/max counter), the value would be prefixed with `p` for protected. It is up to the firmware developer how the value should be protected. It may also only be marked differently to a normal input value (`w`) in a user interface.
+Factory calibration data items are only accessible for the manufacturer after authentication. Authentication can be implemented through ThingSet or other means. If the user should be able to reset a value (e.g. a min/max counter), the value would be prefixed with `p` for protected. It is up to the firmware developer how the value should be protected. It may also only be marked differently to a normal input value (`w`) in a user interface.
 
 Data prefixed with `o` can be thought of as tags for the other data in a report. Most time-series databases allow filtering of datasets based on tags (also called labels). Be aware that the orthogonal data should be limited to a small set of different values to avoid [high-cardinality data](https://en.wikipedia.org/wiki/Cardinality_(SQL_reports)).
-
-#### Subsets
-
-Subset items contain an array pointing at existing data items. They can be used to configure the content of reports if data objects of different groups should be combined in a single message.
-
-Three different types of subsets can be defined depending on their prefix.
-
-| Prefix | TSDB  | Description                                                         |
-|--------|-------|---------------------------------------------------------------------|
-| a      | no    | attribute subset (only published on request or once during startup) |
-| e      | maybe | event subset (only published if changed/updated)                    |
-| m      | yes   | metrics subset (published in regular time intervals)                |
-
-If the subsets are editable, they must have a trailing underscore in their name (similar to editable records, see below). Updates to the subsets are expected to be stored in non-volatile memory.
 
 #### Executable items and parameters
 
@@ -83,28 +68,9 @@ The data types of function parameters for executable items cannot be determined,
 | b      | binary data (base-64 encoded)                 |
 | u      | utf8-string                                   |
 
-#### Records
+#### Units
 
-It is not always feasible to statically assign IDs for all data items at compile-time:
-
-- Where the data follows a pattern but the size of the pattern is not known in advance, e.g. logged error events, a modular system of N modules, or a multi-channel sensor/ADC input where each channel has the same configuration structure.
-- If a device is trying to expose data from one or more connected devices (i.e. a protocol bridge)
-
-Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0). Only entire records can be addressed through the binary protocol. It is not possible to read or change individual items which are part of a record.
-
-The same items in different records share their IDs. This allows to use IDs instead of names in the binary protocol, but only the class/type of items has to be known in advance, not the number of items.
-
-It is not required that all records of one data object have the same data structure. However, using the same `struct` for all records would be most easy to implement for lower-level languages like C.
-
-Data objects to store records don't have a prefix. Their name is similar to a group. The difference is that records are wrapped in an array of arbitrary length and not directly stored as key/value pairs in a JSON object.
-
-If records are alterable (e.g. data can be added or deleted), the maximum number of entries is appended instead of a unit (e.g. `Log_20` for max. 20 log entries). If the length is not fixed, but depends on the available RAM, only the underscore is appended, e.g. `Log_`.
-
-If alterable, record item updates are expected to be stored in non-volatile memory.
-
-### Units
-
-The unit is appended to the data item name using an underscore.
+The unit of a data item is part of its name and separated by an underscore.
 
 Only [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and derived units (e.g. kWh for energy instead of Ws) should be used.
 
@@ -112,12 +78,46 @@ Some special characters have to be replaced according to the following table in 
 
 | Character | Replacement | Example                                       |
 |-----------|-------------|-----------------------------------------------|
-| °         | deg         | "rAmbient_degC" for ambient temperature in °C |
-| %         | pct         | "rRelHumidity_pct" for relative humidity in % |
-| /         | _           | "rVeh_m_s" for vehicle speed in m/s           |
-| ^         | (omitted)   | "cSurface_m2" for surface area in m^2         |
+| °         | `deg`       | `rAmbient_degC` for ambient temperature in °C |
+| %         | `pct`       | `rRelHumidity_pct` for relative humidity in % |
+| /         | `_`         | `rVeh_m_s` for vehicle speed in m/s           |
+| ^         | (omitted)   | `cSurface_m2` for surface area in m^2         |
 
 See also the [Open Manufacturing Platform Semantic Data Model](https://openmanufacturingplatform.github.io/sds-bamm-aspect-meta-model/bamm-specification/2.0.0-M1/appendix/appendix.html#unit-catalog) for a list of common units and physical quantities.
+
+#### Subsets
+
+Three different types of subsets can be defined depending on their prefix.
+
+| Prefix | TSDB  | Description                                                         |
+|--------|-------|---------------------------------------------------------------------|
+| a      | no    | attribute subset (only published on request or once during startup) |
+| e      | maybe | event subset (only published if changed/updated)                    |
+| m      | yes   | metrics subset (published in regular time intervals)                |
+
+If the subsets are editable, they must have a trailing underscore in their name (similar to editable records, see below). Updates to the subsets are expected to be stored in non-volatile memory.
+
+### Records
+
+Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0).
+
+It is not required that all records of one data object have the same data structure. However, using the same `struct` for all records would be most easy to implement for lower-level languages like C.
+
+The root records data object doesn't have a prefix. Its name is similar to a group. The difference is that records are wrapped in an array of arbitrary length and not directly stored as key/value pairs in a JSON object.
+
+If records are alterable (e.g. data can be added or deleted), the maximum number of entries is appended instead of a unit (e.g. `Log_20` for max. 20 log entries). If the length is not fixed, but depends on the available RAM, only the underscore is appended, e.g. `Log_`.
+
+If alterable, record item updates are expected to be stored in non-volatile memory.
+
+## Data Object IDs
+
+Each data object in the tree is identified by a numeric ID in addition to its name. The ID can be chosen by the firmware developer.
+
+The IDs must be unique per device. However, there may be multiple data items with the same name if they are located in different paths in the data hierarchy.
+
+The IDs are used to access data objects in the binary protocol mode for reduced message size. They can also be used in the firmware to define the relations in the data structure. For all interactions with users and in the text-based mode, only the object names and paths are used.
+
+Data object IDs are stored as unsigned integers. The firmware developer should assign the lowest IDs to the most used data objects, as they consume less bytes during transfer (see CBOR representation of unsigned integers).
 
 ### Reserved IDs
 
@@ -125,17 +125,21 @@ The IDs 0x00 and 0x10-0x1F are reserved for special data objects that need to be
 
 The following table shows the assigned IDs. Currently unassigned IDs might be defined in a future version of the protocol.
 
-| ID   | Name         | Description                                                            |
-|------|--------------|------------------------------------------------------------------------|
-| 0x00 |              | Root object of a device                                                |
-| 0x10 | t_s          | Unix timestamp in seconds since Jan 01, 1970                           |
-| 0x16 | _Ids         | Endpoint used by binary protocol to determine IDs from paths           |
-| 0x17 | _Paths       | Endpoint used by binary protocol to determine paths from IDs           |
-| 0x18 | cMetadataURL | URL to JSON file containing extended information about exposed data    |
-| 0x1D | cNodeID      | Alphanumeric string (without spaces) to identify the device/node (should be unique per manufacturer, typical length 8 characters) |
-| >=0x8000 | ...      | Control data objects with fixed IDs                                    |
+| ID   | Name           | Description                                                            |
+|------|----------------|------------------------------------------------------------------------|
+| 0x00 |                | Root object of a device                                                |
+| 0x10 | `t_s`          | Unix timestamp in seconds since Jan 01, 1970                           |
+| 0x16 | `_Ids`         | Endpoint used by binary protocol to determine IDs from paths           |
+| 0x17 | `_Paths`       | Endpoint used by binary protocol to determine paths from IDs           |
+| 0x18 | `cMetadataURL` | URL to JSON file containing extended information about exposed data    |
+| 0x1D | `cNodeID`      | Alphanumeric string (without spaces) to identify the device/node (should be unique per manufacturer, typical length 8 characters) |
+| >=0x8000 | ...        | Control data objects with fixed IDs                                    |
 
 The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `cMetadataURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
+
+### IDs in records
+
+The same items in different records share their IDs. This allows to use IDs instead of names in the binary protocol, but only the class/type of items has to be known in advance, not the number of items.
 
 ## Example Data
 
@@ -208,7 +212,7 @@ The following example data structure of an MPPT solar charge controller will be 
 }
 ```
 
-## User interface processing
+## UI Processing
 
 One major goal of ThingSet is that the data model provides sufficient semantic information to build simple user interfaces to interact with the device and read/update the data.
 

@@ -1,3 +1,7 @@
+---
+title: "Overlays"
+---
+
 # Data Overlays
 
 The concept of overlays is used to separate actual data from additional related information in order to minimize the amount of data frequently transferred over the wire.
