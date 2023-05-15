@@ -134,6 +134,13 @@ If a device is not able to return the content of all records directly, it must r
     ?/ null
     :85/ ["ABCD1234","XYZ12345"]
 
+If the node is not a gateway, requests with with absolute paths (starting with `?/`) are answered with error code `C5`.
+
+    ?/ null
+    :C5
+
+To access the gateway node itself, use a relative path. The list command ?/ MUST show all downstream nodes including the gateway node (if it's not a simple forwarding gateway that does not have own state).
+
 ## Update data
 
 The UPDATE request attempts to overwrite the values of data items.
