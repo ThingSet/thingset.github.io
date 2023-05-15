@@ -217,6 +217,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         },{
           text: 'Protocol',
           children: [
+            '../protocol/connectivity',
             '../protocol/functions',
             '../protocol/text_mode',
             '../protocol/binary_mode',
