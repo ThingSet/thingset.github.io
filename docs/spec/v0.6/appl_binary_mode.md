@@ -220,9 +220,9 @@ For fetching multiple data items, the IDs are provided in the array as the secon
           FA 414E6666                       # CBOR float: 12.9
           FA C048F5C3                       # CBOR float: -3.14
 
-**Example 8:** Retrieve number of records in `ErrorMemory`
+**Example 8:** Retrieve number of records in `ErrorMemory_100`
 
-If the endpoint is an array of records, fetching `undefined` for discovery returns the number of elements in the array (i.e. number of records) instead of the names or IDs as in case of groups as endpoint.
+If the endpoint is an array of records, fetching `null` for discovery returns the number of elements in the array (i.e. number of records) instead of the names or IDs as in case of groups as endpoint.
 
     Request:
     05                                      # FETCH
@@ -234,7 +234,7 @@ If the endpoint is an array of records, fetching `undefined` for discovery retur
        F6                                   # CBOR null (direct connection)
        02                                   # CBOR uint: 0x02 (2 elements)
 
-**Example 9:** Retrieve first record in `ErrorMemory`
+**Example 9:** Retrieve first record in `ErrorMemory_100`
 
 Records are always returned as key/value maps, similar to GET requests for groups.
 
@@ -252,7 +252,7 @@ Records are always returned as key/value maps, similar to GET requests for group
           18 71                             # CBOR uint: 0x71 (object ID)
           19 0100                           # CBOR uint: 256
 
-**Example 10:** Attempt to retrieve a single item from a record in `ErrorMemory`
+**Example 10:** Attempt to retrieve a single item from a record in `ErrorMemory_100`
 
 As there can be multiple instances of the same record sharing the same IDs for their items, it's not possible to query a record item by ID.
 
@@ -304,7 +304,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
 
 Appends new data to a data object in a similar way as in the text mode.
 
-**Example 1:** Add item with ID `0x41` (`Bat/rCurrent_A`) to the generic metrics subset `mLive`
+**Example 1:** Add item with ID `0x41` (`Bat/rCurrent_A`) to the live metrics subset `mLive_`
 
     Request:
     06                                      # CREATE
@@ -353,7 +353,7 @@ Functions may return payload data, in which case the response is `0x85` followed
 
 In contrast to text mode, reporting in binary mode only contain the values and not the corresponding names or IDs in order to reduce payload data as much as possible.
 
-**Example 1:** A report containing the `mLive` subset, sent out by the device every 10 seconds
+**Example 1:** A report containing the `mLive_` subset, sent out by the device every 10 seconds
 
     1F
        07                                   # CBOR uint: 0x07 (subset object ID)
@@ -389,7 +389,7 @@ If the name of the object is supplied instead of the ID, paths are returned in t
 
     Request:
     05                                      # FETCH
-       65 6D4C697665                        # CBOR string: "mLive" (object path)
+       66 6D4C6976655F                      # CBOR string: "mLive_" (object path)
        F6                                   # CBOR null for discovery
 
     Response:
@@ -404,7 +404,7 @@ If the name of the object is supplied instead of the ID, paths are returned in t
 
 If not all child nodes of one path fit into a single report (e.g. because the sizes of CAN and LoRa frames are limited to a few tens of bytes) it can be split. However, in this case the payload must contain the IDs together with the values, as otherwise the values cannot be mapped to the IDs anymore. The endpoint must be the root ID `0x00`.
 
-**Example 4:** A report containing a part of the `mLive` subset.
+**Example 4:** A report containing a part of the `mLive_` subset.
 
     1F
        00                                   # CBOR uint: 0x00 (root ID)

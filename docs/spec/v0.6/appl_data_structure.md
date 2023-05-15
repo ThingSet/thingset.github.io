@@ -11,11 +11,11 @@ Actual data is stored in leaf nodes, called **data items**. The data items can c
 
 Each data object in the tree is identified by a numeric ID and a name. The ID can be chosen by the firmware developer. The name is a short case-sensitive ASCII string containing only alphanumeric characters and underscores without any whitespace characters.
 
-An underscore as the first character is used to identify so-called **overlays** which are used to store additional information for original data objects, e.g. metadata, min/max values or configuration of notifications.
+An underscore as the first character is used to identify so-called **overlays** which are sections of data used to store additional information for original data objects, e.g. metadata, min/max values or configuration of report intervals.
 
-If used in the middle of the name, an underscore separates the description of the item and the unit (also see below). No additional underscores are allowed in the name.
+If used in the middle of an item name, an underscore separates the description of the item and the unit (also see below). No additional underscores are allowed in the name.
 
-By convention, data items (leaf nodes) use [lower camel case](https://en.wikipedia.org/wiki/Camel_case) for their names where the first character is a prefix as defined below. Inner objects to define a path use upper camel case names.
+By convention, data items (leaf nodes) use [lower camel case](https://en.wikipedia.org/wiki/Camel_case) for their names where the first character is a prefix as defined below. Inner objects to define the hierachy of the data as well as records (see below) use upper camel case names.
 
 The IDs must be unique per device. However, there may be multiple data items with the same name if they are located in different paths in the data hierarchy.
 
@@ -52,7 +52,7 @@ Data prefixed with `o` can be thought of as tags for the other data in a report.
 
 #### Subsets
 
-Subset items contain an array pointing at existing data items. They can be used to configure the content of reporting if data objects of different groups should be combined in a single message.
+Subset items contain an array pointing at existing data items. They can be used to configure the content of reports if data objects of different groups should be combined in a single message.
 
 Three different types of subsets can be defined depending on their prefix.
 
@@ -62,7 +62,7 @@ Three different types of subsets can be defined depending on their prefix.
 | e      | maybe | event subset (only published if changed/updated)                    |
 | m      | yes   | metrics subset (published in regular time intervals)                |
 
-The subset names can consist only of the prefix. If only one subset for metrics is required, the name can be `m`.
+If the subsets are editable, they must have a trailing underscore in their name (similar to editable records, see below). Updates to the subsets are expected to be stored in non-volatile memory.
 
 #### Executable items and parameters
 
@@ -90,13 +90,17 @@ It is not always feasible to statically assign IDs for all data items at compile
 - Where the data follows a pattern but the size of the pattern is not known in advance, e.g. logged error events, a modular system of N modules, or a multi-channel sensor/ADC input where each channel has the same configuration structure.
 - If a device is trying to expose data from one or more connected devices (i.e. a protocol bridge)
 
-Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0). Only entire records can be addressed. It is not possible to read or change individual items which are part of a record.
+Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0). Only entire records can be addressed through the binary protocol. It is not possible to read or change individual items which are part of a record.
 
 The same items in different records share their IDs. This allows to use IDs instead of names in the binary protocol, but only the class/type of items has to be known in advance, not the number of items.
 
 It is not required that all records of one data object have the same data structure. However, using the same `struct` for all records would be most easy to implement for lower-level languages like C.
 
 Data objects to store records don't have a prefix. Their name is similar to a group. The difference is that records are wrapped in an array of arbitrary length and not directly stored as key/value pairs in a JSON object.
+
+If records are alterable (e.g. data can be added or deleted), the maximum number of entries is appended instead of a unit (e.g. `Log_20` for max. 20 log entries). If the length is not fixed, but depends on the available RAM, only the underscore is appended, e.g. `Log_`.
+
+If alterable, record item updates are expected to be stored in non-volatile memory.
 
 ### Units
 
@@ -182,7 +186,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "rPower_W": 137.0,                                          // 0x61
         "pThroughput_kWh": 1789                                     // 0x62
     },
-    "ErrorMemory": [                                                // 0x08
+    "ErrorMemory_100": [                                            // 0x08
         {                                                           // #0
             "t_s": 460677000,                                       // 0x70 (shared)
             "rErrorFlags": 4                                        // 0x71 (shared)
@@ -196,9 +200,9 @@ The following example data structure of an MPPT solar charge controller will be 
         "oModule": "charge_controller",                             // 0x91
         "rMessage": "Load overcurrent: 23 A",                       // 0x92
     },
-    "eBoot": ["cMetadataURL", "Device/cFirmwareCommit"],            // 0x05
+    "eBoot_": ["cMetadataURL", "Device/cFirmwareCommit"],           // 0x05
     "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
-    "mLive": [                                                      // 0x07
+    "mLive_": [                                                     // 0x07
         "t_s", "Bat/rVoltage_V", "Solar/rPower_W", "Load/rPower_W"
     ]
 }
@@ -240,11 +244,11 @@ Below structure gives an example of the processed user interface structure for m
         │  ├─ Throughput                                       1789 kWh
         │  └─ Enable                                                [x]
         │
-        ├─ Boot Events
+        ├─ Boot Events                               [ Add ] [ Delete ]
         │  ├─ Metadata URL
         │  └─ Device Firmware Version
         │
-        ├─ State Events                              [ Add ] [ Delete ]
+        ├─ State Events
         │  ├─ Time (s)
         │  └─ Device Error Flags
         │

@@ -79,8 +79,8 @@ Only those data objects are returned which are at least readable. Thus, the resu
     ?
     :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Reporting":
-    null}
+    "ErrorMemory_100":2,"Log":null,"eBoot_":null,"eState":null,"mLive_":null,
+    "_Reporting":null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
@@ -106,19 +106,19 @@ A more simple way is to provide the entire path (GET instead of FETCH request):
     ?Bat/rVoltage_V
     :85 12.9
 
-**Example 5:** Retrieve all records in `ErrorMemory`
+**Example 5:** Retrieve all records in `ErrorMemory_100`
 
-    ?ErrorMemory
+    ?ErrorMemory_100
     :85 [{"t_s":460677000,"rErrorFlags":4},{"t_s":460671000,"rErrorFlags":256}]
 
 If a device is not able to return the content of all records directly, it must return the number of stored records. This number can be used to retrieve each record individually (see below).
 
-    ?ErrorMemory
+    ?ErrorMemory_100
     :85 2
 
-**Example 6:** Retrieve first record in `ErrorMemory`
+**Example 6:** Retrieve first record in `ErrorMemory_100`
 
-    ?ErrorMemory/0
+    ?ErrorMemory_100/0
     :85 {"t_s":460677000,"rErrorFlags":4}
 
 **Example 7:** Get all data of node `XYZ12345` through a gateway
@@ -126,8 +126,8 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory":2,"Log":null,"eBoot":null,"eState":null,"mLive":null,"_Reporting":
-    null}
+    "ErrorMemory_100":2,"Log":null,"eBoot_":null,"eState":null,"mLive_":null,
+    "_Reporting":null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 
@@ -152,22 +152,22 @@ Data items prefixed with `s` will be stored in persistent memory, so it is not a
 
 ## Create data
 
-The equivalent of a POST request allows to append new data to an existing data item, usually an array.
+The equivalent of a POST request allows to append new data to an existing data item, usually an array or a subset.
 
 In current implementations it is not possible to add entirely new data objects, as this would be against the nature of statically allocated memory of constrained devices.
 
 **Example 1:** Add battery current measurement to the generic metrics subset `mLive`
 
-    +mLive "Bat/rCurrent_A"
+    +mLive_ "Bat/rCurrent_A"
     :81
 
 ## Delete data
 
-Deletes data from a data item of array type.
+Deletes data from a subset or a data item of array type.
 
 **Example 1:** Delete `cMetadataURL` from boot events subset
 
-    -eBoot "cMetadataURL"
+    -eBoot_ "cMetadataURL"
     :82
 
 ## Execute function
