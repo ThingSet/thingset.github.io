@@ -1,4 +1,4 @@
-# Existing Solutions
+# Annex A: Existing Solutions
 
 In order to not re-invent the wheel, existing standards were investigated prior to the development of the ThingSet specification.
 

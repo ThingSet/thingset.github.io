@@ -48,7 +48,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         text: 'Specification',
         ariaLabel: 'Specification Menu',
         children: [
-          { text: 'v0.6', link: '/spec/v0.6/introduction' },
+          { text: 'v0.6', link: '/spec/v0.6/introduction/abstract' },
           { text: 'v0.5 (current)', link: '/spec/v0.5/introduction' },
           { text: 'v0.4', link: '/spec/v0.4/introduction' },
           { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },
@@ -202,43 +202,46 @@ export default defineUserConfig<DefaultThemeOptions>({
       ],
       '/spec/v0.6/': [
         {
-          text: 'Why ThingSet?',
+          text: 'Introduction',
           children: [
-            'introduction',
-            'existing_solutions',
-            'glossary',
+            '../introduction/abstract',
+            '../introduction/objectives',
+            '../introduction/terminology',
           ]
         },{
-          text: 'Application Layer',
+          text: 'Data Model',
           children: [
-            'appl_general_concept',
-            'appl_data_structure',
-            'appl_data_overlays',
-            'appl_access_functions',
-            'appl_text_mode',
-            'appl_binary_mode',
+            '../data_model/structure',
+            '../data_model/overlays',
           ]
         },{
-          text: 'Transport Layers',
+          text: 'Protocol',
           children: [
-            'transp_serial',
-            'transp_websocket',
-            'transp_can',
-            'transp_ble',
+            '../protocol/functions',
+            '../protocol/text_mode',
+            '../protocol/binary_mode',
           ]
         },{
-          text: 'Protocol Mapping',
+          text: 'Transports',
           children: [
-            'mapping_mqtt',
-            'mapping_coap',
-            'mapping_http',
-            'mapping_lorawan',
+            '../transports/serial',
+            '../transports/websocket',
+            '../transports/can',
+            '../transports/bluetooth',
           ]
         },{
-          text: 'Tools',
+          text: 'Mappings',
           children: [
-            'tools_serial',
-            'tools_can',
+            '../mappings/mqtt',
+            '../mappings/coap',
+            '../mappings/http',
+            '../mappings/lorawan',
+          ]
+        },{
+          text: 'Annex',
+          children: [
+            '../annex/a_existing_solutions',
+            '../annex/b_tools',
           ]
         }
       ]
