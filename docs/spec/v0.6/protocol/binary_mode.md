@@ -140,7 +140,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Response:
     85                                      # Content.
        F6                                   # CBOR null (direct connection)
-       8D                                   # CBOR array (13 elements)
+       8C                                   # CBOR array (12 elements)
           63 745F73                         # CBOR string: "t_s"
           67 634E6F64654944                 # CBOR string: "cNodeID"
            ...
@@ -186,7 +186,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
     Response:
     85                                      # Content.
        F6                                   # CBOR null (direct connection)
-       8D                                   # CBOR array (13 elements)
+       8C                                   # CBOR array (12 elements)
           01                                # CBOR uint: 0x10
           18 1D                             # CBOR uint: 0x1D
            ...
@@ -319,12 +319,12 @@ Appends new data to a data object in a similar way as in the text mode.
 
 Removes data from an object of array type.
 
-**Example 1:** Delete item with ID `0x18` (`cMetadataURL`) from boot events subset
+**Example 1:** Delete item with ID `0x61` (`Load/rPower_W`) from live metrics subset
 
     Request:
     04                                      # DELETE
-       05                                   # CBOR uint: 0x05 (subset object ID)
-       18 18                                # CBOR uint: 0x18
+       07                                   # CBOR uint: 0x07 (subset object ID)
+       18 61                                # CBOR uint: 0x61
 
     Response:
     82                                      # Deleted.

@@ -50,7 +50,7 @@ A report starts with the hash sign and a path, followed by a whitespace and the 
 
     txt-report = "#" path " " json-object
 
-The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `eState`).
+The path is either a group (e.g. `Device`) or a subset object containing references to other data items as an array (e.g. `mLive_`).
 
 ### Desire
 
@@ -79,8 +79,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
     ?
     :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory_100":2,"Log":null,"eBoot_":null,"eState":null,"mLive_":null,
-    "_Reporting":null}
+    "ErrorMemory_100":2,"Log":null,"eError":null,"mLive_":null,"_Reporting":null}
 
 The content of the groups and subsets would have resulted in a too long response for the resource-constrained device, so the values were set to `null` and can be retrieved separately as shown in the examples below.
 
@@ -126,8 +125,7 @@ If a device is not able to return the content of all records directly, it must r
     ?/XYZ12345
     :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory_100":2,"Log":null,"eBoot_":null,"eState":null,"mLive_":null,
-    "_Reporting":null}
+    "ErrorMemory_100":2,"Log":null,"eError":null,"mLive_":null,"_Reporting":null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 
@@ -163,18 +161,23 @@ The equivalent of a POST request allows to append new data to an existing data i
 
 In current implementations it is not possible to add entirely new data objects, as this would be against the nature of statically allocated memory of constrained devices.
 
-**Example 1:** Add battery current measurement to the generic metrics subset `mLive`
+**Example 1:** Add battery current measurement to the live metrics subset `mLive_`
 
     +mLive_ "Bat/rCurrent_A"
     :81
+
+**Example 2:** Attempt to add `Solar/rState` to read-only error events subset `eError`
+
+    +eError "Solar/rState"
+    :A3 "Item is read-only"
 
 ## Delete data
 
 Deletes data from a subset or a data item of array type.
 
-**Example 1:** Delete `cMetadataURL` from boot events subset
+**Example 1:** Delete `Load/rPower_W` from live metrics subset `mLive_`
 
-    -eBoot_ "cMetadataURL"
+    -mLive_ "Load/rPower_W"
     :82
 
 ## Execute function
@@ -203,20 +206,20 @@ After successful authentication, the device exposes previously restricted data o
 
 Reports broadcast to all connected nodes and no response is sent from nodes receiving the message.
 
-**Example 1:** A report containing the `mLive` subset, sent out by the node every 10 seconds
+**Example 1:** A report containing the `mLive_` subset, sent out by the node every 10 seconds
 
-    #mLive {"t_s":460677600,"Bat":{"rVoltage_V":12.9,"rCurrent_A":-3.14},"Solar":{"rPower_W":96.5},"Load":{"rPower_W":137.0}}
+    #mLive_ {"t_s":460677600,"Bat":{"rVoltage_V":12.9,"rCurrent_A":-3.14},"Solar":{"rPower_W":96.5},"Load":{"rPower_W":137.0}}
 
 The `_Reporting` path is used to configure the publication process itself.
 
-**Example 2:** List all reports available for publication
+**Example 2:** List groups and subsets available for publication
 
     ?_Reporting null
-    :85 ["eState","mLive"]
+    :85 ["Log","eError","mLive_"]
 
-**Example 3:** Enable publication of `mLive` subset
+**Example 3:** Enable publication of `mLive_` subset
 
-    =_Reporting/mLive {"sEnable":true}
+    =_Reporting/mLive_ {"sEnable":true}
     :84
 
 If the published object is a subset object (and not a group), the data items contained in the messages can be configured using CREATE and DELETE requests to the data object as shown in the examples above.

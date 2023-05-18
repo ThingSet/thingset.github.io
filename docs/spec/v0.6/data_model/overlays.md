@@ -23,17 +23,19 @@ Below example shows useful settings for reporting in case of state changes, for 
 ``` json
 {
     "_Reporting": {                                                 // 0x0F
-        "eState": {                                                 // 0xF0
-            "sEnable": true,                                        // 0xF1
-            "cRateLimit_Hz": 1                                      // 0xF2
+        "Log": {                                                    // 0xF0
+            "_" {
+                "sMaxLevel": 3,                                     // 0xF1
+                "sRateLimit_Hz": 1                                  // 0xF2
+            }
         },
-        "mLive": {                                                  // 0xF3
-            "sEnable": false,                                       // 0xF4
-            "sPeriod_s": 10                                         // 0xF5
+        "eError": {                                                 // 0xF3
+            "sEnable": true,                                        // 0xF4
+            "cRateLimit_Hz": 1                                      // 0xF5
         },
-        "Log": {                                                    // 0xF6
-            "sMaxLevel": 3,                                         // 0xF7
-            "sRateLimit_Hz": 1                                      // 0xF8
+        "mLive_": {                                                  // 0xF6
+            "sEnable": false,                                       // 0xF7
+            "sPeriod_s": 10                                         // 0xF8
         }
     }
 }

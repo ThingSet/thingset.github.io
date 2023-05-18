@@ -204,8 +204,7 @@ The following example data structure of an MPPT solar charge controller will be 
         "oModule": "charge_controller",                             // 0x91
         "rMessage": "Load overcurrent: 23 A",                       // 0x92
     },
-    "eBoot_": ["cMetadataURL", "Device/cFirmwareCommit"],           // 0x05
-    "eState": ["t_s", "Device/rErrorFlags"],                        // 0x06
+    "eError": ["t_s", "Device/rErrorFlags"],                        // 0x06
     "mLive_": [                                                     // 0x07
         "t_s", "Bat/rVoltage_V", "Solar/rPower_W", "Load/rPower_W"
     ]
@@ -248,11 +247,7 @@ Below structure gives an example of the processed user interface structure for m
         │  ├─ Throughput                                       1789 kWh
         │  └─ Enable                                                [x]
         │
-        ├─ Boot Events                               [ Add ] [ Delete ]
-        │  ├─ Metadata URL
-        │  └─ Device Firmware Version
-        │
-        ├─ State Events
+        ├─ Error Events
         │  ├─ Time (s)
         │  └─ Device Error Flags
         │
