@@ -45,7 +45,7 @@ The TSDB column marks types which are suitable for storage in a time-series data
 
 Changes to write-able data items (prefix `w`) are only stored in RAM, so they get lost after a reset of the device. In contrast to that, stored data (prefix `s`) is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
 
-Factory calibration data items are only accessible for the manufacturer after authentication. Authentication can be implemented through ThingSet or other means. If the user should be able to reset a value (e.g. a min/max counter), the value would be prefixed with `p` for protected. It is up to the firmware developer how the value should be protected. It may also only be marked differently to a normal input value (`w`) in a user interface.
+A protected data item (prefix `p`) can be used for data which is usually not changed by the user (e.g. a min/max counter or factory calibration values). Updating or resetting the value may be allowed only after authentication (e.g. through a ThingSet function call with an authentication token as a parameter). Protected values are also stored in non-volatile memory, but may be displayed differently to a normal stored value (`s`) in a user interface.
 
 Data prefixed with `o` can be thought of as tags for the other data in a report. Most time-series databases allow filtering of datasets based on tags (also called labels). Be aware that the orthogonal data should be limited to a small set of different values to avoid [high-cardinality data](https://en.wikipedia.org/wiki/Cardinality_(SQL_reports)).
 
