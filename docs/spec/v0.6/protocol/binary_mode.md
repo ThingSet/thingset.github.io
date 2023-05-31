@@ -14,21 +14,21 @@ Requests in binary mode can either use data object IDs or names / paths. IDs off
 
 Each request message consists of a first byte as the request method identifier, a path or ID specifying the endpoint of the request and CBOR data as payload (if applicable).
 
-    bin-request = bin-get / bin-exec / bin-delete / bin-fetch / bin-create / bin-update
+    bin-request = bin-get / bin-fetch / bin-update / bin-create / bin-delete / bin-exec
 
     bin-get    = %x01 endpoint
-
-    bin-exec   = %x02 endpoint cbor-data
-
-    bin-delete = %x04 endpoint cbor-data
 
     bin-fetch  = %x05 endpoint ( cbor-array   ; IDs or names of requested data
                                / %xF6 )       ; CBOR null: request array of all
                                               ; IDs or names behind endpoint
 
-    bin-create = %x06 endpoint cbor-data
-
     bin-update = %x07 endpoint cbor-map
+
+    bin-delete = %x04 endpoint cbor-value
+
+    bin-create = %x06 endpoint cbor-value
+
+    bin-exec   = %x02 endpoint cbor-array
 
     endpoint   = path         ; CBOR string: path same as text mode
                / parent-id    ; CBOR uint: parent object ID instead of path
@@ -39,7 +39,7 @@ Responses in binary mode start with the error/status code as specified before, f
 
     bin-response = %x80-FF                ; response code
                    ( node-id / %xF6 )     ; CBOR string with node ID or null
-                   [ cbor-data ]
+                   ( cbor-data / %xF6 )   ; CBOR payload data or null
 
 ### Report
 
@@ -204,11 +204,11 @@ If a path (string containing names) is used to specify an endpoint, also names a
 
 **Example 7:** Retrieve multiple data items:
 
-For fetching multiple data items, the IDs are provided in the array as the second argument. The endpoint (first argument) is redundant, as the ID already provides an unambiguous link to the data item, so it should be set to `0x00`.
+For fetching multiple data items, the IDs are provided in the array as the second argument. Even though the IDs already describe the data item unambiguously, the endpoint must still be the correct group/parent ID.
 
     Request:
     05                                      # FETCH
-       00                                   # CBOR uint: 0x00 (root ID)
+       02                                   # CBOR uint: 0x02 (parent ID)
        82                                   # CBOR array (2 elements)
           18 40                             # CBOR uint: 0x40 (object ID)
           18 41                             # CBOR uint: 0x41 (object ID)
@@ -222,12 +222,11 @@ For fetching multiple data items, the IDs are provided in the array as the secon
 
 **Example 8:** Retrieve number of records in `ErrorMemory_100`
 
-If the endpoint is an array of records, fetching `null` for discovery returns the number of elements in the array (i.e. number of records) instead of the names or IDs as in case of groups as endpoint.
+If the endpoint is an array of records, a GET request returns all records or the number of records if not all data can be fit into the response (most likely the case).
 
     Request:
-    05                                      # FETCH
-       08                                   # CBOR uint: 0x08 (parent ID)
-       F6                                   # CBOR null for discovery
+    01                                      # GET
+       08                                   # CBOR uint: 0x08 (records ID)
 
     Response:
     85                                      # Content.
@@ -265,6 +264,7 @@ As there can be multiple instances of the same record sharing the same IDs for t
     Response:
     A4                                      # Not Found.
        F6                                   # CBOR null (direct connection)
+       F6                                   # CBOR null (no payload)
 
 ## Update data
 
@@ -286,6 +286,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
     Response:
     84                                      # Changed.
        F6                                   # CBOR null (direct connection)
+       F6                                   # CBOR null (no payload)
 
 **Example 2:** Attempt to write read-only measurement values
 
@@ -299,6 +300,7 @@ If the data type is not supported, an error status code (`0xAF`) is responded.
     Response:
     A3                                      # Forbidden.
        F6                                   # CBOR null (direct connection)
+       F6                                   # CBOR null (no payload)
 
 ## Create data
 
@@ -314,6 +316,7 @@ Appends new data to a data object in a similar way as in the text mode.
     Response:
     81                                      # Created.
        F6                                   # CBOR null (direct connection)
+       F6                                   # CBOR null (no payload)
 
 ## Delete data
 
@@ -329,6 +332,7 @@ Removes data from an object of array type.
     Response:
     82                                      # Deleted.
        F6                                   # CBOR null (direct connection)
+       F6                                   # CBOR null (no payload)
 
 ## Execute function
 
@@ -344,6 +348,7 @@ For execution of a function, the EXEC request is used.
     Response:
     84                                      # Changed.
        F6                                   # CBOR null (direct connection)
+       F6                                   # CBOR null (no payload)
 
 Note that the endpoint is the object of the executable function itself. Data can be passed to the called function as the second parameter, but the `Device/xReset` function does not require any parameters, so it receives an empty array.
 

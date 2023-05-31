@@ -20,7 +20,7 @@ Each request message consists of a first character as the request method identif
 
     txt-delete = "-" path [ " " json-value ]
 
-    txt-exec   = "!" path [ " " json-value ]
+    txt-exec   = "!" path [ " " json-array ]
 
     path = relative-path / absolute-path / ""
 
