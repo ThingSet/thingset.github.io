@@ -30,18 +30,16 @@ By convention, data items (leaf nodes) use [lower camel case](https://en.wikiped
 
 Each data item is prefixed with a single character to identify its type according to below tables.
 
-| Prefix | Read  | Write | TSDB  | Description                                                 |
-|--------|-------|-------|-------|-------------------------------------------------------------|
-| c      | yes   | no    | no    | constant value (not changed during operation)               |
-| r      | yes   | no    | yes   | read-only value (e.g. measurement, state)                   |
-| w      | yes   | yes   | yes   | write-able value (e.g. control input, stored in RAM)        |
-| p      | yes   | yes   | yes   | protected value (reset-able, normally only read)            |
-| s      | yes   | yes   | no    | stored value (in non-volatile memory, typically config)     |
-| t      | yes   | maybe | yes   | timestamp (dedicated prefix to reduce processing effort)    |
-| o      | yes   | no    | yes   | orthogonal data (tags / labels for datasets)                |
-| z      | yes   | yes   | yes   | control values (reserved for future use)                    |
-
-The TSDB column marks types which are suitable for storage in a time-series database (TSDB) because they may change dynamically over time (typically measurements or states). The other types are used for more static data like configuration values.
+| Prefix | Read  | Write | Description                                                 |
+|--------|-------|-------|-------------------------------------------------------------|
+| `c`    | yes   | no    | constant value (not changed during operation)               |
+| `r`    | yes   | no    | read-only value (e.g. measurement, state)                   |
+| `w`    | yes   | yes   | write-able value (e.g. control input, stored in RAM)        |
+| `p`    | yes   | yes   | protected value (reset-able, normally only read)            |
+| `s`    | yes   | yes   | stored value (in non-volatile memory, typically config)     |
+| `t`    | yes   | maybe | timestamp (dedicated prefix to reduce processing effort)    |
+| `o`    | yes   | no    | orthogonal data (tags / labels for datasets)                |
+| `z`    | yes   | yes   | control values (reserved for future use)                    |
 
 Changes to write-able data items (prefix `w`) are only stored in RAM, so they get lost after a reset of the device. In contrast to that, stored data (prefix `s`) is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
 
@@ -55,18 +53,18 @@ Excecutable data means that they trigger a function call in the device firmware.
 
 | Prefix | Description                                                 |
 |--------|-------------------------------------------------------------|
-| x      | executable item (name can be read, parameters write-only)   |
+| `x`    | executable item (name can be read, parameters write-only)   |
 
 The data types of function parameters for executable items cannot be determined, as the values cannot be read. For this reason, special prefixes to define the data type according to below table are used:
 
 | Prefix | Description                                   |
 |--------|-----------------------------------------------|
-| n      | natural number (unsigned)                     |
-| i      | integer                                       |
-| f      | floating-point number                         |
-| l      | logic value (boolean)                         |
-| b      | binary data (base-64 encoded)                 |
-| u      | utf8-string                                   |
+| `n`    | natural number (unsigned)                     |
+| `i`    | integer                                       |
+| `f`    | floating-point number                         |
+| `l`    | logic value (boolean)                         |
+| `b`    | binary data (base-64 encoded)                 |
+| `u`    | utf8-string                                   |
 
 #### Units
 
@@ -78,10 +76,10 @@ Some special characters have to be replaced according to the following table in 
 
 | Character | Replacement | Example                                       |
 |-----------|-------------|-----------------------------------------------|
-| °         | `deg`       | `rAmbient_degC` for ambient temperature in °C |
-| %         | `pct`       | `rRelHumidity_pct` for relative humidity in % |
-| /         | `_`         | `rVeh_m_s` for vehicle speed in m/s           |
-| ^         | (omitted)   | `cSurface_m2` for surface area in m^2         |
+| `°`       | `deg`       | `rAmbient_degC` for ambient temperature in °C |
+| `%`       | `pct`       | `rRelHumidity_pct` for relative humidity in % |
+| `/`       | `_`         | `rVeh_m_s` for vehicle speed in m/s           |
+| `^`       | (omitted)   | `cSurface_m2` for surface area in m^2         |
 
 See also the [Open Manufacturing Platform Semantic Data Model](https://openmanufacturingplatform.github.io/sds-bamm-aspect-meta-model/bamm-specification/2.0.0-M1/appendix/appendix.html#unit-catalog) for a list of common units and physical quantities.
 
@@ -89,11 +87,13 @@ See also the [Open Manufacturing Platform Semantic Data Model](https://openmanuf
 
 Three different types of subsets can be defined depending on their prefix.
 
-| Prefix | TSDB  | Description                                                         |
-|--------|-------|---------------------------------------------------------------------|
-| a      | no    | attribute subset (only published on request or once during startup) |
-| e      | maybe | event subset (only published if changed/updated)                    |
-| m      | yes   | metrics subset (published in regular time intervals)                |
+| Prefix | Description                                                         |
+|--------|---------------------------------------------------------------------|
+| `a`    | attribute subset (only published on request or once during startup) |
+| `e`    | event subset (only published if changed/updated)                    |
+| `m`    | metrics subset (published in regular time intervals)                |
+
+A backend may decide how to store published report data depending on the subset prefix. Attributes are suitable for relational databases (e.g. MySQL) or document-oriented storages (e.g. MongoDB) whereas event and metrics subsets are more suitable for storage in a time-series database (TSDB) because they may change dynamically over time (typically measurements or states).
 
 If the subsets are editable, they must have a trailing underscore in their name (similar to editable records, see below). Updates to the subsets are expected to be stored in non-volatile memory.
 
