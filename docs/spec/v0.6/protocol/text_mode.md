@@ -77,7 +77,7 @@ Only those data objects are returned which are at least readable. Thus, the resu
 **Example 1:** Attempt to get all data of the device
 
     ?
-    :85 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
+    :85 {"t_s":460677600,"pNodeID":"DEADC0DEBAADCODE","cMetadataURL":"https://files.
     libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
     "ErrorMemory_100":2,"Log":null,"eError":null,"mLive_":null,"_Reporting":null}
 
@@ -120,17 +120,18 @@ If a device is not able to return the content of all records directly, it must r
     ?ErrorMemory_100/0
     :85 {"t_s":460677000,"rErrorFlags":4}
 
-**Example 7:** Get all data of node `XYZ12345` through a gateway
+**Example 7:** Get all data of node `DEADC0DEBAADCODE` through a gateway
 
-    ?/XYZ12345
-    :85/XYZ12345 {"t_s":460677600,"cNodeID":"XYZ12345","cMetadataURL":"https://files.
-    libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,"Load":null,
-    "ErrorMemory_100":2,"Log":null,"eError":null,"mLive_":null,"_Reporting":null}
+    ?/DEADC0DEBAADCODE
+    :85/DEADC0DEBAADCODE {"t_s":460677600,"pNodeID":"DEADC0DEBAADCODE","cMetadataURL":
+    "https://files.libre.solar/meta/cc-05.json","Device":null,"Bat":null,"Solar":null,
+    "Load":null,"ErrorMemory_100":2,"Log":null,"eError":null,"mLive_":null,"_Reporting":
+    null}
 
 **Example 8:** List all nodes behind the gateway we are communicating with
 
     ?/ null
-    :85/ ["ABCD1234","XYZ12345"]
+    :85/ ["C001CAFE01234567","DEADC0DEBAADCODE"]
 
 If the node is not a gateway, requests with with absolute paths (starting with `?/`) are answered with error code `C5`.
 

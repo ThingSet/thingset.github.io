@@ -142,7 +142,7 @@ If a path (string containing names) is used to specify an endpoint, also names a
        F6                                   # CBOR null (direct connection)
        8C                                   # CBOR array (12 elements)
           63 745F73                         # CBOR string: "t_s"
-          67 634E6F64654944                 # CBOR string: "cNodeID"
+          67 704E6F64654944                 # CBOR string: "pNodeID"
            ...
 
 **Example 3:** Retrieve value for single data item `Bat/rVoltage_V`

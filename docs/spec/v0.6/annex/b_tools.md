@@ -67,7 +67,7 @@ echo "01 18 1D" | isotpsend -s 0x18000100 -d 0x18000001 can0
 The same for text mode:
 
 ```
-echo -n "?cNodeId" | hexdump -v -e '/1 "%02X "' | isotpsend -s 0x18000100 -d 0x18000001 can0
+echo -n "?pNodeID" | hexdump -v -e '/1 "%02X "' | isotpsend -s 0x18000100 -d 0x18000001 can0
 ```
 
 `isotprecv` only prints the hex values of the received data. The ASCII payload can be monitored using:

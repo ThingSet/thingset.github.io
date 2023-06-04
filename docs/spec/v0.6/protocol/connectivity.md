@@ -4,7 +4,7 @@
 
 ThingSet uses a tree topology for communication between applications, gateways and nodes.
 
-A ThingSet **node** is an entity with a globally unique ID (`cNodeID` in the data structure). A physical **device** may contain one or more ThingSet nodes.
+A ThingSet **node** is an entity with a globally unique ID (`pNodeID` in the data structure). A physical **device** may contain one or more ThingSet nodes.
 
 An **application** needs to establish a **communication channel** to the node in order to exchange ThingSet messages. This channel may be established directly with the node or accross one or multiple gateways. Nodes can also autonomously establish synchronous or asynchronous communication channels with a cloud backend, which can afterwards be used by applications or for internal services in a backend.
 

@@ -43,7 +43,7 @@ Each data item is prefixed with a single character to identify its type accordin
 
 Changes to write-able data items (prefix `w`) are only stored in RAM, so they get lost after a reset of the device. In contrast to that, stored data (prefix `s`) is stored in non-volatile memory (e.g. flash or EEPROM) after a change. As non-volatile memory has a limited amount of write cycles, configuration data should not be changed continuously.
 
-A protected data item (prefix `p`) can be used for data which is usually not changed by the user (e.g. a min/max counter or factory calibration values). Updating or resetting the value may be allowed only after authentication (e.g. through a ThingSet function call with an authentication token as a parameter). Protected values are also stored in non-volatile memory, but may be displayed differently to a normal stored value (`s`) in a user interface.
+A protected data item (prefix `p`) can be used for data which is usually not changed by the user (e.g. the node ID, a min/max counter or factory calibration values). Updating or resetting the value may be allowed only after authentication (e.g. through a ThingSet function call with an authentication token as a parameter). Protected values are also stored in non-volatile memory, but may be displayed differently to a normal stored value (`s`) in a user interface.
 
 Data prefixed with `o` can be thought of as tags for the other data in a report. Most time-series databases allow filtering of datasets based on tags (also called labels). Be aware that the orthogonal data should be limited to a small set of different values to avoid [high-cardinality data](https://en.wikipedia.org/wiki/Cardinality_(SQL_reports)).
 
@@ -132,10 +132,12 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 | 0x16 | `_Ids`         | Endpoint used by binary protocol to determine IDs from paths           |
 | 0x17 | `_Paths`       | Endpoint used by binary protocol to determine paths from IDs           |
 | 0x18 | `cMetadataURL` | URL to JSON file containing extended information about exposed data    |
-| 0x1D | `cNodeID`      | Alphanumeric string (without spaces) to identify the device/node (should be unique per manufacturer, typical length 8 characters) |
+| 0x1D | `pNodeID`      | Unique alphanumeric string (without spaces) to identify the node       |
 | >=0x8000 | ...        | Control data objects with fixed IDs                                    |
 
 The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `cMetadataURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
+
+The `pNodeID` value must be an alphanumeric string without white spaces. It must be globally unique or at least guaranteed to be unique for the ecosystem, as the node ID is used to identify devices in gateways and backends. It is highly recommended to use the 16 character upper-case hexadecimal representation of an [EUI-64](https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.1), which can e.g. be derived from a MAC address.
 
 ### IDs in records
 
@@ -151,7 +153,7 @@ The following data layout could be used for a smart heating thermostat that can 
 
 ``` json
 {
-    "cNodeID": "ABCD1234",
+    "pNodeID": "C001CAFE01234567",
     "rRoomTemp_degC": 18.3,
     "sTargetTemp_degC": 22.0,
     "rHeaterOn": true,
@@ -165,7 +167,7 @@ The following example data structure of an MPPT solar charge controller will be 
 ``` json
 {
     "t_s": 460677600,                                               // 0x10 (fixed)
-    "cNodeID": "XYZ12345",                                          // 0x1D (fixed)
+    "pNodeID": "DEADC0DEBAADCODE",                                  // 0x1D (fixed)
     "cMetadataURL": "https://files.libre.solar/meta/cc-05.json",    // 0x18 (fixed)
     "Device": {                                                     // 0x01
         "cManufacturer": "Libre Solar",                             // 0x30
@@ -222,7 +224,7 @@ The prefixes themselves should be omitted in the user interface and single words
 Below structure gives an example of the processed user interface structure for most parts of above data. Instead of pure text, this structure could be easily rendered in a web page or phone app.
 
 ```
-                       ThingSet Node XYZ12345 Data Objecs
+                    ThingSet Node DEADC0DEBAADCODE Data Objecs
 
         ├─ Device
         │  ├─ Manufacturer                                  Libre Solar
