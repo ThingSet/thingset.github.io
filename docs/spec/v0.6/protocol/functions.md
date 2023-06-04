@@ -71,11 +71,3 @@ The internal path `_Reporting` is used to configure the device to publish certai
 By convention, the object names below the `_Reporting` define which data object should be published. This can be an entire group like `Bat` or a subset data object that contains a list of references to other data items like `eChange` in the above example.
 
 More details regarding the ThingSet protocol methods for data access will be explained in the next chapter.
-
-::: tip Idea for evaluation
-Publication of a report can be manually triggered by sending a desire with empty payload to the same path of that node.
-:::
-
-::: tip Idea for evaluation
-After each update of a value via request/response, the device sends out a report with the updated values. This ensures that also other devices are notified (reports may be broadcast on the bus) and it allows to double-check if the value was correctly received or if it was e.g. rounded to the next possible value.
-:::

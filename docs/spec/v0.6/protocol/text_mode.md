@@ -146,15 +146,22 @@ The UPDATE request attempts to overwrite the values of data items.
 
 Data items prefixed with `s` will be stored in persistent memory, so it is not allowed to change settings periodically. Only data of with `w` prefix can be changed regularly.
 
+Responses only contain payload if the requested update was valid, but could not be applied exactly as requested, e.g. if a setting value had to be rounded to the next feasible value. In this case, the response repeats all requested data with actually applied values. This guarantees that a client or cloud backend always knows the actual values used by the node.
+
 **Example 1:** Disable load output
 
     =Load {"wEnable":false}
     :84
 
-**Example 2:** Attempt to write read-only measurement value with optional diagnostic payload
+**Example 2:** Attempt to write read-only measurement value (response with optional diagnostic payload)
 
     =Bat {"rCurrent_A":0}
     :A3 "Item is read-only"
+
+**Example 3:** Write value with higher precision than supported by the device
+
+    =Bat {"sTargetVoltage_V":14.123}
+    :84 {"sTargetVoltage_V":14.1}
 
 ## Create data
 
