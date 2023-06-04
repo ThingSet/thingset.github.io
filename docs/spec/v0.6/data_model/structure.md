@@ -133,6 +133,7 @@ The following table shows the assigned IDs. Currently unassigned IDs might be de
 | 0x17 | `_Paths`       | Endpoint used by binary protocol to determine paths from IDs           |
 | 0x18 | `cMetadataURL` | URL to JSON file containing extended information about exposed data    |
 | 0x1D | `pNodeID`      | Unique alphanumeric string (without spaces) to identify the node       |
+| 0x1E | `pNodeName`    | Optional human-readable name of a node (e.g. device type)              |
 | >=0x8000 | ...        | Control data objects with fixed IDs                                    |
 
 The IDs up to 0x17 consume only a single byte when encoded as CBOR, which minimizes space consumption for IDs that are used often. The `cMetadataURL` is retrieved only once during startup, so it is acceptable to consume 2 bytes for its ID.
