@@ -13,41 +13,46 @@ This part of the protocol specification is still work in progress.
 ThingSet uses only a subset of CoAPs features in order to make it more simple and compact:
 
 - Mapping to CoAP message types:
-    - ThingSet requests are always CON
-    - Only publication messages are NON
-    - No dedicated ACK, the response must also contain data (only piggybacked responses)
+    - ThingSet requests and responses are always CON
+    - The ACK response should also contain data (piggybacked responses)
+    - ThingSet reports are NON
     - RST needed? probably not...
 - No message IDs: Synchronous communication necessary
 - PUT request is not used.
+- [Caching](https://www.rfc-editor.org/rfc/rfc7252#section-5.6.1) is not supported: Every response must explicitly set the Max-Age parameter to 0.
 
 The binary function codes of ThingSet are the same as CoAP method codes. The status codes are also aligned, but contain an offset as explained before.
 
-## Device as server
+The content format of the message payload determines whether ThingSet text mode (application/json) or binary mode (application/cbor) is used.
+
+## Node as server
 
 This is the original way how CoAP was designed. The device provides resources which can be requested by a client. However, as this requires knowledge about the device's IP address and does not work well behind routers and firewalls, many applications use CoAP the other way round. LwM2M for example lets the device connect to the cloud first to make it known, afterwards it acts a server.
 
-Independent of the method how the connection is established, the data in the device can be accessed using the following Uri-Path option:
+ThingSet node IDs and IP addresses of CoAP nodes have to be mapped by a ThingSet gateway, so that the node ID is not required in the CoAP message for addressing a node and only relative paths are used.
 
-    Uri-Path option: /{device-id}/{object-path}
+The relative path of the ThingSet request is encoded in one or multiple Uri-Path options.
 
-It is assumed that the device is a gateway and has access to multiple down-stream nodes. If the device only contains a single node, the `~` character can be used instead of the device ID to point at the device itself.
+For the binary mode with CBOR format, the data object ID can be encoded in a numeric Uri-Path option.
 
-Omitting the Uri-Path option is the same as specifying `/~` and the request goes to the device itself.
+The native CoAP observe features can be used for reports. The groups or subsets that can be observed must be determined from the `_Reporting` path.
 
-The native CoAP observe features can be used to get notifications of changed subsets or groups.
+**ToDo:** Register thingset+json and thingset+cbor content-formats in [CoAP Content-Formats registry](https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats)
 
-If the object path is numeric, the binary mode with CBOR format is assumed and the number corresponds to the data object ID.
+## Node as client
 
-**ToDo:** Request thingset+json and thingset+cbor content-formats in [CoAP Content-Formats registry](https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats)
+In contrast to above method where the data is pulled from the node, the data can also be pushed to the cloud by the node. This method is suitable for asynchronous communication.
 
-## Device as client
+Reports are pushed to the following cloud endpoint:
 
-In contrast to above method where the data is pulled from the device, the data can also be pushed from the device to the cloud.
+    Method: POST
+    Path: /rpt/{node-id}/{object-path}
 
-Data from the device is pushed to the following cloud endpoint (using PATCH method):
+The node can poll the following cloud endpoint to receive desires:
 
-    Uri-Path option: /{device-id}/_report/{object-path}
+    Method: GET or observe
+    Path: /des/{node-id}
 
-The device can poll the following cloud endpoint (using GET method) to receive data.
+The content of the desire must contain the aggregated data of all desires. It is not possible to provide incremental updates to the data.
 
-    Uri-Path option: /{device-id}/_desire
+Note: A node cannot be solely identified via DTLS PSK (allowing to use generic paths without the node ID) because this would not allow gateways to upload data for different nodes.
