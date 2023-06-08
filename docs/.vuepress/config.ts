@@ -40,8 +40,8 @@ export default defineUserConfig<DefaultThemeOptions>({
       {
         text: 'Software',
         children: [
-          { text: 'Device Library', link: '/software/device_library' },
-          { text: 'SDK for Zephyr', link: '/software/sdk' },
+          { text: 'Node Library', link: '/software/node_library' },
+          { text: 'SDK for Zephyr', link: '/software/zephyr_sdk' },
           { text: 'Mobile App', link: '/software/app' }
         ]
       }, {
