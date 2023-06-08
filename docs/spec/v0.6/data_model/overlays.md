@@ -24,7 +24,7 @@ Below example shows useful settings for reporting in case of state changes, for 
 {
     "_Reporting": {                                                 // 0x0F
         "Log": {                                                    // 0xF0
-            "_" {
+            "_": {
                 "sMaxLevel": 3,                                     // 0xF1
                 "sRateLimit_Hz": 1                                  // 0xF2
             }

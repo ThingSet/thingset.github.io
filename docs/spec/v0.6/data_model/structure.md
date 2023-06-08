@@ -83,7 +83,7 @@ Some special characters have to be replaced according to the following table in 
 
 See also the [Open Manufacturing Platform Semantic Data Model](https://openmanufacturingplatform.github.io/sds-bamm-aspect-meta-model/bamm-specification/2.0.0-M1/appendix/appendix.html#unit-catalog) for a list of common units and physical quantities.
 
-#### Subsets
+### Subsets
 
 Three different types of subsets can be defined depending on their prefix.
 
