@@ -22,7 +22,7 @@ As an application layer protocol, ThingSet protocol is located in the higher lay
 
 The underlying layers have to ensure encryption, reliable transfer, de-duplication, correct packet order (if messages are packetized) and error-checking of the transferred data.
 
-A major feature of the ThingSet protocol is a seamless integration with other application layer protocols such as HTTP, [CoAP](https://tools.ietf.org/html/rfc7252) and MQTT. See the Mappings section for details.
+A major feature of the ThingSet protocol is a seamless integration with other application layer protocols such as [CoAP](https://tools.ietf.org/html/rfc7252) and MQTT. See the Mappings section for details.
 
 ## Communication Patterns
 

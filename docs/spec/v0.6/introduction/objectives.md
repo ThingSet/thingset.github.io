@@ -8,7 +8,7 @@ As an application layer protocol, it is largely independent of the underlying tr
 
 #### Compatible
 
-Easy to integrate with existing protocols such as MQTT, HTTP or CoAP and based on common data formats such as JSON or CBOR.
+Easy to integrate with existing protocols such as MQTT or CoAP and based on common data formats such as JSON or CBOR.
 
 #### Easy to use and human-readable
 
@@ -46,4 +46,4 @@ For class 0 devices and on networks with very low bitrate and payload sizes (CAN
 
 If the payload size does not have to be optimized to its very minimum, the binary mode can be used with names instead of IDs (see [Binary Mode](2c_binary_mode.md) chapter for more details). The advantage of the binary mode is that no support for printing floating point numbers is required, which reduces firmware footprint significantly. This mode is suitable for class 0 and class 1 devices.
 
-For most class 1 and class 2 devices, floating-point support will not be an issue, so they might also use the text mode for easier direct interactions with humans. Also gateways should typically support the text mode in order to map ThingSet to other higher-level protocols like HTTP and MQTT.
+For most class 1 and class 2 devices, floating-point support will not be an issue, so they might also use the text mode for easier direct interactions with humans. Also gateways should typically support the text mode in order to map ThingSet to other higher-level protocols like CoAP and MQTT.

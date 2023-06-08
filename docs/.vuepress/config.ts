@@ -235,7 +235,6 @@ export default defineUserConfig<DefaultThemeOptions>({
           children: [
             '../mappings/mqtt',
             '../mappings/coap',
-            '../mappings/http',
             '../mappings/lorawan',
           ]
         },{

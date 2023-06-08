@@ -14,7 +14,7 @@ The first byte of a ThingSet message is either a text-mode identifier (`?`, `=`,
 
 ## Requests
 
-The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent mapping between ThingSet and HTTP APIs or CoAP devices.
+The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent mapping between ThingSet and CoAP devices.
 
 | Binary mode | Text mode | Function | CoAP equivalent | Description                    |
 |-------------|-----------|----------|--------|-----------------------------------------|
