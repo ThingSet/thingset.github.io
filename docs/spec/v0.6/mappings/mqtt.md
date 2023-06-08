@@ -18,7 +18,7 @@ The basic MQTT topic layout for ThingSet follows the below structure:
 
     {message-type}/{node-id}/{details}
 
-The first part of the topic indicates the message type (request, response, desire or report) and mode (text or binary).
+The first part of the topic indicates the message type (request, response, desire or report) and mode (text or binary). As MQTT does not allow to specify a content format, the format has to be encoded in the topic.
 
 The second part contains the node ID, followed by further details depending on the message type.
 
@@ -42,11 +42,11 @@ A user name is not part of the topic, as device claiming is usually part of the 
 
 ### Reports
 
-Messages in text mode are published to the `report` path and the payload format must be the valid JSON data extracted from a ThingSet report.
+Messages in text mode are published to the `rpt` path and the payload format must be the valid JSON data extracted from a ThingSet report.
 
 **JSON name:value map, QoS 0/1**
 
-    report/{node-id}/{group}
+    rpt/{node-id}/{group}
 
 Messages can also be published directly in the binary format to the `r` path if the device does not support the text mode.
 
@@ -68,21 +68,23 @@ The text mode is the preferred way for MQTT communication if supported by the de
 
 A cloud service might subscribe to the CBOR topics and convert them into the JSON topic automatically so that they can be further processed by other services.
 
-The link to extended device data information will be published to a special topic:
+The link to extended device data information will be published to the topic:
 
-    report/{node-id}/cMetadataURL
+    rpt/{node-id}/cMetadataURL
 
 If the binary mode is used with separated IDs and values, the IDs should be published with QoS 1 and the retained flag in order to make sure they are always available and matching the values that are sent to the `/v/` topic.
 
-If possible, static data like firmware version should only be published once after startup (e.g. as part of a dedicated subset for static data) and may use the retained flag aswell.
-
-A gateway does not know which messages should have the retained flag, so the retained flags may only be suitable for cloud to device communication.
+Only static information as parts of attribute subsets may use the retained flag. Other data should not set the retained flag, as the data gets outdated quickly.
 
 ### Desires
 
+Desires are published by the application with QoS 1 and the retained flag set.
+
+The nodes must connect to the broker with a clean session (note: retained messages are also kept when connecting with clean session). This avoids that outdated desires are received. Same as for CoAP, the desires must contain all requested updates to the data in the device and not only an incremental update to the data.
+
 **JSON name:value map**
 
-    desire/{node-id}/{group-name}
+    des/{node-id}/{group-name}
 
 **CBOR id:value map**
 
@@ -102,223 +104,15 @@ For the request / response messaging mode the response has to be matched with th
 
 **Requests (JSON or CBOR)**
 
-    req/{node-id}/{req-id}
+    req/{node-id}/{cmd-id}
 
 **Response (JSON or CBOR, same as request)**
 
-    res/{node-id}/{req-id}
+    rsp/{node-id}/{cmd-id}
 
 The above topics contain the entire ThingSet request or response. Hence, both binary or text mode can be used with the same topic.
 
-## Data Processing
-
-The following diagrams explain the data flow between a device and an MQTT broker.
-
-In case of LoRaWAN or CAN where the binary mode with IDs is used, an agent may be installed which subscribes to the binary messages and translates them to the JSON messages which are later on consumed by a higher-level application.
-
-This translation can also be done on a local gateway.
-
-The mapping of IDs and names can either be retrieved from the device (e.g. via request/response for a device connected via CAN) or it can be stored in a `.json` file on a server which contains extended information. The detailed specification of this file is still work in progress.
-
-### Device to Broker
-
-#### MQTT direct (low bandwidth, with agent)
-
-- e.g. 2G with global SIM card and very low data rate
-- ID mapping by data agent
-
-```
-Dev       MQTT:bin     Agent       MQTT:txt     Broker
- |                       |                        |
- |                       |                        |
- |     ids (QoS 1)       |                        |
- | --------------------> |                        |
- |    values (QoS 0)     |                        |
- | --------------------> |    objects (QoS 0)     |
- |                       | ---------------------> |
- |                       |                        |
- |         ...           |                        |
- |                       |                        |
- |    values (QoS 0)     |                        |
- | --------------------> |    objects (QoS 0)     |
- |                       | ---------------------> |
-```
-
-#### MQTT direct (sufficient bandwidth)
-
-- e.g. LTE with local SIM card
-
-```
-Dev       MQTT:txt     Broker
- |                        |
- |    objects (QoS 0)     |
- | ---------------------> |
-```
-
-#### Serial
-
-```
-Dev    UART:txt    GW    MQTT:txt   Broker
- |                 |                  |
- |     objects     |                  |
- | --------------> |      objects     |
- |                 | ---------------> |
-```
-
-#### CAN (smart gateway)
-
-- ID mapping and translation between binary and text mode on gateway
-- Preferred way
-
-```
-Dev     CAN:bin       GW       MQTT:txt       Broker
- |                    |                         |
- |      values        |                         |
- | -----------------> |                         |
- |   req/resp names   |                         |
- | <----------------> |    objects (QoS 0)      |
- |                    | ----------------------> |
- |         ...        |                         |
- |                    |                         |
- |      values        |                         |
- | -----------------> |    objects (QoS 0)      |
- |                    | ----------------------> |
-```
-
-#### CAN (with data agent)
-
-- ID mapping by data agent
-
-```
-Dev     CAN:bin      GW       MQTT:bin       Agent       MQTT:txt     Broker
- |                   |                         |                        |
- |      values       |                         |                        |
- | ----------------> |                         |                        |
- |   req/resp ids    |                         |                        |
- | <---------------> |     ids (QoS 1)         |                        |
- |                   | ----------------------> |                        |
- |                   |    values (QoS 0)       |                        |
- |                   | ----------------------> |    objects (QoS 0)     |
- |                   |                         | ---------------------> |
- |        ...        |                         |                        |
- |                   |                         |                        |
- |      values       |                         |                        |
- | ----------------> |    values (QoS 0)       |                        |
- |                   | ----------------------> |    objects (QoS 0)     |
- |                   |                         | ---------------------> |
-```
-
-#### LoRaWAN (smart gateway)
-
-- ID mapping on gateway
-
-```
-Dev   LoRaWAN:bin      GW       MQTT:txt      Broker
- |                     |                        |
- |     ids (ACK-ed)    |                        |
- | ------------------> |                        |
- |       values        |                        |
- | ------------------> |    objects (QoS 0)     |
- |                     | ---------------------> |
- |        ...          |                        |
- |                     |                        |
- |       values        |                        |
- | ------------------> |    objects (QoS 0)     |
- |                     | ---------------------> |
-```
-
-#### LoRaWAN (with data agent)
-
-- Simple forwarding of messages by gateway
-- ID mapping by data agent or statically via TTN payload formatter
-- Probably preferred way in order to be able to use standard TTN gateways
-
-```
-Dev   LoRaWAN:bin      GW       MQTT:bin     Agent       MQTT:txt     Broker
- |                     |                       |                        |
- |     ids (ACK-ed)    |                       |                        |
- | ------------------> |     ids (QoS 1)       |                        |
- |       values        | --------------------> |                        |
- | ------------------> |    values (QoS 0)     |                        |
- |                     | --------------------> |    objects (QoS 0)     |
- |                     |                       | ---------------------> |
- |        ...          |                       |                        |
- |                     |                       |                        |
- |       values        |                       |                        |
- | ------------------> |    values (QoS 0)     |                        |
- |                     | --------------------> |    objects (QoS 0)     |
- |                     |                       | ---------------------> |
-```
-
-### Broker to Device
-
-#### Serial
-
-```
-Dev    UART:txt     GW   MQTT:txt    Broker
- |                  |                  |
- |                  |      objects     |
- |      objects     | <--------------- |
- | <--------------- |                  |
-```
-
-#### CAN (direct)
-
-- No mapping of IDs needed, as incoming reports are sent via ISO-TP and can have almost arbitrary length.
-
-```
-Dev     CAN:txt      GW       MQTT:txt       Broker
- |                   |                         |
- |                   |      objects (QoS 0)    |
- |      objects      | <---------------------- |
- | <---------------- |                         |
-```
-
-#### LoRaWAN (direct)
-
-- ID mapping on gateway
-
-```
-Dev   LoRaWAN:bin      GW       MQTT:txt      Broker
- |                     |                        |
- |    ids (ACK-ed)     |                        |
- | ------------------> |                        |
- |                     |                        |
- |        ...          |                        |
- |                     |                        |
- |                     |     objects (QoS 0)    |
- |       values        | <--------------------- |
- | <------------------ |                        |
-```
-
-#### LoRaWAN (with data agent)
-
-- Simple forwarding of messages by gateway
-- ID mapping by data agent or statically via TTN payload formatter
-- Probably preferred way in order to be able to use standard TTN gateways
-
-```
-Dev   LoRaWAN:bin      GW       MQTT:bin     Agent       MQTT:txt     Broker
- |                     |                       |                        |
- |    ids (ACK-ed)     |                       |                        |
- | ------------------> |     ids (QoS 1)       |                        |
- |       values        | --------------------> |                        |
- | ------------------> |    values (QoS 0)     |                        |
- |                     | --------------------> |    objects (QoS 0)     |
- |                     |                       | ---------------------> |
- |        ...          |                       |                        |
- |                     |                       |                        |
- |       values        |                       |                        |
- | ------------------> |    values (QoS 0)     |                        |
- |                     | --------------------> |    objects (QoS 0)     |
- |                     |                       | ---------------------> |
-```
-
-### Broker to Device (requests)
-
-ToDo
-
-## Special topic for connectivity status
+## Connectivity status
 
 ::: warning
 This is a first idea for an approach to store connectivity information. Expect changes in the future.
@@ -328,7 +122,7 @@ See also [here](http://www.steves-internet-guide.com/checking-active-mqtt-client
 
 The following topic is used to store device connectivity status:
 
-    report/{node-id}/$conn
+    rpt/{node-id}/$conn
 
 1. Client connects and sends 1 to above topic.
 2. Client sends last will and testament (LWT) with content 0 for that topic.
@@ -338,19 +132,6 @@ All messages should be retained.
 
 **Idea:** Use this topic to tell that client is intermittent / async by design (e.g. in case of LoRaWAN).
 
-## Provider Incompatibilities
+## Incompatibilities
 
-AWS is not MQTT compliant:
-
-https://www.hivemq.com/blog/hivemq-cloud-vs-aws-iot/
-
-Handling of retained messages is wrong. According to MQTT standard, subscribing to a retained topic via wild-cards would deliver the mesage. In AWS it doesn't.
-
-https://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html#mqtt-retain
-
-## References
-
-[1] [Designing MQTT Topics for AWS IoT Core](https://d1.awsstatic.com/whitepapers/Designing_MQTT_Topics_for_AWS_IoT_Core.pdf)
-
-[2] https://pi3g.com/2019/05/29/mqtt-topic-tree-design-best-practices-tips-examples/
-
+AWS is [not MQTT compliant](https://www.hivemq.com/blog/hivemq-cloud-vs-aws-iot/). Handling of retained messages is wrong. According to MQTT standard, subscribing to a retained topic via wild-cards would deliver the mesage. [In AWS this is not supported](https://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html#mqtt-retain).
