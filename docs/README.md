@@ -8,7 +8,7 @@ actions:
     link: /software/sdk
     type: secondary
   - text: Specification
-    link: /spec/v0.5/introduction
+    link: /spec/v0.6/introduction
     type: secondary
 features:
   - title: Fast and Easy
