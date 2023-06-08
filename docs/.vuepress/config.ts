@@ -49,7 +49,7 @@ export default defineUserConfig<DefaultThemeOptions>({
         ariaLabel: 'Specification Menu',
         children: [
           { text: 'v0.6', link: '/spec/v0.6/introduction/abstract' },
-          { text: 'v0.5 (current)', link: '/spec/v0.5/introduction' },
+          { text: 'v0.5', link: '/spec/v0.5/introduction' },
           { text: 'v0.4', link: '/spec/v0.4/introduction' },
           { text: 'v0.3', link: '/spec/v0.3/1a_introduction' },
           { text: 'v0.2', link: '/spec/v0.2/1a_introduction' },

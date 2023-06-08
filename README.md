@@ -8,7 +8,7 @@ You can contribute to the protocol specification by cloning the repository to yo
 
 ## Development status
 
-The protocol specification is still under active development and improved based on experiences made with Libre Solar devices. A release of version v1.0 is expected end of 2021.
+The protocol specification is still under active development and improved based on experiences in different applications. A release of version v1.0 is expected end of 2023.
 
 ## Local deployment for development
 
