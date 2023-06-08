@@ -30,7 +30,7 @@ ThingSet defines four types of messages (requests, responses, desires and report
 
 ### Request-response
 
-A **request** is sent from one node (client) to a single other node (server). The server is expected to answer with a **response** containing a status code and optional payload.
+A **request** is sent from a client to a single ThingSet node (acting as a server). The node is expected to answer with a **response** containing a status code and optional payload.
 
 The client would usually be a display, a mobile phone application or a gateway.
 
@@ -40,7 +40,7 @@ Only a single request can be processed by a node at once. If multiple applicatio
 
 ### Publish-subscribe
 
-Data that is not intended for a specific client and that is sent out regularly (e.g. monitoring data to be stored in a database) can be exchanged using a publish-subscribe messaging pattern to increase efficiency and avoid polling. Published messages are called **reports**. Reports are not confirmed by a receving node and may be broadcast through the network such that any interested node can receive it (subscribe).
+Data which is not intended for a specific client or which is sent out regularly (e.g. monitoring data to be stored in a database) can be exchanged using a publish-subscribe messaging pattern to increase efficiency and avoid polling. Published messages are called **reports**. Reports are not confirmed by a receving node and may be broadcast through the network such that any interested node can receive it (subscribe).
 
 A **desire** is a message that is sent to a node without expecting a response or confirmation. It is considered a proposal to update the values as stated in the message. If all or some of the requested changes are invalid, they are silently ignored, as it is not possible to respond to a desire.
 

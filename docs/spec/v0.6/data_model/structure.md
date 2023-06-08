@@ -4,7 +4,7 @@ title: "Structure"
 
 # Data Structure
 
-The accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The data can be accessed using the protocol functions described in [separate chapter](../protocol/functions.md). This chapter will only explain the device data structure itself.
+The accessible data of a device is [structured as a tree](https://en.wikipedia.org/wiki/Tree_(data_structure)). The data can be accessed using the protocol functions described in [Access Functions](../protocol/functions.md). This chapter will only explain the device data structure itself.
 
 ## Hierarchy
 
@@ -14,7 +14,7 @@ Inner nodes in the structure, called **groups**, are used to define the hierarch
 
 Actual data is stored in leaf nodes, called **data items**. The data items can contain any kind of measurements (e.g. temperature), device configuration (e.g. setpoint of a controller) or similar information. Data items can contain simple values (numbers, strings and booleans) or arrays of simple values.
 
-**Subsets** and **records** are special kinds of arrays arrays explained further down below.
+**Subsets** and **records** are special kinds of arrays explained further down below.
 
 ## Naming Conventions
 
@@ -22,7 +22,7 @@ The name of a data object is a short case-sensitive ASCII string containing only
 
 An underscore as the first character is used to identify [overlays](overlays.md), which are sections of data used to store additional information for original data objects, e.g. metadata, min/max values or configuration of report intervals.
 
-If used in the middle of an item name, an underscore separates the description of the item and the unit (also see below). No additional underscores are allowed in the name.
+If used in the middle of an item name, an underscore separates the description of the item and the unit (see below). No additional underscores are allowed in the name.
 
 By convention, data items (leaf nodes) use [lower camel case](https://en.wikipedia.org/wiki/Camel_case) for their names where the first character is a prefix as defined below. Groups as well as records use upper camel case names.
 
@@ -74,16 +74,18 @@ Only [SI units](https://en.wikipedia.org/wiki/International_System_of_Units) and
 
 Some special characters have to be replaced according to the following table in order to be compatible with URIs (see [RFC 3986, section 2.3](https://tools.ietf.org/html/rfc3986#section-2.3)):
 
-| Character | Replacement | Example                                       |
-|-----------|-------------|-----------------------------------------------|
-| `°`       | `deg`       | `rAmbient_degC` for ambient temperature in °C |
-| `%`       | `pct`       | `rRelHumidity_pct` for relative humidity in % |
-| `/`       | `_`         | `rVeh_m_s` for vehicle speed in m/s           |
-| `^`       | (omitted)   | `cSurface_m2` for surface area in m^2         |
+| Character | Replacement | Example                                           |
+|-----------|-------------|---------------------------------------------------|
+| `°`       | `deg`       | `rAmbientTemp_degC` for ambient temperature in °C |
+| `%`       | `pct`       | `rRelHumidity_pct` for relative humidity in %     |
+| `/`       | `_`         | `rVehicleSpeed_m_s` for vehicle speed in m/s      |
+| `^`       | (omitted)   | `cSurfaceArea_m2` for surface area in m^2         |
 
 See also the [Open Manufacturing Platform Semantic Data Model](https://openmanufacturingplatform.github.io/sds-bamm-aspect-meta-model/bamm-specification/2.0.0-M1/appendix/appendix.html#unit-catalog) for a list of common units and physical quantities.
 
 ### Subsets
+
+Subsets allow to aggregate existing data items (also from different groups) for a certain purpose, e.g. to define which data items should be stored in non-volatile memory or which data items should be part of a report.
 
 Three different types of subsets can be defined depending on their prefix.
 
@@ -99,7 +101,7 @@ If the subsets are editable, they must have a trailing underscore in their name 
 
 ### Records
 
-Records are a collection of arbitrary key/value pairs of data (JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0).
+Records are a collection of arbitrary key/value pairs of data (equivalent to JSON objects) stored as elements of an array. The individual records can be accessed using their index in the array (starting at 0).
 
 It is not required that all records of one data object have the same data structure. However, using the same `struct` for all records would be most easy to implement for lower-level languages like C.
 

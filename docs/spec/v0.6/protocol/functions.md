@@ -16,14 +16,14 @@ The first byte of a ThingSet message is either a text-mode identifier (`?`, `=`,
 
 The protocol supports the typical [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete). Request codes match with CoAP to allow transparent mapping between ThingSet and HTTP APIs or CoAP devices.
 
-| Code | Text ID | Function | CoAP equivalent | Description                    |
-|------|---------|----------|--------|-----------------------------------------|
-| 0x01 | ?       | GET      | GET    | Retrieve all data from a path           |
-| 0x02 | !       | EXEC     | POST   | Execute a function                      |
-| 0x04 | -       | DELETE   | DELETE | Delete data from an object              |
-| 0x05 | ?       | FETCH    | FETCH  | Retrieve a part of the data from a path |
-| 0x06 | +       | CREATE   | PATCH  | Append data to an object                |
-| 0x07 | =       | UPDATE   | iPATCH | Update (overwrite) data of a path       |
+| Binary mode | Text mode | Function | CoAP equivalent | Description                    |
+|-------------|-----------|----------|--------|-----------------------------------------|
+| 0x01        | ?         | GET      | GET    | Retrieve all data from a path           |
+| 0x05        | ?         | FETCH    | FETCH  | Retrieve a part of the data from a path |
+| 0x07        | =         | UPDATE   | iPATCH | Update (overwrite) data of a path       |
+| 0x06        | +         | CREATE   | PATCH  | Append data to an object                |
+| 0x04        | -         | DELETE   | DELETE | Delete data from an object              |
+| 0x02        | !         | EXEC     | POST   | Execute a function                      |
 
 The CoAP PUT method is not explicitly implemented. PUT is equivalent to an update of all sub-objects of a resource using a PATCH request. UPDATE requests for ThingSet are always idempotent, so only the iPATCH request code is used. The PATCH method is used to create new data.
 
@@ -61,13 +61,11 @@ Responses text mode use the colon `:` as the first byte identifier, followed by 
 
 Desires and reports are neither requests nor response messages, as they are sent without expecting a confirmation. Below table lists the message specifiers in text and binary mode.
 
-| Code | Text ID | Description |
-|------|---------|-------------|
-| 0x1D | @       | Desire      |
-| 0x1F | #       | Report      |
+| Binary mode | Text mode | Description |
+|-------------|-----------|-------------|
+| 0x1D        | @         | Desire      |
+| 0x1F        | #         | Report      |
 
-The internal path `_Reporting` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
-
-By convention, the object names below the `_Reporting` define which data object should be published. This can be an entire group like `Bat` or a subset data object that contains a list of references to other data items like `eChange` in the above example.
+The overlay `_Reporting` is used to configure the device to publish certain data items on a regular basis through a defined communication channel (UART, CAN, LoRaWAN, etc.). If implemented in the firmware, the publication interval may be adjustable.
 
 More details regarding the ThingSet protocol methods for data access will be explained in the next chapter.
