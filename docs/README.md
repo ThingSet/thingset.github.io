@@ -5,7 +5,7 @@ heroText: null
 tagline: ThingSet - The Data Accessibility Framework
 actions:
   - text: SDK for Zephyr
-    link: /software/sdk
+    link: /software/zephyr_sdk
     type: secondary
   - text: Specification
     link: /spec/v0.6/introduction/abstract
