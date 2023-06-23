@@ -16,11 +16,13 @@ The following extensions for the grammar as described in [Text Mode chapter](app
 
     thingset-uart = thingset-msg end
 
-    end = [ " " checksum ] [ CR ] LF
+    end = [ " " checksum "#" ] [ CR ] LF
 
     checksum = 8( DIGIT / %x41-46 )      ; CRC-32 as HEXDIGs (always upper case)
 
 The CRC checksum is calculated over the entire thingset-msg as defined above. The same CRC-32 polynom 0x04C11DB7 as for [Ethernet and many other protocols](https://en.wikipedia.org/wiki/Cyclic_redundancy_check) is used.
+
+The hash sign `#` at the end of the checksum allows to detect easily whether the message contains a checksum or not by checking the last character of the message.
 
 The CRC is optional so that it is still possible to interact with the device by humans using a terminal. However, the device should always calculate the CRC and in case of M2M communication, the client should check the CRC and also provide a CRC for requests to increase reliability.
 
