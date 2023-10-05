@@ -31,9 +31,10 @@ The node address can be in the range of `0x00` to `0xFD` (253). Node addresses `
 |------|:--------:|:--------:|:-------------:|:-------------:|:--------------:|
 |      | Priority |   Type   | Variable byte | Variable byte | Source address |
 
-There are three different message types defined for ThingSet:
+There are four different message types defined for ThingSet:
 
 - `0x0`: [Service message (request/response)](#request-response)
+- `0x1`: [Packetized publication message (publish/subscribe)](#publish-subscribe)
 - `0x2`: [Publication message (publish/subscribe)](#publish-subscribe)
 - `0x3`: [Network management message](#network-management)
 
@@ -164,18 +165,18 @@ Subsequent frames:
 
 ## Publish/subscribe
 
-The publication message provides a very efficient way to send data in a regular interval using a single CAN frame without the overhead of a transport protocol. The publication messages are mainly intended for monitoring purposes. The first type bit is set to `1` (resulting in `0x2`).
+The publication message provides a very efficient way to send data at regular intervals, which is particularly suitable for monitoring purposes. For many CBOR-encoded values, a single CAN frame provides sufficient space (8 bytes for classical; 64 bytes for CAN-FD) to transmit the value without the overhead of a transport protocol. Such messages are indicated with type `0x2`. For values larger than a single frame, a simple packetization format (the same as that used for BLE) transmits the messages over multiple frames. These messages are indicated with type `0x1`.
 
 ### CAN identifier layout
 
 Publication messages are not sent to a single node, so the destination address does not need to be specified. Instead, the data object ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
 
-| Bits | 28 .. 26 |   25 .. 24  |    23 .. 16          |   15 .. 8            |   7 .. 0       |
-|------|:--------:|:-----------:|:--------------------:|:--------------------:|:--------------:|
-|      | Priority | Type: `0x2` | Data object ID (MSB) | Data object ID (LSB) | Source address |
+| Bits | 28 .. 26 |   25 .. 24           |    23 .. 16          |   15 .. 8            |   7 .. 0       |
+|------|:--------:|:--------------------:|:--------------------:|:--------------------:|:--------------:|
+|      | Priority | Type: `0x1` or `0x2` | Data object ID (MSB) | Data object ID (LSB) | Source address |
 
 - Priority (28-26): Defines the importance of the message. For publication messages, only 5 (high priority) and 7 (low priority) are valid.
-- Type (25-24): `0x2` for publication message
+- Type (25-24): `0x2` for single-frame publication messages; `0x1` for multi-frame packetized messages
 - Data object ID (23-8): Data object ID as a 16-bit unsigned integer. The most significant byte is stored first (bits 23 to 16).
 - Source address (7-0): Source node address (`0x00` to `0xFD`)
 
@@ -190,6 +191,8 @@ The data section of the CAN frame contains the CBOR-encoded value of the data ob
 In order to acquire real-time measurement values, a 16-bit timestamp (unsigned int) can be appended to the CBOR-encoded value. The timestamp contains the 16 least significant bits of the microcontroller's system clock in milliseconds. It is a rolling counter and restarts at 0 after an overflow. The timestamp cannot be used to determine the absolute time of a measurement, but the time difference between subsequent measurements. This is important to obtain correct sampling of time-series data if higher priority messages cause a delay of the data delivery on the bus.
 
 The maximum length of the value and the optional timestamp is defined by the maximum data section size of the CAN frame (8 bytes for classic CAN).
+
+When transmitting multi-frame packetized reports (type `0x1`), the first byte of the data section of the CAN frame contains a sequence number.
 
 ## Network management
 
