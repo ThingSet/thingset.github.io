@@ -48,19 +48,20 @@ Only CAN extended IDs with a size of 29 bit are used, so it should be possible t
 
 A service message can be identified by the type bits 25-24 both set to 0. A single byte each for source and destination node address are defined as part of the CAN ID to identify sender and receiver of the message.
 
-A service message can be routed to different physical buses by a gateway. The bus number is also encoded as part of the CAN ID.
+A service message can be routed to different physical buses by a gateway. The 4-bit target and source bus numbers are encoded as part of the CAN ID. There is no automatic bus ID claiming procedure specified. Instead, the bus number has to be manually configured (or hard-coded). For single-bus systems it is `0x0`.
 
 ### CAN identifier layout
 
 The service message addressing in 29-bit CAN ID is similar to SAE J1939:
 
-| Bits |     28 .. 26    |   25 .. 24  |    23 .. 16     |   15 .. 8      |   7 .. 0       |
-|------|:---------------:|:-----------:|:---------------:|:--------------:|:--------------:|
-|      | Priority: `0x6` | Type: `0x0` |   Bus number    | Target address | Source address |
+| Bits |     28 .. 26    |   25 .. 24  |  23 .. 20  |  19 .. 16  |   15 .. 8      |   7 .. 0       |
+|------|:---------------:|:-----------:|:----------:|:----------:|:--------------:|:--------------:|
+|      | Priority: `0x6` | Type: `0x0` | Target bus | Source bus | Target address | Source address |
 
 - Priority (28-26): Defines the importance of the message. For service messages, only priority 6 is valid.
 - Type (25-24): 0x0 for request/response message
-- Bus number (23-16): Default for single bus systems is `0xDA` (218) as suggested by ISO-TP standard (ISO 15765-2) for normal fixed addressing with N_TAtype = physical
+- Target bus (23-20): Bus number of the target device (default for single bus systems is `0x0`).
+- Source bus (19-16): Bus number of the source device (default for single bus systems is `0x0`).
 - Target address (15-8): Destination node address (`0x00` to `0xFD`)
 - Source address (7-0): Source node address (`0x00` to `0xFD`)
 
@@ -242,13 +243,13 @@ The random number in the CAN ID provides a first level of protection against col
 
 This frame indicates that the device with the EUI-64 in the payload uses the given source address.
 
-| Bits |    28 .. 26     |   25 .. 24  |   23 .. 16  |        15 .. 8         |     7 .. 0     |
-|------|:---------------:|:-----------:|:-----------:|:----------------------:|:--------------:|
-|      | Priority: `0x4` | Type: `0x3` |  Bus number | Target address: `0xFF` | Source address |
+| Bits |     28 .. 26    |   25 .. 24  |  23 .. 20  |  19 .. 16  |         15 .. 8        |   7 .. 0       |
+|------|:---------------:|:-----------:|:----------:|:----------:|:----------------------:|:--------------:|
+|      | Priority: `0x4` | Type: `0x3` | Target bus | Source bus | Target address: `0xFF` | Source address |
 
 - Priority (28-26): `0x4` suggested for network management frames
 - Type (25-24): `0x3` for network management frames
-- Bus number (23-16): same as for request/response messages
+- Bus numbers (23-16): same as for request/response messages
 - Target address (15-8): `0xFF` for broadcast without a specific recipient
 - Source address (7-0): Source node address being claimed (`0x00` to `0xFD`)
 - Payload: 8-byte EUI-64 of the node
