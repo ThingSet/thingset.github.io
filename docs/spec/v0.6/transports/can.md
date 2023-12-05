@@ -237,6 +237,8 @@ This frame is used to find out if a desired address is already taken by another 
 
 The target address is the desired address of the node. If this address is already taken, the node with that address must immediately respond with an Address Claim frame (see below).
 
+If the target address is set to `0xFF` (broadcast), all nodes should answer with an Address Claim frame. This method can be used to determine all connected nodes on a bus (e.g. as a gateway).
+
 The random number in the CAN ID provides a first level of protection against collision of different nodes wanting to claim the same address. If another node with higher priority random number tries to claim the same address at the same time it will win the arbitration on the bus. The message will be received and the node has to try again with another address.
 
 #### Address Claim frame
