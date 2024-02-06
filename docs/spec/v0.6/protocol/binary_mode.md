@@ -32,8 +32,9 @@ Each request message consists of a first byte as the request method identifier, 
 
     bin-exec   = %x02 endpoint cbor-array
 
-    endpoint   = path         ; CBOR string: path same as text mode
-               / parent-id    ; CBOR uint: parent object ID instead of path
+    endpoint   = path            ; CBOR string: path same as text mode
+               / parent-id       ; CBOR uint: parent object ID instead of path
+               / parent-id-index ; CBOR array: parent object ID, record index
 
 ### Response
 
@@ -240,9 +241,10 @@ If the endpoint is an array of records, a GET request returns all records or the
 Records are always returned as key/value maps, similar to GET requests for groups.
 
     Request:
-    05                                      # FETCH
-       08                                   # CBOR uint: 0x08 (parent ID)
-       00                                   # CBOR uint: 0x00 (index)
+    01                                      # GET
+       82                                   # CBOR array (2 elements)
+          08                                # CBOR uint: 0x08 (parent ID)
+          00                                # CBOR uint: 0x00 (index)
 
     Response:
     85                                      # Content.
