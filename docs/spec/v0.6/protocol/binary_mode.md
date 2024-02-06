@@ -422,3 +422,17 @@ If not all child nodes of one path fit into a single report (e.g. because the si
           FA 414E6666                       # CBOR float: 12.9
           18 41                             # CBOR uint: 0x41 (object ID)
           FA C048F5C3                       # CBOR float: -3.14
+
+Reports can also contain record items. If IDs are used instead of path strings, a two-element array is used to specify ID and record index (similar to GET requests).
+
+**Example 5:** A report containing the first record in `ErrorMemory_100`
+
+    1F
+       82                                   # CBOR array (2 elements)
+          08                                # CBOR uint: 0x08 (parent ID)
+          00                                # CBOR uint: 0x00 (index)
+       A2                                   # CBOR map (2 elements)
+          18 70                             # CBOR uint: 0x70 (object ID)
+          1A 1B7561E0                       # CBOR uint: 460677600
+          18 71                             # CBOR uint: 0x71 (object ID)
+          19 0100                           # CBOR uint: 256
