@@ -15,50 +15,50 @@ This specification defines layer 3 (Network) and 4 (Transport) of the ThingSet P
 - Master-less operation
 - Automatic node ID assignment without central instance
 - Efficient useage of CAN ID and data bytes
-- Transport protocol to allow payload of more than 8 bytes
+- Transport protocol to allow payload of more than 8 bytes (classical CAN) or 64 bytes (CAN FD)
 - RTR frame is not allowed
-- Fixed bitrate of 500 kbit/s
+- Fixed bitrate of 500 kbit/s (arbitration and data phase for classical CAN) and 2 Mbit/s (data phase for CAN FD)
 
 ### CAN identifier layout
 
 In the CAN bus, the identifier part of the CAN frame is used for arbitration and identification of the message type. Typically, it does not define the sender or receiver of the message, but the content of the message.
 
-For a network with connected ThingSet devices, the layout of the CAN identifier is similar to the SAE J1939 specification. Parts of the identifier define the source and destination address of the message. In addition to that, the first three bits are used to prioritize the messages.
+For a network with connected ThingSet nodes, the layout of the CAN identifier is similar to the SAE J1939 specification. Parts of the identifier define the source and destination address of the message. In addition to that, the first three bits are used to prioritize the messages.
 
-The node address can be in the range of `0x00` to `0xFD` (253). Node addresses `0xFE` and `0xFF` are reserved for network management purposes (see below).
+The node address can be in the range of `0x00` to `0xFD` (253). Node addresses `0xFE` and `0xFF` are reserved for network management purposes (see below). Address `0x00` is reserved for gateways. Normal nodes on the bus should use addresses between `0x01` and `0xFD`.
 
 | Bits | 28 .. 26 | 25 .. 24 |    23 .. 16   |    15 .. 8    |     7 .. 0     |
 |------|:--------:|:--------:|:-------------:|:-------------:|:--------------:|
 |      | Priority |   Type   | Variable byte | Variable byte | Source address |
 
-There are four different message types defined for ThingSet:
+There are four different CAN frame types defined for ThingSet:
 
-- `0x0`: [Service message (request/response)](#request-response)
-- `0x1`: [Packetized publication message (publish/subscribe)](#publish-subscribe)
-- `0x2`: [Publication message (publish/subscribe)](#publish-subscribe)
-- `0x3`: [Network management message](#network-management)
+- `0x0`: [Request/response messages](#request-response-messages)
+- `0x1`: [Multi-frame reports](#multi-frame-reports)
+- `0x2`: [Single-frame reports](#single-frame-reports)
+- `0x3`: [Network management](#network-management)
 
-The variable bytes have a different meaning depending on the message type.
+The variable bytes have a different meaning depending on the frame type.
 
-It may be possible to run ThingSet messages on the same bus with SAE J1939 (using type `0x0`) or NMEA2000 (using type `0x1`) if device addresses are chosen carefully. However, ThingSet is not meant to be compatible with mentioned protocols.
+It may be possible to exchange ThingSet messages on the same bus with SAE J1939 (using type `0x0`) or NMEA2000 (using type `0x1`) if device addresses are chosen carefully. However, ThingSet is not meant to be compatible with mentioned protocols.
 
 Only CAN extended IDs with a size of 29 bit are used, so it should be possible to use ThingSet together with protocols using standard IDs (e.g. CANopen) on the same bus.
 
-## Request/response
+## Request/response messages
 
-A service message can be identified by the type bits 25-24 both set to 0. A single byte each for source and destination node address are defined as part of the CAN ID to identify sender and receiver of the message.
+Channel-based communication between two nodes use the frame type `0x0`. A single byte each for source and destination node address are defined as part of the CAN ID to identify sender and receiver of the message.
 
-A service message can be routed to different physical buses by a gateway. The 4-bit target and source bus numbers are encoded as part of the CAN ID. There is no automatic bus ID claiming procedure specified. Instead, the bus number has to be manually configured (or hard-coded). For single-bus systems it is `0x0`.
+A request/response message can be routed to different physical buses by a gateway. The 4-bit target and source bus numbers are encoded as part of the CAN ID. There is no automatic bus ID claiming procedure specified. Instead, the bus number has to be manually configured (or hard-coded). For single-bus systems it is `0x0`.
 
 ### CAN identifier layout
 
-The service message addressing in 29-bit CAN ID is similar to SAE J1939:
+The request/response message addressing in the 29-bit CAN ID is similar to SAE J1939:
 
 | Bits |     28 .. 26    |   25 .. 24  |  23 .. 20  |  19 .. 16  |   15 .. 8      |   7 .. 0       |
 |------|:---------------:|:-----------:|:----------:|:----------:|:--------------:|:--------------:|
 |      | Priority: `0x6` | Type: `0x0` | Target bus | Source bus | Target address | Source address |
 
-- Priority (28-26): Defines the importance of the message. For service messages, only priority 6 is valid.
+- Priority (28-26): Defines the importance of the message. For request/response messages, only priority 6 is valid.
 - Type (25-24): 0x0 for request/response message
 - Target bus (23-20): Bus number of the target device (default for single bus systems is `0x0`).
 - Source bus (19-16): Bus number of the source device (default for single bus systems is `0x0`).
@@ -164,36 +164,62 @@ Subsequent frames:
 - Byte 2-8: 7 bytes of transmitted data. Unused bits in the last frame of a fast-packet message shall be filled with "1" bits.
 -->
 
-## Publish/subscribe
+## Multi-frame reports
 
-The publication message provides a very efficient way to send data at regular intervals, which is particularly suitable for monitoring purposes. For many CBOR-encoded values, a single CAN frame provides sufficient space (8 bytes for classical; 64 bytes for CAN-FD) to transmit the value without the overhead of a transport protocol. Such messages are indicated with type `0x2`. For values larger than a single frame, a simple packetization format (the same as that used for BLE) transmits the messages over multiple frames. These messages are indicated with type `0x1`.
+ThingSet reports of arbitrary length can be broadcast to the bus using frame type `0x1`.
 
 ### CAN identifier layout
 
-Publication messages are not sent to a single node, so the destination address does not need to be specified. Instead, the data object ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
+Reports are not sent to a single node, so the destination address does not need to be specified. Instead, packetization information is specified in the CAN ID.
 
-| Bits | 28 .. 26 |   25 .. 24           |    23 .. 16          |   15 .. 8            |   7 .. 0       |
-|------|:--------:|:--------------------:|:--------------------:|:--------------------:|:--------------:|
-|      | Priority | Type: `0x1` or `0x2` | Data object ID (MSB) | Data object ID (LSB) | Source address |
+| Bits | 28 .. 26 |  25 .. 24   |  23 .. 20  |  19 .. 16  | 15 .. 13 | 12  | 11 .. 8 |   7 .. 0       |
+|------|:--------:|:-----------:|:----------:|:----------:|:--------:|:---:|:-------:|:--------------:|
+|      | Priority | Type: `0x1` | res: `0x0` | Source bus |  Msg no. | End | Seq no. | Source address |
 
 - Priority (28-26): Defines the importance of the message. For publication messages, only 5 (high priority) and 7 (low priority) are valid.
-- Type (25-24): `0x2` for single-frame publication messages; `0x1` for multi-frame packetized messages
-- Data object ID (23-8): Data object ID as a 16-bit unsigned integer. The most significant byte is stored first (bits 23 to 16).
+- Type (25-24): `0x1` for multi-frame report
+- Source bus (19-16): Bus number of the source device (default for single bus systems is `0x0`).
+- Message number (15-13): Wrapping counter of all messages sent by that node
+- End of message flag (12): Bit set to indicate the end of a message
+- Sequence number (11-8): Wrapping counter of all frames for this ThingSet message
 - Source address (7-0): Source node address (`0x00` to `0xFD`)
 
-The data object ID is not encoded in the CBOR format, but as a raw 16-bit unsigned integer. The publication messages are limited to IDs that fit into 16 bits.
+Bytes 23-20 are reserved for future use.
+
+### CAN data format
+
+The data section of the CAN frame contains the raw ThingSet report (which may be in text or binary mode), split in multiple frames with increasing sequence number. The last frame of one message is identified by the end flag set to 1.
+
+In case the last frame is longer than needed, `0x00` shall be used for padding the unused bytes.
+
+## Single-frame reports
+
+The single-frame report frames of type `0x2` provide a very efficient way to publish a single data item, which is especially interesting for control purposes. For many CBOR-encoded values, a single CAN frame provides sufficient space (8 bytes for classical; 64 bytes for CAN-FD) to transmit the value without the overhead of a transport protocol. For values larger than a single frame, multi-frame reports have to be used.
+
+### CAN identifier layout
+
+Reports are not sent to a single node, so the destination address does not need to be specified. Instead, the data object ID is specified directly in the CAN identifier to have more bytes available for payload in the data section of the CAN frame.
+
+| Bits | 28 .. 26 |  25 .. 24   |    23 .. 16        |   15 .. 8          |   7 .. 0       |
+|------|:--------:|:-----------:|:------------------:|:------------------:|:--------------:|
+|      | Priority | Type: `0x2` | Data item ID (MSB) | Data item ID (LSB) | Source address |
+
+- Priority (28-26): Defines the importance of the message. For reports, only 5 (high priority) and 7 (low priority) are valid.
+- Type (25-24): `0x2` for single-frame report
+- Data item ID (23-8): Data object ID as a 16-bit unsigned integer. The most significant byte is stored first (bits 23 to 16).
+- Source address (7-0): Source node address (`0x00` to `0xFD`)
+
+The data item ID is not encoded in the CBOR format, but as a raw 16-bit unsigned integer. The single-frame reports are limited to IDs that fit into 16 bits.
 
 IDs >= 0x8000 are fixed and reserved for control messages, so the CAN filter can be configured to distinguish between normal data ojbects and (high priority) control messages.
 
 ### CAN data format
 
-The data section of the CAN frame contains the CBOR-encoded value of the data object with the specified ID.
+The data section of the CAN frame contains the CBOR-encoded value of the data item with the specified ID.
 
 In order to acquire real-time measurement values, a 16-bit timestamp (unsigned int) can be appended to the CBOR-encoded value. The timestamp contains the 16 least significant bits of the microcontroller's system clock in milliseconds. It is a rolling counter and restarts at 0 after an overflow. The timestamp cannot be used to determine the absolute time of a measurement, but the time difference between subsequent measurements. This is important to obtain correct sampling of time-series data if higher priority messages cause a delay of the data delivery on the bus.
 
 The maximum length of the value and the optional timestamp is defined by the maximum data section size of the CAN frame (8 bytes for classic CAN).
-
-When transmitting multi-frame packetized reports (type `0x1`), the first byte of the data section of the CAN frame contains a sequence number.
 
 ## Network management
 
