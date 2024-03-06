@@ -172,15 +172,15 @@ ThingSet reports of arbitrary length can be broadcast to the bus using frame typ
 
 Reports are not sent to a single node, so the destination address does not need to be specified. Instead, packetization information is specified in the CAN ID.
 
-| Bits | 28 .. 26 |  25 .. 24   |  23 .. 20  |  19 .. 16  | 15 .. 13 | 12  | 11 .. 8 |   7 .. 0       |
-|------|:--------:|:-----------:|:----------:|:----------:|:--------:|:---:|:-------:|:--------------:|
-|      | Priority | Type: `0x1` | res: `0x0` | Source bus |  Msg no. | End | Seq no. | Source address |
+| Bits | 28 .. 26 |  25 .. 24   |  23 .. 20  |  19 .. 16  | 15 .. 14 | 13 .. 12 | 11 .. 8 |   7 .. 0       |
+|------|:--------:|:-----------:|:----------:|:----------:|:--------:|:--------:|:-------:|:--------------:|
+|      | Priority | Type: `0x1` | res: `0x0` | Source bus |  Msg no. | MF type  | Seq no. | Source address |
 
 - Priority (28-26): Defines the importance of the message. For publication messages, only 5 (high priority) and 7 (low priority) are valid.
 - Type (25-24): `0x1` for multi-frame report
 - Source bus (19-16): Bus number of the source device (default for single bus systems is `0x0`).
-- Message number (15-13): Wrapping counter of all messages sent by that node
-- End of message flag (12): Bit set to indicate the end of a message
+- Message number (15-14): Wrapping counter of all messages sent by that node
+- Multi-frame type (13-12): First frame `0x0`, Consecutive frame `0x1`, Last frame `0x2`, Single frame `0x3`
 - Sequence number (11-8): Wrapping counter of all frames for this ThingSet message
 - Source address (7-0): Source node address (`0x00` to `0xFD`)
 
@@ -188,7 +188,11 @@ Bytes 23-20 are reserved for future use.
 
 ### CAN data format
 
-The data section of the CAN frame contains the raw ThingSet report (which may be in text or binary mode), split in multiple frames with increasing sequence number. The last frame of one message is identified by the end flag set to 1.
+The data section of the CAN frame contains the raw ThingSet report (which may be in text or binary mode), split in multiple frames with increasing sequence number.
+
+A multi-frame (MF) transmission starts with the MF type set to `0x0` for the first frame. Consecutive frames between first and last frame (if existing) are indicated with MF type set to `0x1`. The last frame uses MF type `0x2`.
+
+If a single frame is sufficient, the MF type `0x3` is used.
 
 In case the last frame is longer than needed, `0x00` shall be used for padding the unused bytes.
 
