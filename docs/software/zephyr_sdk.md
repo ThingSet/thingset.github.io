@@ -41,10 +41,10 @@ bool heater_on = true;
 void reset(void);
 
 /* ThingSet object definitions */
-THINGSET_ADD_ITEM_FLOAT(ID_ROOT, 0x61, "rRoomTemp_degC", &room_temp, 1, TS_ANY_R, 0);
-THINGSET_ADD_ITEM_FLOAT(ID_ROOT, 0x62, "wTargetTemp_degC", &target_temp, 1, TS_ANY_RW, 0);
-THINGSET_ADD_ITEM_BOOL(ID_ROOT, 0x71, "rHeaterOn", &heater_on, TS_ANY_R, 0);
-THINGSET_ADD_FN_VOID(ID_ROOT, 0xE1, "xReset", &reset, TS_ANY_RW);
+THINGSET_ADD_ITEM_FLOAT(ID_ROOT, 0x61, "rRoomTemp_degC", &room_temp, 1, THINGSET_ANY_R, 0);
+THINGSET_ADD_ITEM_FLOAT(ID_ROOT, 0x62, "wTargetTemp_degC", &target_temp, 1, THINGSET_ANY_RW, 0);
+THINGSET_ADD_ITEM_BOOL(ID_ROOT, 0x71, "rHeaterOn", &heater_on, THINGSET_ANY_R, 0);
+THINGSET_ADD_FN_VOID(ID_ROOT, 0xE1, "xReset", &reset, THINGSET_ANY_RW);
 
 void reset(void)
 {
